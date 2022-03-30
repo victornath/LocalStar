@@ -42,6 +42,10 @@
 
     <!-- Scripts -->
     <script src="./WebGL.min.js"></script>
-    <script src="./index_new.js" type="module"></script>
+    <script type="text/javascript" src="./bower_components/pathfinding/pathfinding-browser.min.js"></script>
+    <script type="module">
+        import * as PF from './bower_components/pathfinding/pathfinding-browser.min.js';
+     </script>
+    <script src="./index.js" type="module"></script>
 </body>
 </html>

@@ -10,11 +10,13 @@
 
 // Library Imports
 import * as THREE from './three.js/build/three.module.js'
-import * as Rooms from './room/test_room.js';
+import Rooms from './room/test_room.js';
+import PLAYER_OBJ from './furniture/player.js';
 import { MapControls } from './three.js/examples/jsm/controls/OrbitControls.js';
 import { PointerLockControls} from './three.js/examples/jsm/controls/PointerLockControls.js';
 import {GLTFLoader} from './three.js/examples/jsm/loaders/GLTFLoader.js' 
 import {FontLoader} from './three.js/examples/jsm/loaders/FontLoader.js' 
+// import * as PF from 'pathfinding'
 
 // Variables
 const MANAGER = new THREE.LoadingManager();
@@ -30,12 +32,17 @@ const SCENE = new THREE.Scene();
 const CAMERA = new THREE.OrthographicCamera((-135*(window.innerWidth/window.innerHeight)), (135*(window.innerWidth/window.innerHeight)), 135, -135, 1,1000)
 const RENDERER = new THREE.WebGLRenderer({
     antialias: false,
+    localClippingEnabled: true
 });
 const CAMERA_CONTROL = new MapControls(CAMERA, RENDERER.domElement)
 const RAYCAST = new THREE.Raycaster()
-let PLAYER_MOVE
+const ROOM = new Rooms()
+let ROOM_GRID
+let WALK_FINDER
+let PLAYER_MOVE = []
 let PLAYER
-let dif = {}
+let PIVOTx = 0
+let PIVOTz = 0
 
 var time, delta, moveTimer = 0;
 var useDeltaTiming = true, weirdTiming = 0;
@@ -67,7 +74,7 @@ function init() {
     initRenderer()
     initCamera()
     initScene()
-    initRoom(new Rooms.default)
+    initRoom(ROOM)
     initPlayer()
     window.addEventListener('resize', onWindowResize, false);
 }
@@ -108,7 +115,7 @@ function initCamera(){
     // CAMERA_CONTROL.minZoom = 1000;
     // CAMERA_CONTROL.maxZoom = 100;
     CAMERA_CONTROL.enableDamping = false;
-    console.log(CAMERA_CONTROL.getDistance())
+    // console.log(CAMERA_CONTROL.getDistance())
 }
 
 function initScene(){
@@ -175,23 +182,38 @@ function initRoom(Room){
     let gridHelper = new THREE.GridHelper( (Room.room.x*25), Room.room.x );
     gridHelper.position.set((Room.room.x*25)/2,0,(Room.room.y*25)/2);
     SCENE.add(gridHelper)
-
-    //objects
-    Room.objects.forEach(element => {
-        element.mesh.position.set(element.position_x*25,element.position_y,element.position_z*25)
-        SCENE.add(element.mesh)
+    ROOM_GRID = new PF.Grid(Room.room.x, Room.room.y)
+    WALK_FINDER = new PF.AStarFinder({
+        allowDiagonal: true
     });
 
+    //lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    SCENE.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    dirLight.position.set(0, 20, 10); // x, y, z
+    SCENE.add(dirLight);
+    
+    //objects
+    Room.objects.forEach(element => {
+        element.mesh.position.set((element.position_x)*25,element.position_y,(element.position_z)*25)
+        SCENE.add(element.mesh)
+        for (let index = 0; index < element.size_x; index++) {
+            for (let index2 = 0; index2 < element.size_z; index2++) {
+                ROOM_GRID.setWalkableAt(element.position_x+index-1,element.position_z+index2-1,false)
+                console.log("Position: ("+(element.position_x+index)+","+(element.position_z+index2)+") is blocked")
+            }
+        }
+    });
+
+
+    console.log(PF)
+ 
 }
 
 function initPlayer(){
-    let player_box = new THREE.BoxGeometry(25,50,25)
-    let player_material = new THREE.MeshBasicMaterial({
-        color: 0x00ff00,
-        wireframe: true
-    })
-    const player_mesh = new THREE.Mesh(player_box, player_material)
-    PLAYER = player_mesh
+    PLAYER = new PLAYER_OBJ().group
 
     PLAYER.position.set(137.5,25,12.5);
     PLAYER.speedMultiplier = 1
@@ -209,26 +231,39 @@ function initPlayer(){
             mouse.y = event.clientY/h *(-2) + 1
         
             RAYCAST.setFromCamera(mouse,CAMERA)
-            console.log(CAMERA.zoom)
+            // console.log(CAMERA.zoom)
             let items = RAYCAST.intersectObjects(SCENE.children,false)
             // console.log(items)
             items.forEach(i=>{
                 let newPoint = {}
-                newPoint.x = Math.round(Math.round(i.point.x/25)*25)
-                newPoint.y = Math.round(Math.round(i.point.y/25)*25)
-                newPoint.z = Math.round(Math.round(i.point.z/25)*25)
+                newPoint.x = Math.round(i.point.x/25)
+                newPoint.z = Math.round(i.point.z/25)
+
+                if(newPoint.x<0){
+                    newPoint.x = 0
+                }
+                if(newPoint.z<0){
+                    newPoint.z = 0
+                }
+
+                if(newPoint.x>ROOM.room.x-1){
+                    newPoint.x = ROOM.room.x-1
+                }
+                if(newPoint.z>ROOM.room.y-1){
+                    newPoint.z = ROOM.room.y-1
+                }
+
                 
-                if(newPoint.x>=12.5){
-                    dif.x = newPoint.x - PLAYER.position.x - 12.5
-                } else dif.x = -PLAYER.position.x + 12.5
-                if(newPoint.y<0){
-                    dif.y = newPoint.y - PLAYER.position.y
-                } else dif.y = 0
-                if(newPoint.z>=12.5){
-                    dif.z = newPoint.z - PLAYER.position.z - 12.5
-                } else dif.z = -PLAYER.position.z +12.5
-                let maxdif = Math.round(Math.max(Math.abs(dif.x), Math.abs(dif.y), Math.abs(dif.z)))
-    
+                let startPos = {
+                    x: Math.floor((PLAYER.position.x+12.5)/25)-1,
+                    z: Math.floor((PLAYER.position.z+12.5)/25)-1
+                }
+                PLAYER_MOVE.pop()
+                var gridClone = ROOM_GRID.clone()
+                var path = WALK_FINDER.findPath(startPos.x,startPos.z,newPoint.x,newPoint.z, gridClone)
+                // PLAYER_MOVE.push([newPoint.x,newPoint.z,startPos.x,startPos.z])
+                PLAYER_MOVE.push(path)
+                items.pop()
 
                 //rotate player
 /*               if(dif.x < 0){
@@ -246,10 +281,6 @@ function initPlayer(){
                     console.log("Z+")
                 }
 */
-                if(maxdif != 0 ){
-                    PLAYER_MOVE = maxdif
-                }
-    
                 // console.log(PLAYER.position)
             })
         }
@@ -276,10 +307,59 @@ function gameLoop() {
         }
     
         // Process player input
-        if (PLAYER_MOVE >= delta) {
-            PLAYER.translateX(dif.x *delta)
-            PLAYER.translateZ(dif.z *delta)
-            PLAYER_MOVE -= Math.round(Math.max(Math.abs(dif.x), Math.abs(dif.y), Math.abs(dif.z)))*delta
+        if(PLAYER_MOVE.length > 0) {
+            if(PLAYER_MOVE[0].length > 1){
+                let start_position = {
+                    x: PLAYER_MOVE[0][0][0],
+                    z: PLAYER_MOVE[0][0][1]
+                }
+                let end_position = {
+                    x: PLAYER_MOVE[0][1][0],
+                    z: PLAYER_MOVE[0][1][1]
+                }
+                let xMove = 0;
+                let zMove = 0;
+                if (end_position.x-start_position.x > 0){
+                    xMove = 1;
+                } else xMove = -1
+                
+                if (end_position.z-start_position.z > 0){
+                    zMove = 1;
+                } else zMove = -1
+                
+                if(PLAYER.position.x !== (end_position.x*25)+12.5){
+                    PLAYER.position.x += xMove*PLAYER.speedMultiplier
+                } else {
+                    PIVOTx++
+                }
+                if(PLAYER.position.z !== (end_position.z*25)+12.5){
+                    PLAYER.position.z += zMove*PLAYER.speedMultiplier
+                } else {
+                    PIVOTz++
+                }
+                
+                if (PIVOTx !== 0 && PIVOTz !== 0){
+                    console.log("Player walks from ("+PLAYER_MOVE[0][0]+") to (" + PLAYER_MOVE[0][1]+")")
+                    console.log("Walking Queue: "+PLAYER_MOVE)
+                    PLAYER_MOVE[0].shift()
+                    PIVOTx = 0
+                    PIVOTz = 0
+                    if(PLAYER_MOVE[0].length === 1){
+                        PLAYER_MOVE.shift()
+                    }
+                }
+            }
+            
+
+
+            // if(!(ROOM.x_map.has(Math.floor(PLAYER.position.x/25)) && ROOM.z_map.has(Math.floor(PLAYER.position.z/25)))){
+            //     // console.log(Math.floor(PLAYER.position.x/25))
+            // }
+            // PLAYER_MOVE -= Math.floor(Math.max(Math.abs(dif.x), Math.abs(dif.y), Math.abs(dif.z)))*delta
+
+            // PLAYER.translateX(dif.x *delta)
+            // PLAYER.translateZ(dif.z *delta)
+            // PLAYER_MOVE -= Math.floor(Math.max(Math.abs(dif.x), Math.abs(dif.y), Math.abs(dif.z)))*delta
             // console.log(PLAYER_MOVE)
         }
     
