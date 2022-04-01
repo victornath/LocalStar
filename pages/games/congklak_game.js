@@ -14,9 +14,9 @@ import { MapControls } from '../../three.js/examples/jsm/controls/OrbitControls.
 import { PointerLockControls} from '../../three.js/examples/jsm/controls/PointerLockControls.js';
 import {GLTFLoader} from '../../three.js/examples/jsm/loaders/GLTFLoader.js' 
 import {FontLoader} from '../../three.js/examples/jsm/loaders/FontLoader.js' 
-import Congklak_big from "../../furniture/congklak_game_board.js";
-import Desk from "../../furniture/desk.js"
-import Player from "../../furniture/player.js"
+import Congklak_big from "../../object/congklak_game_board.js";
+import Desk from "../../object/desk/desk.js"
+import Player from "../../object/player/player.js"
 
 // Variables
 const MANAGER = new THREE.LoadingManager();
