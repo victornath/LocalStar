@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Congklak - Local Star</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow:hidden;
+        }
+    </style>
+</head>
+<body>
+    <!-- HTML Page -->
+    <div id='ui-holder' style="position:absolute; width:40%; height:100%"></div>
+    <div id='player1-status' style="position:absolute; top:15%; left: 20%; font-family:Tahoma">P1 Status</div>
+    <div id='player2-status' style="position:absolute; top:53%; left: 20%; font-family:Tahoma">P2 Status</div>
+    <div id='player1-name' style="position:absolute; top:28%; left: 20%; font-family:Tahoma">P1 name</div>
+    <div id='player2-name' style="position:absolute; top:68%; left: 20%; font-family:Tahoma">P2 name</div>
+    <div id='end-screen' style="
+        position:absolute;
+        top:40%;
+        left: 57.5%;
+        display:block;
+        background-color: azure;
+        width:15%;
+        height: 10%;
+        margin:auto;
+        padding:5%;
+        font-family:Tahoma;
+        text-align: center;
+    "></div>
+    <div id='canvas-holder'></div>
+
+    <!-- Scripts -->
+    <script src="../../WebGL.min.js"></script>
+    <script src="./congklak_game.js" type="module"></script>
+    <!-- <script src="./congklak_ui.js" type="module"></script> -->
+
+</body>
+</html>
