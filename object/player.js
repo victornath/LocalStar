@@ -1,51 +1,27 @@
 import * as THREE from '../three.js/build/three.module.js'
 
-/*
-
-    Gunakan file ini sebagai TEMPLATE PEMBUATAN OBJECT.
-
-    1. Sebelum membuat object, ganti nama Class (Line 27) dan export (Line 122)
-       sesuai dengan nama object yang akan dibuat
-
-    2. Basic test material hanya digunakan untuk testing.
-    3. Disarankan untuk menambahkan comment nama Sub Object.
-    4. Untuk membuat object:
-        1. Pembuatan object terdiri dari:
-            - Properties
-            - Geometry
-            - Mesh
-            - Positioning
-            - Rotating (optional)
-        2. Setelah object terbuat, lakukan Group Adding
-    5. Untuk melakukan testing, buka object_test.js.
-    6. Ikuti petunjuk yang sudah di sediakan di object_test.js
-    7. Lakuan Go Live Server pada object_test.HTML
-    
-*/
-
-
 class Player
 {
     constructor(){
         // basic test color material
-        let black = new THREE.MeshLambertMaterial({
+        let black = new THREE.MeshBasicMaterial({
             color: 0x000000,
         })
-        let white = new THREE.MeshLambertMaterial({
-            color: 0xFFFFFF,
-        })
-        let green = new THREE.MeshLambertMaterial({
+        let green = new THREE.MeshBasicMaterial({
             color: 0x00ff00,
         })
-        let blue = new THREE.MeshLambertMaterial({
+        let blue = new THREE.MeshBasicMaterial({
             color: 0x0000ff,
         })
-        let red = new THREE.MeshLambertMaterial({
+        let red = new THREE.MeshBasicMaterial({
             color: 0xff0000,
+        })
+        let skin = new THREE.MeshLambertMaterial({
+            color: 0xffdbac
         })
 
         // Stack Height (y)
-        let height = 0
+        let height = -25
 
         // Object 1 : Leg
         let leg_properties = {
@@ -58,10 +34,10 @@ class Player
             leg_properties.height,
             leg_properties.length
         )
-        const leg_r = new THREE.Mesh(geo_leg, black)
+        const leg_r = new THREE.Mesh(geo_leg, skin)
         leg_r.position.set(5,height+(leg_properties.height/2),0)
         
-        const leg_l = new THREE.Mesh(geo_leg, black)
+        const leg_l = new THREE.Mesh(geo_leg, skin)
         leg_l.position.set(-5,height+(leg_properties.height/2),0)
         height += leg_properties.height
 
@@ -76,7 +52,7 @@ class Player
             body_properties.height,
             body_properties.length
         )
-        const body = new THREE.Mesh(geo_body, green)
+        const body = new THREE.Mesh(geo_body, skin)
         body.position.set(0,height+(body_properties.height/2),0)
         height += body_properties.height
 
@@ -91,7 +67,7 @@ class Player
             head_properties.height,
             head_properties.length
         )
-        const head = new THREE.Mesh(geo_head, blue)
+        const head = new THREE.Mesh(geo_head, skin)
         head.position.set(0,height+(head_properties.height/2),0)
         height += head_properties.height
 
@@ -106,20 +82,39 @@ class Player
             hand_properties.height,
             hand_properties.length
         )
-        const hand_l = new THREE.Mesh(geo_hand, black)
-        hand_l.position.set(-10, 28.5,0)
+        const hand_l = new THREE.Mesh(geo_hand, skin)
+        hand_l.position.set(-10, 3.5,0)
 
-        const hand_r = new THREE.Mesh(geo_hand, black)
-        hand_r.position.set(10, 28.5, 0)
+        const hand_r = new THREE.Mesh(geo_hand, skin)
+        hand_r.position.set(10, 3.5, 0)
+
+        // Object 5 : Shadow
+        let shadow_properties = {
+            radius: 12.5,
+            segments: 25,
+        }
+        let geo_shadow = new THREE.CircleGeometry(
+            shadow_properties.radius,
+            shadow_properties.segments
+        )
+        const shadow = new THREE.Mesh(geo_shadow, new THREE.MeshBasicMaterial({
+            color: 0x151515,
+            opacity: 0.35,
+            transparent: true
+        }))
+
+        shadow.rotation.x = -Math.PI/2
+        shadow.position.set(0,-24.8,0)
 
         // Group Adding
         this.group = new THREE.Group()
         this.group.add(leg_l)
         this.group.add(leg_r)
-        this.group.add(body)
-        this.group.add(head)
         this.group.add(hand_l)
         this.group.add(hand_r)
+        this.group.add(body)
+        this.group.add(head)
+        this.group.add(shadow)
     }
 }
 export default Player;
