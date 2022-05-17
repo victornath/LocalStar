@@ -10,12 +10,13 @@
 
 // Library Imports
 import * as THREE from './three.js/build/three.module.js'
-import Rooms from './room/test_room.js';
-import PLAYER_OBJ from './furniture/player.js';
+import RoomLoader from './room/RoomLoader.js';
+import PlayerLoader from './item/PlayerLoader.js';
 import { MapControls } from './three.js/examples/jsm/controls/OrbitControls.js';
 import { PointerLockControls} from './three.js/examples/jsm/controls/PointerLockControls.js';
 import {GLTFLoader} from './three.js/examples/jsm/loaders/GLTFLoader.js' 
 import {FontLoader} from './three.js/examples/jsm/loaders/FontLoader.js' 
+import { TextGeometry } from './three.js/examples/jsm/geometries/TextGeometry.js'
 // import * as PF from 'pathfinding'
 
 // Variables
@@ -27,22 +28,33 @@ const TEXTURE_LOADER = new THREE.TextureLoader();
 const FONT_SIZE = 0.08;
 
 const CONTAINER = document.getElementById('canvas-holder');
+const UI_CONTAINER = document.getElementById('ui-holder');
 
 const SCENE = new THREE.Scene();
+const UI = new THREE.Scene();
+const ROOM_LOADER = new RoomLoader(SCENE, MANAGER)
+let PLAYER_LOADER = new PlayerLoader()
 const CAMERA = new THREE.OrthographicCamera((-135*(window.innerWidth/window.innerHeight)), (135*(window.innerWidth/window.innerHeight)), 135, -135, 1,1000)
+const UI_CAMERA = new THREE.OrthographicCamera((-135*(window.innerWidth/window.innerHeight)), (135*(window.innerWidth/window.innerHeight)), 135, -135, -1000,1000)
 const RENDERER = new THREE.WebGLRenderer({
     antialias: false,
     localClippingEnabled: true
 });
-const CAMERA_CONTROL = new MapControls(CAMERA, RENDERER.domElement)
+const UI_RENDERER = new THREE.WebGLRenderer({
+    antialias: false,
+    localClippingEnabled: true,
+    alpha: true
+});
+let CAMERA_CONTROL
+let LOADED_FONT
 const RAYCAST = new THREE.Raycaster()
-const ROOM = new Rooms()
 let ROOM_GRID
 let WALK_FINDER
 let PLAYER_MOVE = []
 let PLAYER
 let PIVOTx = 0
 let PIVOTz = 0
+let UI_Object = []
 
 var time, delta, moveTimer = 0;
 var useDeltaTiming = true, weirdTiming = 0;
@@ -57,7 +69,7 @@ if (!('getContext' in document.createElement('canvas'))) {
 // Also make sure webgl is enabled on the current machine
 if (WEBGL.isWebGLAvailable()) {
     // If everything is possible, start the app, otherwise show an error
-    init();
+    load();
     gameLoop();
 } else {
     let warning = WEBGL.getWebGLErrorMessage();
@@ -66,16 +78,21 @@ if (WEBGL.isWebGLAvailable()) {
     throw 'WebGL disabled or not supported';
 }
 
-function init() {
-    // Initiate Loading
+function load(){
     initManager()
+    initRoom()
+    FONT_LOADER.load( './texture/fonts/Bahnschrift_Regular.json', function ( font ) {
+        LOADED_FONT = font
+    });
+}
 
+function init() {
     // Initiate the Room
     initRenderer()
-    initCamera()
     initScene()
-    initRoom(ROOM)
+    initCamera()
     initPlayer()
+    initUI()
     window.addEventListener('resize', onWindowResize, false);
 }
 
@@ -89,21 +106,20 @@ function initManager() {
         console.log('Loading file: ' + managerUrl + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
     };
     MANAGER.onLoad = function () {
-        // Only allow control once content is fully loaded
-        // CANVAS_HOLDER.addEventListener('click', function () {
-        //     CONTROLS.lock();
-        // }, false);
-
+        init()
         console.log('Loading complete!');
         document.getElementById('progress').hidden = true;
     };
-    document.getElementById('progress').hidden = true;
 }
 
 function initRenderer(){
     RENDERER.setSize(window.innerWidth, window.innerHeight)
     RENDERER.setClearColor(0x303030)
     RENDERER.shadowMap.enabled = true
+
+    UI_RENDERER.setSize(window.innerWidth, window.innerHeight)
+    UI_RENDERER.setClearColor(0xFFFFFF, 0)
+    UI_RENDERER.shadowMap.enabled = true
 }
 
 function initCamera(){
@@ -112,110 +128,94 @@ function initCamera(){
     CAMERA.rotation.y = - Math.PI / 4;
     CAMERA.rotation.x = Math.atan( - 1 / Math.sqrt( 2 ) );
 
-    // CAMERA_CONTROL.minZoom = 1000;
-    // CAMERA_CONTROL.maxZoom = 100;
+    UI_CAMERA.position.set(20,140,150)
+    UI_CAMERA.updateProjectionMatrix();
+    UI_CAMERA.rotation.order = 'YXZ';
+    UI_CAMERA.rotation.y = - Math.PI / 4;
+    UI_CAMERA.rotation.x = Math.atan( - 1 / Math.sqrt( 2 ) );
     CAMERA_CONTROL.enableDamping = false;
-    // console.log(CAMERA_CONTROL.getDistance())
 }
 
-function initScene(){
-    // RAYCAST.layers.set(1)
-        
-    // ThirdPersonCamControl = new MapControls(ThirdPersonCam, RENDERER.domElement)
-
-    // ThirdPersonCamControl.maxDistance = 600;
-    // ThirdPersonCamControl.minDistance = 150;
-    // ThirdPersonCamControl.enableDamping = false;
-
-    CONTAINER.appendChild(RENDERER.domElement)
-}
-
-function initRoom(Room){
-    // Ground
-    let ground = new THREE.PlaneGeometry((Room.room.x*25),(Room.room.y*25))
-    let ground_texture = TEXTURE_LOADER.load('./texture/ground/'+Room.room.floor+'.png')
-    ground_texture.wrapS = THREE.RepeatWrapping
-    ground_texture.wrapT = THREE.RepeatWrapping
-    ground_texture.repeat.set(Room.room.x,Room.room.y)
-    let ground_material = new THREE.MeshBasicMaterial({
-        map: ground_texture,
-        side: THREE.DoubleSide
-    })
-    const ground_mesh = new THREE.Mesh(ground,ground_material)
-    ground_mesh.position.set((Room.room.x*25)/2,0,(Room.room.y*25)/2)
-    ground_mesh.rotation.x = -Math.PI / 2
-    // ground_mesh.layers.set(1)
-    SCENE.add(ground_mesh)
-
-    /* Wall
-        R = kanan
-        L = kiri
-    */
-    let wall_r = new THREE.PlaneGeometry(Room.room.x*25,100)
-    let wall_r_texture = TEXTURE_LOADER.load('./texture/wall/'+Room.room.wall+'.png')
-    wall_r_texture.wrapS = THREE.RepeatWrapping
-    wall_r_texture.wrapT = THREE.RepeatWrapping
-    wall_r_texture.repeat.set(Room.room.x,1)
-    let wall_r_material = new THREE.MeshBasicMaterial({
-        map: wall_r_texture,
-        side: THREE.DoubleSide
-    })
-    const wall_r_mesh = new THREE.Mesh(wall_r, wall_r_material)
-    wall_r_mesh.position.set((Room.room.x*25)/2,50,0)
-    SCENE.add(wall_r_mesh)
-
-    let wall_l = new THREE.PlaneGeometry(Room.room.y*25,100)
-    let wall_l_texture = TEXTURE_LOADER.load('./texture/wall/'+Room.room.wall+'.png')
-    wall_l_texture.wrapS = THREE.RepeatWrapping
-    wall_l_texture.wrapT = THREE.RepeatWrapping
-    wall_l_texture.repeat.set(Room.room.y,1)
-    let wall_l_material = new THREE.MeshBasicMaterial({
-        map: wall_l_texture,
-        side: THREE.DoubleSide
-    })
-    const wall_l_mesh = new THREE.Mesh(wall_l, wall_l_material)
-    wall_l_mesh.position.set(0,50,(Room.room.y*25)/2)
-    wall_l_mesh.rotation.y = -Math.PI / 2
-    SCENE.add(wall_l_mesh)
-
-    // grid helper
-    let gridHelper = new THREE.GridHelper( (Room.room.x*25), Room.room.x );
-    gridHelper.position.set((Room.room.x*25)/2,0,(Room.room.y*25)/2);
-    SCENE.add(gridHelper)
-    ROOM_GRID = new PF.Grid(Room.room.x, Room.room.y)
-    WALK_FINDER = new PF.AStarFinder({
-        allowDiagonal: true
-    });
-
-    //lights
+function initUI(){
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    SCENE.add(ambientLight);
+    UI.add(ambientLight);
 
     const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
     dirLight.position.set(0, 20, 10); // x, y, z
-    SCENE.add(dirLight);
-    
-    //objects
-    Room.objects.forEach(element => {
-        element.mesh.position.set((element.position_x)*25,element.position_y,(element.position_z)*25)
-        SCENE.add(element.mesh)
-        for (let index = 0; index < element.size_x; index++) {
-            for (let index2 = 0; index2 < element.size_z; index2++) {
-                ROOM_GRID.setWalkableAt(element.position_x+index-1,element.position_z+index2-1,false)
-                console.log("Position: ("+(element.position_x+index)+","+(element.position_z+index2)+") is blocked")
+    UI.add(dirLight);
+    console.log(ROOM_LOADER.getRoomName())
+    let geometry = new TextGeometry( ROOM_LOADER.getRoomName(), {
+        font: LOADED_FONT,
+        size: 10,
+        height: 0,
+        bevelEnabled: false,
+    } );
+    let mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0xffffff}))
+    mesh.rotation.y = -Math.PI/4
+    mesh.position.set(-5,140,-150)
+    UI_Object.push(mesh)
+    UI.add(mesh)
+
+    geometry = new TextGeometry( "Back to Lobby", {
+        font: LOADED_FONT,
+        size: 7,
+        height: 0,
+        bevelEnabled: false,
+    } );
+        mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0xffffff}))
+        mesh.rotation.y = -Math.PI/4
+        mesh.position.set(-5,-150,-150)
+        mesh.userData = { URL: "./pages/lobby.html"}
+        mesh.name = "ui_back_btn"
+        UI.add(mesh)
+
+        geometry = new THREE.PlaneGeometry(70,40)
+        mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({color:0x000000,opacity:0.2,transparent:true}))
+        mesh.rotation.y = -Math.PI/4
+        mesh.position.set(17.5,-150,-127.5)
+        mesh.userData = { URL: "./pages/lobby.html"}
+        mesh.name = "ui_back_btn"
+        UI.add(mesh)
+    document.addEventListener("click", function(event){
+        /* which = 1 itu click kiri */
+        /* which = 2 itu scroll click */
+        /* which = 3 itu click kanan */
+            if(event.which == 1){
+                let mouse = {}
+                let w = window.innerWidth
+                let h = window.innerHeight
+                mouse.x = event.clientX/w *2 -1
+                mouse.y = event.clientY/h *(-2) + 1
+            
+                RAYCAST.setFromCamera(mouse,UI_CAMERA)
+                let items = RAYCAST.intersectObjects(UI.children,false)
+                items.forEach(i=>{
+                    if (i.object.name =="ui_back_btn"){
+                        window.open(i.object.userData.URL, "_self")
+                    }
+                })
             }
-        }
+        })
+}
+
+function initScene(){
+    CONTAINER.appendChild(RENDERER.domElement)
+    UI_CONTAINER.appendChild(UI_RENDERER.domElement)
+    CAMERA_CONTROL = new MapControls(CAMERA, UI_CONTAINER)
+}
+
+function initRoom(){
+    ROOM_LOADER.Load(0)
+    WALK_FINDER = new PF.AStarFinder({
+        allowDiagonal: true
     });
-
-
-    console.log(PF)
- 
+    ROOM_GRID = ROOM_LOADER.getGrid()
 }
 
 function initPlayer(){
-    PLAYER = new PLAYER_OBJ().group
+    PLAYER = PLAYER_LOADER.Load()
 
-    PLAYER.position.set(137.5,25,12.5);
+    PLAYER.position.copy(ROOM_LOADER.spawn)
     PLAYER.speedMultiplier = 1
     SCENE.add(PLAYER);
 
@@ -232,56 +232,44 @@ function initPlayer(){
         
             RAYCAST.setFromCamera(mouse,CAMERA)
             // console.log(CAMERA.zoom)
-            let items = RAYCAST.intersectObjects(SCENE.children,false)
-            // console.log(items)
+            let items = RAYCAST.intersectObjects(SCENE.children,true)
+            console.log(items)
             items.forEach(i=>{
-                let newPoint = {}
-                newPoint.x = Math.round(i.point.x/25)
-                newPoint.z = Math.round(i.point.z/25)
+                if(i.object.parent.name=="clickable"){
+                    console.log(i.object.parent.name)
+                    window.open(i.object.parent.userData.URL)
+                    items.pop()
+                } else {
+                    let newPoint = {}
+                    newPoint.x = Math.round(i.point.x/25)
+                    newPoint.z = Math.round(i.point.z/25)
+    
+                    if(newPoint.x<0){
+                        newPoint.x = 0
+                    }
+                    if(newPoint.z<0){
+                        newPoint.z = 0
+                    }
+    
+                    if(newPoint.x>ROOM_LOADER.x-1){
+                        newPoint.x = ROOM_LOADER.x-1
+                    }
+                    if(newPoint.z>ROOM_LOADER.y-1){
+                        newPoint.z = ROOM_LOADER.y-1
+                    }
+    
+                    
+                    let startPos = {
+                        x: Math.floor((PLAYER.position.x+12.5)/25)-1,
+                        z: Math.floor((PLAYER.position.z+12.5)/25)-1
+                    }
+                    PLAYER_MOVE.pop()
+                    var gridClone = ROOM_GRID.clone()
+                    var path = WALK_FINDER.findPath(startPos.x,startPos.z,newPoint.x,newPoint.z, gridClone)
+                    // PLAYER_MOVE.push([newPoint.x,newPoint.z,startPos.x,startPos.z])
+                    PLAYER_MOVE.push(path)
+                }
 
-                if(newPoint.x<0){
-                    newPoint.x = 0
-                }
-                if(newPoint.z<0){
-                    newPoint.z = 0
-                }
-
-                if(newPoint.x>ROOM.room.x-1){
-                    newPoint.x = ROOM.room.x-1
-                }
-                if(newPoint.z>ROOM.room.y-1){
-                    newPoint.z = ROOM.room.y-1
-                }
-
-                
-                let startPos = {
-                    x: Math.floor((PLAYER.position.x+12.5)/25)-1,
-                    z: Math.floor((PLAYER.position.z+12.5)/25)-1
-                }
-                PLAYER_MOVE.pop()
-                var gridClone = ROOM_GRID.clone()
-                var path = WALK_FINDER.findPath(startPos.x,startPos.z,newPoint.x,newPoint.z, gridClone)
-                // PLAYER_MOVE.push([newPoint.x,newPoint.z,startPos.x,startPos.z])
-                PLAYER_MOVE.push(path)
-                items.pop()
-
-                //rotate player
-/*               if(dif.x < 0){
-                    player_mesh.rotation.y = -Math.PI/2
-                    console.log("x-")
-                } else if(dif.x > 0){
-                    player_mesh.rotation.y = 0
-                    console.log("x+")
-                }
-                if(dif.z < 0){
-                    player_mesh.rotation.y = Math.PI
-                    console.log("z-")
-                } else if(dif.z > 0){
-                    player_mesh.rotation.y = Math.PI/2
-                    console.log("Z+")
-                }
-*/
-                // console.log(PLAYER.position)
             })
         }
     })
@@ -309,6 +297,7 @@ function gameLoop() {
         // Process player input
         if(PLAYER_MOVE.length > 0) {
             if(PLAYER_MOVE[0].length > 1){
+                PLAYER_LOADER.PlayerWalk()
                 let start_position = {
                     x: PLAYER_MOVE[0][0][0],
                     z: PLAYER_MOVE[0][0][1]
@@ -337,30 +326,29 @@ function gameLoop() {
                 } else {
                     PIVOTz++
                 }
+                if(xMove == -1 && zMove == -1){
+                    if(PIVOTx > 0 && PIVOTz == 0){
+                        PLAYER.rotation.y = Math.PI
+                    } else if(PIVOTz > 0 && PIVOTx == 0){
+                        PLAYER.rotation.y = -Math.PI/2
+                    }
+                } else if (xMove == -1 && zMove == 1){
+                    PLAYER.rotation.y = 0
+                } else if (xMove == 1 && zMove == -1){
+                    PLAYER.rotation.y = Math.PI/2
+                }
                 
                 if (PIVOTx !== 0 && PIVOTz !== 0){
-                    console.log("Player walks from ("+PLAYER_MOVE[0][0]+") to (" + PLAYER_MOVE[0][1]+")")
-                    console.log("Walking Queue: "+PLAYER_MOVE)
                     PLAYER_MOVE[0].shift()
                     PIVOTx = 0
                     PIVOTz = 0
                     if(PLAYER_MOVE[0].length === 1){
                         PLAYER_MOVE.shift()
+                        PLAYER_LOADER.PlayerStop()
                     }
                 }
             }
             
-
-
-            // if(!(ROOM.x_map.has(Math.floor(PLAYER.position.x/25)) && ROOM.z_map.has(Math.floor(PLAYER.position.z/25)))){
-            //     // console.log(Math.floor(PLAYER.position.x/25))
-            // }
-            // PLAYER_MOVE -= Math.floor(Math.max(Math.abs(dif.x), Math.abs(dif.y), Math.abs(dif.z)))*delta
-
-            // PLAYER.translateX(dif.x *delta)
-            // PLAYER.translateZ(dif.z *delta)
-            // PLAYER_MOVE -= Math.floor(Math.max(Math.abs(dif.x), Math.abs(dif.y), Math.abs(dif.z)))*delta
-            // console.log(PLAYER_MOVE)
         }
     
         // Broadcast movement to other players n times per second
@@ -393,10 +381,41 @@ function gameLoop() {
     
         prevTime = time;
         RENDERER.render(SCENE, CAMERA);
+        UI_RENDERER.render(UI, UI_CAMERA);
+}
+
+document.getElementById('roombutton').addEventListener("click", changeRoomRed)
+
+function changeRoomRed(){
+    SCENE.remove(PLAYER)
+    ROOM_LOADER.Load(1)
+    ROOM_GRID = ROOM_LOADER.getGrid()
+    PLAYER = PLAYER_LOADER.Load()
+
+    UI_Object.forEach(e => {
+        UI.remove(e)
+    });
+    let geometry = new TextGeometry( ROOM_LOADER.getRoomName(), {
+        font: LOADED_FONT,
+        size: 10,
+        height: 0,
+        bevelEnabled: false,
+    } );
+    let mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0xffffff}))
+    mesh.rotation.y = -Math.PI/4
+    mesh.position.set(-5,140,-150)
+    UI_Object.push(mesh)
+    UI.add(mesh)
+
+    PLAYER.position.copy(ROOM_LOADER.spawn)
+    PLAYER.speedMultiplier = 1
+    SCENE.add(PLAYER);
 }
 
 function onWindowResize(){
     CAMERA.aspect = window.innerWidth / window.innerHeight;
     CAMERA.updateProjectionMatrix();
+    UI_CAMERA.aspect = window.innerWidth / window.innerHeight;
+    UI_CAMERA.updateProjectionMatrix();
     RENDERER.setSize(window.innerWidth, window.innerHeight);
 }
