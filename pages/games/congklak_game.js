@@ -14,17 +14,14 @@ import { MapControls } from '../../three.js/examples/jsm/controls/OrbitControls.
 import { PointerLockControls} from '../../three.js/examples/jsm/controls/PointerLockControls.js';
 import {GLTFLoader} from '../../three.js/examples/jsm/loaders/GLTFLoader.js' 
 import {FontLoader} from '../../three.js/examples/jsm/loaders/FontLoader.js' 
-import Congklak_big from "../../object/congklak_game_board.js";
-import Desk from "../../object/desk/desk.js"
-import Player from "../../object/player/player.js"
+import { TextGeometry } from '../../three.js/examples/jsm/geometries/TextGeometry.js'
+import Congklak_big from "../../furniture/congklak_game_board.js";
+import Desk from "../../furniture/desk.js"
+import Player from "../../furniture/player.js"
 
 // Variables
 const MANAGER = new THREE.LoadingManager();
-const GLTF_LOADER = new GLTFLoader(MANAGER);
-const CUBE_TEXTURE_LOADER = new THREE.CubeTextureLoader();
 const FONT_LOADER = new FontLoader(MANAGER);
-const TEXTURE_LOADER = new THREE.TextureLoader();
-const FONT_SIZE = 0.08;
 
 const CONTAINER = document.getElementById('canvas-holder');
 const UI_CONTAINER = document.getElementById('ui-holder');
@@ -41,7 +38,6 @@ const UI_RENDERER = new THREE.WebGLRenderer({
     antialias: false,
     localClippingEnabled: true
 });
-// const CAMERA_CONTROL = new MapControls(CAMERA, RENDERER.domElement)
 const RAYCAST = new THREE.Raycaster()
 const BOARD = new Congklak_big().group
 const DESK = new Desk().group
@@ -50,9 +46,11 @@ var curr_turn = 1;
 var end_game = false;
 var PLAYER_CHOOSE;
 var ONGOING_TURN = false;
+let LOADED_FONT;
 
 let ui_p1;
 let ui_p2;
+let ui_status = [];
 
 let congklak_row1 = []
 let congklak_row2 = []
@@ -60,6 +58,10 @@ let congklak_p1 = []
 let congklak_p2 = []
 let circle_row1 = []
 let circle_row2 = []
+let big_circle = [];
+let counter_p1 = []
+let counter_p2 = []
+let counter_big = []
 let s_circle_p1 = [7,7,7,7,7,7,7];
 let b_circle = [0,0];
 let s_circle_p2 = [7,7,7,7,7,7,7];
@@ -88,7 +90,7 @@ if (!('getContext' in document.createElement('canvas'))) {
 // Also make sure webgl is enabled on the current machine
 if (WEBGL.isWebGLAvailable()) {
     // If everything is possible, start the app, otherwise show an error
-    init();
+    load();
     gameLoop();
 } else {
     let warning = WEBGL.getWebGLErrorMessage();
@@ -98,9 +100,6 @@ if (WEBGL.isWebGLAvailable()) {
 }
 
 function init() {
-    // Initiate Loading
-    initManager()
-
     // Initiate the Game
     initRenderer()
     initCamera()
@@ -116,16 +115,22 @@ function initManager() {
     };
 
     MANAGER.onProgress = function(managerUrl, itemsLoaded, itemsTotal) {
+        document.getElementById('progress-bar').style.width = (itemsLoaded / itemsTotal * 100) + '%';
         console.log('Loading file: ' + managerUrl + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
     };
     MANAGER.onLoad = function () {
-        // Only allow control once content is fully loaded
-        // CANVAS_HOLDER.addEventListener('click', function () {
-        //     CONTROLS.lock();
-        // }, false);
-
+        init()
+        document.getElementById('progress').hidden = true;
         console.log('Loading complete!');
     };
+}
+
+function load(){
+    initManager()
+    FONT_LOADER.load( '../../texture/fonts/Bahnschrift_Regular.json', function ( font ) {
+        LOADED_FONT = font
+    })
+
 }
 
 function initRenderer(){
@@ -172,13 +177,24 @@ function initUI(){
     dirLight.position.set(0, 20, 10); // x, y, z
     UI.add(dirLight);
 
+
+    for (let i = 0; i < 2; i++) {
+        let geometry = new TextGeometry( "Player Name", {
+            font: LOADED_FONT,
+            size: 10,
+            height: 0,
+            bevelEnabled: false,
+        } );
+        let mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0x000000}))
+        mesh.rotation.y = -Math.PI/4
+        mesh.position.set(100,110-(i*130),50)
+        UI.add(mesh)
+    }
+
     const ui_background = new THREE.PlaneGeometry(180,120);
     const ui_padding = new THREE.PlaneGeometry(170,105);
     const ui_status = new THREE.PlaneGeometry(100,50);
     const ui_btn_background = new THREE.PlaneGeometry(180,40);
-    let ui_white = new THREE.MeshBasicMaterial({
-        color: 0xFFFFFF,
-    })
     let ui_pink = new THREE.MeshBasicMaterial({
         color: 0xFFCECE,
     })
@@ -202,12 +218,10 @@ function initUI(){
     let ui_pink_btn = new THREE.MeshBasicMaterial({
         color: 0xFF3366,
     })
-    let ui_black = new THREE.MeshBasicMaterial({
-        color: 0x000,
-    })
     ui_p1 = new THREE.Mesh(ui_background,ui_pink_dark);
     let ui_p1_padding = new THREE.Mesh(ui_padding,ui_pink);
     let ui_p1_status = new THREE.Mesh(ui_status,ui_pink_light);
+
     ui_p2 = new THREE.Mesh(ui_background,ui_blue_dark);
     let ui_p2_padding = new THREE.Mesh(ui_padding,ui_blue);
     let ui_p2_status = new THREE.Mesh(ui_status,ui_blue_light);
@@ -249,6 +263,28 @@ function initUI(){
     UI.add(ui_btn)
     // UI.add(mesh)
 }
+function updateStatus(status1,status2){
+    if(ui_status.length > 0){
+        ui_status.forEach(e => {
+            UI.remove(e)
+        });
+        ui_status = []
+    }
+    let statusText = [status1,status2]
+    for (let i = 0; i < 2; i++) {
+        let geometry = new TextGeometry( statusText[i], {
+            font: LOADED_FONT,
+            size: 10,
+            height: 0,
+            bevelEnabled: false,
+        } );
+        let mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0x000000}))
+        mesh.rotation.y = -Math.PI/4
+        mesh.position.set(100,155-(i*130),50)
+        ui_status.push(mesh)
+        UI.add(mesh)
+    }
+}
 
 function initGame(){
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -264,6 +300,37 @@ function initGame(){
     hand.position.set(0,0,0)
     hand.rotation.x = - Math.PI/2
     hand.scale.set(1.7,1.7,1.7)
+
+    for (let i = 0; i < 8; i++) {
+        const box_geometry = RoundedRectangle(-5,20,15,15)
+        let mesh = new THREE.Mesh(box_geometry, new THREE.MeshBasicMaterial({color:0x000000}))
+        mesh.scale.set(0.25,0.25,0.25)
+        mesh.rotation.x = -Math.PI/2
+        if(i == 0){
+            mesh.position.set(p2_big,10.2,162)
+        } else {
+            if(i%2 == 1){
+                mesh.position.set(p1_loc[i-1],10.2,162)
+            } else {
+                mesh.position.set(p1_loc[i-1],10.2,172)
+            }
+        }
+        SCENE.add(mesh)
+        mesh = new THREE.Mesh(box_geometry, new THREE.MeshBasicMaterial({color:0x000000}))
+        mesh.scale.set(0.25,0.25,0.25)
+        mesh.rotation.x = -Math.PI/2
+        if(i == 0){
+            mesh.position.set(p1_big,10.2,123)
+        } else {
+            if(i%2 == 1){
+                mesh.position.set(p1_loc[i-1],10.2,123)
+            } else {
+                mesh.position.set(p1_loc[i-1],10.2,113)
+            }
+        }
+        SCENE.add(mesh)
+    }
+
 
     SCENE.add(BOARD)
     SCENE.add(hand)
@@ -284,18 +351,15 @@ function initGame(){
                 RAYCAST.setFromCamera(mouse,CAMERA)
                 // console.log(CAMERA.zoom)
                 let items = RAYCAST.intersectObjects(SCENE.children,false)
-                console.log(items)
                 items.forEach(i=>{
                     if(PLAYER_CHOOSE == null){
                         if(curr_turn == 1){
                             if(i.object.name.startsWith("player1") && s_circle_p1[parseInt(i.object.name.charAt(12))] > 0){
                                 PLAYER_CHOOSE = i.object.name
-                                console.log("Player1 choosed:" + PLAYER_CHOOSE)
                             }
                         } else {
                             if(i.object.name.startsWith("player2") && s_circle_p2[parseInt(i.object.name.charAt(12))] > 0){
                                 PLAYER_CHOOSE = i.object.name
-                                console.log("Player2 choosed:" + PLAYER_CHOOSE)
                             }
                         }
                     } else {
@@ -309,24 +373,92 @@ function initGame(){
 function distributeSeed(a1,a2,b1,b2){
     console.log(s_circle_p1,b_circle[0],s_circle_p2,b_circle[1])
     if(curr_turn == 1){
-        document.getElementById('player1-status').innerHTML = "Your Turn"
-        document.getElementById('player2-status').innerHTML = ""
+       updateStatus("Your Turn","Waiting")
         ui_p1.material.color = new THREE.Color(0xFF5D79);
         ui_p1.material.needsUpdate = true
         ui_p2.material.color = new THREE.Color(0xBCE5FB);
         ui_p2.material.needsUpdate = true
     } else {
-        document.getElementById('player2-status').innerHTML = "Your Turn"
-        document.getElementById('player1-status').innerHTML = ""
+       updateStatus("Waiting","Your Turn")
         ui_p1.material.color = new THREE.Color(0xFFCECE);
         ui_p1.material.needsUpdate = true
         ui_p2.material.color = new THREE.Color(0x0B97F4);
         ui_p2.material.needsUpdate = true
     }
 
-    let congklak_row1_length = 0
-    let congklak_row2_length = 0    
 
+    if(counter_p1.length > 0){
+        counter_p1.forEach(e =>{
+            SCENE.remove(e)
+        })
+        counter_p1 = []
+    }
+    for (let i = 0; i < a1.length; i++) {
+        const geometry = new TextGeometry(a1[i].toString(),{
+            font: LOADED_FONT,
+            size: 5,
+            height: 0,
+            bevelEnabled: false,
+        } );
+        let mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0xffffff}))
+        mesh.rotation.x = -Math.PI/2
+        if(i%2 == 0){
+            mesh.position.set(p1_loc[i]-5,10.3,125)
+        } else {
+            mesh.position.set(p1_loc[i]-5,10.3,115)
+        }
+        counter_p1.push(mesh)
+        SCENE.add(mesh)
+    }
+    if(counter_p2.length > 0){
+        counter_p2.forEach(e =>{
+            SCENE.remove(e)
+        })
+        counter_p2 = []
+    }
+    for (let i = 0; i < b1.length; i++) {
+        const geometry = new TextGeometry(b1[i].toString(),{
+            font: LOADED_FONT,
+            size: 5,
+            height: 0,
+            bevelEnabled: false,
+        } );
+        let mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0xffffff}))
+        mesh.rotation.x = -Math.PI/2
+        if(i%2 == 0){
+            mesh.position.set(p2_loc[i]-5,10.3,165)
+        } else {
+            mesh.position.set(p2_loc[i]-5,10.3,175)
+        }
+        counter_p2.push(mesh)
+        SCENE.add(mesh)
+    }
+
+    if(counter_big.length > 0){
+        counter_big.forEach(e =>{
+            SCENE.remove(e)
+        })
+        counter_big = []
+    }
+    let text = [a2,b2]
+    for (let i = 0; i < 2; i++) {
+        const geometry = new TextGeometry(text[i].toString(),{
+            font: LOADED_FONT,
+            size: 5,
+            height: 0,
+            bevelEnabled: false,
+        } );
+        let mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0xffffff}))
+        mesh.rotation.x = -Math.PI/2
+        if(i == 0){
+            mesh.position.set(p1_big-5,10.3,125)
+        } else {
+            mesh.position.set(p2_big-5,10.3,165)
+        }
+        counter_big.push(mesh)
+        SCENE.add(mesh)
+    }
+    
     const congklak_seed_geo = new THREE.SphereGeometry(1,6,6);
     let seed = new THREE.MeshLambertMaterial({
         color: 0xFFFFFF,
@@ -335,74 +467,124 @@ function distributeSeed(a1,a2,b1,b2){
     let wood_dark = new THREE.MeshBasicMaterial({
         color: 0x36594E,
     })
+    
+    if(big_circle.length == 0){
+        let geo_b_circle = new THREE.CircleGeometry(12,12);
 
-    let geo_circle = new THREE.CircleGeometry(5,9);
-    let geo_b_circle = new THREE.CircleGeometry(12,12);
+        const b_circle_1 = new THREE.Mesh(geo_b_circle, wood_dark)
+        b_circle_1.position.set(p1_big,10.1,142)
+        b_circle_1.rotation.x = -Math.PI/2
+        big_circle.push(b_circle_1)
+        SCENE.add(b_circle_1)
+        
+        const b_circle_2 = new THREE.Mesh(geo_b_circle, wood_dark)
+        b_circle_2.position.set(p2_big,10.1,142)
+        b_circle_2.rotation.x = -Math.PI/2
+        big_circle.push(b_circle_2)
+        SCENE.add(b_circle_2)
+    }
 
-    for (let i = 0; i < a1.length; i++) {
-        circle_row1[i] = new THREE.Mesh(geo_circle, wood_dark)
-        circle_row1[i].position.set(p1_loc[i],10.1,135)
-        circle_row1[i].rotation.x = -Math.PI/2
-        circle_row1[i].name = "player1_row_"+i
-        SCENE.add(circle_row1[i])
-        for (let j = 0; j < a1[i]; j++){
-            congklak_row1[congklak_row1_length] = new THREE.Mesh(congklak_seed_geo, seed)
-            congklak_row1[congklak_row1_length].position.set((Math.random()*6)+p1_loc[i]-3,10.2+j/10,(Math.random()*5)+133)
-            SCENE.add(congklak_row1[congklak_row1_length])
-            congklak_row1_length++
+    if(congklak_p1.length != a2){
+        congklak_p1.forEach(e => {
+            SCENE.remove(e)
+        });
+        congklak_p1 = [];
+        for (let i = 0; i < a2; i++) {
+            let congklak = new THREE.Mesh(congklak_seed_geo,seed)
+            congklak.position.set((Math.random()*10)+p1_big-5,10+i/10,(Math.random()*15)+135)
+            congklak_p1.push(congklak)
+            SCENE.add(congklak)
         }
     }
-    for (let i = 0; i < b1.length; i++) {
-        circle_row2[i] = new THREE.Mesh(geo_circle, wood_dark)
-        circle_row2[i].position.set(p2_loc[i],10.1,150)
-        circle_row2[i].rotation.x = -Math.PI/2
-        circle_row2[i].name = "player2_row_"+i
-        SCENE.add(circle_row2[i])
-        for (let j = 0; j < b1[i]; j++){
-            congklak_row2[congklak_row2_length] = new THREE.Mesh(congklak_seed_geo, seed)
-            congklak_row2[congklak_row2_length].position.set((Math.random()*6)+p2_loc[i]-3,10.2+j/10,(Math.random()*5)+148)
-
-            SCENE.add(congklak_row2[congklak_row2_length])
-            congklak_row2_length++
+    if(congklak_p2.length != b2){
+        congklak_p2.forEach(e => {
+            SCENE.remove(e)
+        })
+        for (let i = 0; i < b2; i++) {
+            congklak_p2[i] = new THREE.Mesh(congklak_seed_geo,seed)
+            congklak_p2[i].position.set((Math.random()*10)+p2_big-5,10+i/10,(Math.random()*15)+135)
+            SCENE.add(congklak_p2[i])
         }
     }
-    const b_circle_1 = new THREE.Mesh(geo_b_circle, wood_dark)
-    b_circle_1.position.set(p1_big,10.1,142)
-    b_circle_1.rotation.x = -Math.PI/2
-    SCENE.add(b_circle_1)
-    for (let i = 0; i < a2; i++) {
-        congklak_p1[i] = new THREE.Mesh(congklak_seed_geo,seed)
-        congklak_p1[i].position.set((Math.random()*10)+p1_big-5,10+i/10,(Math.random()*15)+135)
-        SCENE.add(congklak_p1[i])
+
+    if(circle_row1.length == 0){
+        let geo_circle = new THREE.CircleGeometry(5,9);
+        for (let i = 0; i < 7; i++) {
+        let circle = new THREE.Mesh(geo_circle, wood_dark)
+            circle.position.set(p1_loc[i],10.1,135)
+            circle.rotation.x = -Math.PI/2
+            circle.name = "player1_row_"+i
+            circle_row1.push(circle)
+            SCENE.add(circle)
+            let arrayTemp = []
+            for (let j = 0; j < 7; j++) {
+                let congklak = new THREE.Mesh(congklak_seed_geo, seed)
+                congklak.position.set((Math.random()*6)+p1_loc[i]-3,10.2+(j/10),(Math.random()*5)+133)
+                SCENE.add(congklak)
+                arrayTemp.push(congklak)                    
+            }
+            congklak_row1.push(arrayTemp)
+        }
     }
-    const b_circle_2 = new THREE.Mesh(geo_b_circle, wood_dark)
-    b_circle_2.position.set(p2_big,10.1,142)
-    b_circle_2.rotation.x = -Math.PI/2
-    SCENE.add(b_circle_2)
-    for (let i = 0; i < b2; i++) {
-        congklak_p2[i] = new THREE.Mesh(congklak_seed_geo,seed)
-        congklak_p2[i].position.set((Math.random()*10)+p2_big-5,10+i/10,(Math.random()*15)+135)
-        SCENE.add(congklak_p2[i])
+
+    for (let i = 0; i < 7; i++) {
+        if(congklak_row1[i].length != a1[i]){
+            let arrayTemp = []
+            congklak_row1[i].forEach(e => {
+                SCENE.remove(e)
+            })
+            congklak_row1[i] = []
+            for (let j = 0; j < a1[i]; j++){
+                let congklak = new THREE.Mesh(congklak_seed_geo, seed)
+                congklak.position.set((Math.random()*6)+p1_loc[i]-3,10.2+(j/10),(Math.random()*5)+133)
+                SCENE.add(congklak)
+                arrayTemp.push(congklak)
+            }
+            congklak_row1[i] = arrayTemp
+        }
+    }
+
+
+    if(circle_row2.length == 0){
+        let geo_circle = new THREE.CircleGeometry(5,9);
+        for (let i = 0; i < 7; i++) {
+        let circle = new THREE.Mesh(geo_circle, wood_dark)
+            circle.position.set(p2_loc[i],10.1,150)
+            circle.rotation.x = -Math.PI/2
+            circle.name = "player2_row_"+i
+            circle_row2.push(circle)
+            SCENE.add(circle)
+            let arrayTemp = []
+            for (let j = 0; j < 7; j++) {
+                let congklak = new THREE.Mesh(congklak_seed_geo, seed)
+                congklak.position.set((Math.random()*6)+p2_loc[i]-3,10.2+j/10,(Math.random()*5)+148)
+                SCENE.add(congklak)
+                arrayTemp.push(congklak)                    
+            }
+            congklak_row2.push(arrayTemp)
+        }
+    }
+
+    for (let i = 0; i < 7; i++) {
+        if(congklak_row2[i].length != b1[i]){
+            let arrayTemp = []
+            congklak_row2[i].forEach(e => {
+                SCENE.remove(e)
+            })
+            congklak_row2[i] = []
+            for (let j = 0; j < b1[i]; j++){
+                let congklak = new THREE.Mesh(congklak_seed_geo, seed)
+                congklak.position.set((Math.random()*6)+p2_loc[i]-3,10.2+j/10,(Math.random()*5)+148)
+                SCENE.add(congklak)
+                arrayTemp.push(congklak)
+            }
+            congklak_row2[i] = arrayTemp
+        }
     }
 }
 
-function removeSeeds(){
-    for (let i = 0; i < congklak_row1.length; i++) {
-        SCENE.remove(congklak_row1[i])
-    }
-    for (let i = 0; i < congklak_row2.length; i++) {
-        SCENE.remove(congklak_row2[i])
-    }
-    for (let i = 0; i < congklak_p1.length; i++) {
-        SCENE.remove(congklak_p1[i])
-    }
-    for (let i = 0; i < congklak_p2.length; i++) {
-        SCENE.remove(congklak_p2[i])
-    }
-    for (let i = 0; i < circle_row1.length; i++) {
-        SCENE.remove(circle_row1[i])
-        SCENE.remove(circle_row2[i])
-    }
+function randomizeSeedLocation(){
+
 }
 
 var distribute = (player_input, player, congklak_temp) => new Promise(resolve => {
@@ -454,21 +636,18 @@ var distribute = (player_input, player, congklak_temp) => new Promise(resolve =>
             if((player_input+j)%15 < 7){
                 array[(player_input+j)%15]++;
                 hand.position.set(loc[(player_input+j)%15],50,hand_z)
-                removeSeeds()
                 distributeSeed(s_circle_p1,b_circle[0],s_circle_p2,b_circle[1]);
                 i--
                 j++;
             } else if (((player_input+j)%15) == 7){
                 big[player-1]++;
                 hand.position.set(loc_big,50,hand_z_big)
-                removeSeeds()
                 distributeSeed(s_circle_p1,b_circle[0],s_circle_p2,b_circle[1]);
                 i--
                 j++;
             } else {
                 enemy_array[(((player_input+j)%15)%8)]++;
                 hand.position.set(enemy_loc[(((player_input+j)%15)%8)],50,hand_enemy_z)
-                removeSeeds()
                 distributeSeed(s_circle_p1,b_circle[0],s_circle_p2,b_circle[1]);
                 i--
                 j++;
@@ -563,7 +742,6 @@ var checkTurn = (player_input, player, congklak_temp, j) => new Promise(resolve 
         ONGOING_TURN = false
         PLAYER_CHOOSE = null
     }
-    removeSeeds()
     distributeSeed(s_circle_p1,b_circle[0],s_circle_p2,b_circle[1]);
     resolve([PLAYER_CHOOSE,player_input, curr_turn, congklak_temp]);
     return;
@@ -649,6 +827,87 @@ function gameLoop() {
         RENDERER.render(SCENE, CAMERA);
         UI_RENDERER.render(UI, UI_CAMERA);
 }
+
+function RoundedRectangle( w, h, r, s ) { // width, height, radius corner, smoothness
+		
+    // helper const's
+    const wi = w / 2 - r;		// inner width
+    const hi = h / 2 - r;		// inner height
+    const w2 = w / 2;			// half width
+    const h2 = h / 2;			// half height
+    const ul = r / w;			// u left
+    const ur = ( w - r ) / w;	// u right
+    const vl = r / h;			// v low
+    const vh = ( h - r ) / h;	// v high	
+    
+    let positions = [
+    
+         wi, hi, 0, -wi, hi, 0, -wi, -hi, 0, wi, -hi, 0
+         
+    ];
+    
+    let uvs = [
+        
+        ur, vh, ul, vh, ul, vl, ur, vl
+        
+    ];
+    
+    let n = [
+        
+        3 * ( s + 1 ) + 3,  3 * ( s + 1 ) + 4,  s + 4,  s + 5,
+        2 * ( s + 1 ) + 4,  2,  1,  2 * ( s + 1 ) + 3,
+        3,  4 * ( s + 1 ) + 3,  4, 0
+        
+    ];
+    
+    let indices = [
+        
+        n[0], n[1], n[2],  n[0], n[2],  n[3],
+        n[4], n[5], n[6],  n[4], n[6],  n[7],
+        n[8], n[9], n[10], n[8], n[10], n[11]
+        
+    ];
+    
+    let phi, cos, sin, xc, yc, uc, vc, idx;
+    
+    for ( let i = 0; i < 4; i ++ ) {
+    
+        xc = i < 1 || i > 2 ? -wi : wi;
+        yc = i < 2 ? -hi : hi;
+        
+        uc = i < 1 || i > 2 ? ur : ul;
+        vc = i < 2 ? vh : vl;
+            
+        for ( let j = 0; j <= s; j ++ ) {
+        
+            phi = Math.PI / 2  *  ( i + j / s );
+            cos = Math.cos( phi );
+            sin = Math.sin( phi );
+
+            positions.push( xc + r * cos, yc + r * sin, 0 );
+
+            uvs.push( uc + ul * cos, vc + vl * sin );
+                    
+            if ( j < s ) {
+            
+                idx =  ( s + 1 ) * i + j + 4;
+                indices.push( i, idx, idx + 1 );
+                
+            }
+            
+        }
+        
+    }
+        
+    const geometry = new THREE.BufferGeometry( );
+    geometry.setIndex( new THREE.BufferAttribute( new Uint32Array( indices ), 1 ) );
+    geometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array( positions ), 3 ) );
+    geometry.setAttribute( 'uv', new THREE.BufferAttribute( new Float32Array( uvs ), 2 ) );
+    
+    return geometry;	
+    
+}
+
 
 function onWindowResize(){
     CAMERA.aspect = window.innerWidth / window.innerHeight;

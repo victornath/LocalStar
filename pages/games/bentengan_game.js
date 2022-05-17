@@ -1,28 +1,15 @@
-/*
-    Local Star
-
-    Coding Guide:
-        Imports: Line 12
-        Constants: Line 18
-        Support Check: Line 44
-        Code init: Line 61
-*/
-
 // Library Imports
 import * as THREE from '../../three.js/build/three.module.js'
-import { MapControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
-import { PointerLockControls} from '../../three.js/examples/jsm/controls/PointerLockControls.js';
-import {GLTFLoader} from '../../three.js/examples/jsm/loaders/GLTFLoader.js' 
 import {FontLoader} from '../../three.js/examples/jsm/loaders/FontLoader.js' 
-import Player from "../../objects/player.js"
-import Tribune_l from "../../objects/bentengan_game_tribune_l.js"
-import Tribune_r from "../../objects/bentengan_game_tribune_r.js"
-import Tribune_mid from "../../objects/bentengan_game_tribune_mid.js"
-import finish_line from "../../objects/game_finish_line.js"
+import { TextGeometry } from '../../three.js/examples/jsm/geometries/TextGeometry.js'
+import PlayerLoader from '../../item/PlayerLoader.js'
+import Tribune_l from "../../furniture/bentengan_game_tribune_l.js"
+import Tribune_r from "../../furniture/bentengan_game_tribune_r.js"
+import Tribune_mid from "../../furniture/bentengan_game_tribune_mid.js"
+import finish_line from "../../furniture/game_finish_line.js"
 
 // Variables
 const MANAGER = new THREE.LoadingManager();
-const GLTF_LOADER = new GLTFLoader(MANAGER);
 const CUBE_TEXTURE_LOADER = new THREE.CubeTextureLoader();
 const FONT_LOADER = new FontLoader(MANAGER);
 const TEXTURE_LOADER = new THREE.TextureLoader();
@@ -34,7 +21,7 @@ const UI_CONTAINER = document.getElementById('ui-holder');
 const SCENE = new THREE.Scene();
 const UI = new THREE.Scene();
 const CAMERA = new THREE.OrthographicCamera((-135*(window.innerWidth/window.innerHeight)), (135*(window.innerWidth/window.innerHeight)), 135, -135, -1000,1000)
-const UI_CAMERA = new THREE.OrthographicCamera((-135*(window.innerWidth/window.innerHeight)), (135*(window.innerWidth/window.innerHeight)), 135, -135, 1,1000)
+const UI_CAMERA = new THREE.OrthographicCamera((-135*(window.innerWidth/window.innerHeight)), (135*(window.innerWidth/window.innerHeight)), 135, -135, -1000,1000)
 const RENDERER = new THREE.WebGLRenderer({
     antialias: false,
     localClippingEnabled: true
@@ -48,11 +35,24 @@ const UI_RENDERER = new THREE.WebGLRenderer({
 const RAYCAST = new THREE.Raycaster()
 
 var end_game = false;
+const CATCHER_LOADER = [new PlayerLoader(), new PlayerLoader(), new PlayerLoader(), new PlayerLoader(), new PlayerLoader(), new PlayerLoader()]
+const PLAYER_LOADER = new PlayerLoader()
 var PLAYER_CHOOSE = [];
 var PLAYER_POINT = [0,0];
 var ONGOING_TURN = false;
 var PLAYER_SPECIAL = [Math.floor(Math.random() * 6)+1,Math.floor(Math.random() * 6)+1]
 
+
+let ui_pink_btn = new THREE.MeshBasicMaterial({
+    color: 0xFF3366,
+})
+let P1_UI = []
+let ROW_RING = []
+let P2_UI = []
+let P2_POINT
+let P1_POINT
+let FONT_USED
+let END_SCREEN =[]
 let ui_btn_p1 = []
 let ui_btn_p2 = []
 let GAME_ROUND = 0;
@@ -132,7 +132,6 @@ function initRenderer(){
 function initCamera(){
     CAMERA.position.set(200,110,150)
     CAMERA.zoom = 1.1
-    // CAMERA.zoom = 0.35
     CAMERA.updateProjectionMatrix();
     CAMERA.rotation.order = 'YXZ';
     CAMERA.rotation.y = - Math.PI / 4;
@@ -154,22 +153,13 @@ function initScene(){
 }
 
 function initUI(){
-    document.getElementById('player1-name').innerHTML = "Name"
-    document.getElementById('player1-status').innerHTML = "Waiting..."
-    document.getElementById('player1-point').innerHTML = "0"
-    document.getElementById('player2-name').innerHTML = "Name"
-    document.getElementById('player2-status').innerHTML = "Waiting..."
-    document.getElementById('player2-point').innerHTML = "0"
-
-    document.getElementById("end-screen").style.display = "none"
-
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     UI.add(ambientLight);
-
+    
     const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
     dirLight.position.set(0, 20, 10); // x, y, z
     UI.add(dirLight);
-
+    
     const ui_background = new THREE.PlaneGeometry(180,95);
     const ui_padding = new THREE.PlaneGeometry(170,80);
     const ui_status = new THREE.PlaneGeometry(100,35);
@@ -186,15 +176,129 @@ function initUI(){
     let ui_blue_light = new THREE.MeshBasicMaterial({
         color: 0xEBF8FF,
     })   
-    let ui_pink_btn = new THREE.MeshBasicMaterial({
-        color: 0xFF3366,
-    })
     let ui_btn_left = new THREE.MeshBasicMaterial({
         map: TEXTURE_LOADER.load('../../texture/ui/arrow_l.png')
     })
     let ui_btn_right = new THREE.MeshBasicMaterial({
         map: TEXTURE_LOADER.load('../../texture/ui/arrow_r.png')
     })
+    FONT_LOADER.load( '../../texture/fonts/Bahnschrift_Regular.json', function ( font ) {
+        FONT_USED = font
+        let geometry = new TextGeometry("Player Name", {
+            font: font,
+            size: 10,
+            height: 0,
+            bevelEnabled: false,
+        } );
+        let mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0x000000}))
+        mesh.rotation.y = -Math.PI/4
+        mesh.position.set(-95,40,49)
+        P1_UI.push(mesh)
+        UI.add(mesh)
+        
+        mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0x000000}))
+        mesh.rotation.y = -Math.PI/4
+        mesh.position.set(102,40,246)
+        P2_UI.push(mesh)
+        UI.add(mesh)
+        
+        geometry = new TextGeometry("Waiting...", {
+            font: font,
+            size: 10,
+            height: 0,
+            bevelEnabled: false,
+        } );
+        mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0x000000}))
+        mesh.rotation.y = -Math.PI/4
+        mesh.position.set(-65,60,49)
+        P1_UI.push(mesh)
+        UI.add(mesh)
+
+        mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0x000000}))
+        mesh.rotation.y = -Math.PI/4
+        mesh.position.set(112,75,256)
+        P2_UI.push(mesh)
+        UI.add(mesh)
+
+        geometry = new TextGeometry("Waiting opponent", {
+            font: font,
+            size: 8,
+            height: 0,
+            bevelEnabled: false,
+        } );
+        mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0x000000}))
+        mesh.rotation.y = -Math.PI/4
+        mesh.position.set(-90,72.5,49)
+        P1_UI.push(mesh)
+
+        mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0x000000}))
+        mesh.rotation.y = -Math.PI/4
+        mesh.position.set(92.5,87.5,264)
+        P2_UI.push(mesh)
+
+        geometry = new TextGeometry(PLAYER_POINT[0].toString(), {
+            font: font,
+            size: 20,
+            height: 0,
+            bevelEnabled: false,
+        } );
+        mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0x000000}))
+        mesh.rotation.y = -Math.PI/4
+        mesh.position.set(-152.5,85,49)
+        P1_POINT = mesh
+        UI.add(P1_POINT)
+
+        geometry = new TextGeometry(PLAYER_POINT[1].toString(), {
+            font: font,
+            size: 20,
+            height: 0,
+            bevelEnabled: false,
+        } );
+        mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0x000000}))
+        mesh.rotation.y = -Math.PI/4
+        mesh.position.set(45,85,246)
+        P2_POINT = mesh
+        UI.add(P2_POINT)
+
+        geometry = new THREE.PlaneGeometry(100,105)
+        mesh = new THREE.Mesh(geometry,ui_blue_light)
+        mesh.rotation.y = -Math.PI/4
+        mesh.position.set(0,200,175)
+        END_SCREEN.push(mesh)
+
+        geometry = new TextGeometry("Player 1 Win", {
+            font: font,
+            size: 12,
+            height: 0,
+            bevelEnabled: false,
+        } );
+        mesh = new THREE.Mesh(geometry,ui_pink_btn)
+        mesh.rotation.y = -Math.PI/4
+        mesh.position.set(-70,235,185)
+        END_SCREEN.push(mesh)
+
+        geometry = new TextGeometry("Player 2 Win", {
+            font: font,
+            size: 12,
+            height: 0,
+            bevelEnabled: false,
+        } );
+        mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0x000000}))
+        mesh.rotation.y = -Math.PI/4
+        mesh.position.set(-75,235,185)
+        END_SCREEN.push(mesh)
+
+        geometry = new TextGeometry("Tie Game.", {
+            font: font,
+            size: 12,
+            height: 0,
+            bevelEnabled: false,
+        } );
+        mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0x000000}))
+        mesh.rotation.y = -Math.PI/4
+        mesh.position.set(-60,230,185)
+        END_SCREEN.push(mesh)
+    });
     let ui_btn_left_sp = new THREE.MeshBasicMaterial({
         map: TEXTURE_LOADER.load('../../texture/ui/arrow_l_special.png')
     })
@@ -294,10 +398,10 @@ function initGame(){
     })
     
     for (let i = 0; i < 6; i++) {
-        Catcher[i] = new Player().group
+        Catcher[i] = CATCHER_LOADER[i].Load()
         Catcher[i].position.set(320,30,CATCHER_POSITION[i])
     }
-    Player2 = new Player().group
+    Player2 = PLAYER_LOADER.Load()
     Player2.position.set(295,30,82.5)
     Player2.rotation.y = -Math.PI
 
@@ -368,9 +472,13 @@ function initGame(){
     SCENE.add(finish)
     SCENE.add(strip_long_r)
 
-    let gridHelper = new THREE.GridHelper( 500, 20 );
-    gridHelper.position.set(287.5,0,12.5)
-    SCENE.add(gridHelper)
+    let indicator_ring = new THREE.RingGeometry(11,15,25,25)
+    let turn_ring = new THREE.Mesh(indicator_ring,new THREE.MeshBasicMaterial({color: 0xFF3366}))
+    turn_ring.rotation.x = -Math.PI/2
+    turn_ring.position.set(320,5.4,CATCHER_POSITION[ROW])
+    ROW_RING.push(turn_ring)
+    
+    SCENE.add(turn_ring)
 
     document.addEventListener("click", function(event){
         /* which = 1 itu click kiri */
@@ -398,7 +506,8 @@ function initGame(){
                                 ui_btn_p1[6-PLAYER_CHOOSE[0]].material = ui_btn_right_disabled
                             }
                             ui_btn_p1[6-PLAYER_CHOOSE[0]].name += "_disabled"
-                            document.getElementById('player1-status').innerHTML = "Waiting for opponent"
+                            UI.remove(P1_UI[1])
+                            UI.add(P1_UI[2])
                             console.log("Player1 choosed: " + PLAYER_CHOOSE[0])
                         }
                     } else if(i.object.name.startsWith("player2")){
@@ -410,8 +519,9 @@ function initGame(){
                                 ui_btn_p2[6-PLAYER_CHOOSE[1]].material = ui_btn_right_disabled
                             }
                             ui_btn_p2[6-PLAYER_CHOOSE[1]].name += "_disabled"
-                            document.getElementById('player2-status').innerHTML = "Waiting for opponent"
                             console.log("Player2 choosed:" + PLAYER_CHOOSE[1])
+                            UI.remove(P2_UI[1])
+                            UI.add(P2_UI[2])
                         }
                     }
                 })
@@ -419,7 +529,7 @@ function initGame(){
         })
 }
 
-var moveChara = (obj_chara, loc) => new Promise(resolve => {
+var moveChara = (obj_loader, obj_chara, loc) => new Promise(resolve => {
     let pos = obj_chara.position
     let dx
     let dz
@@ -433,6 +543,9 @@ var moveChara = (obj_chara, loc) => new Promise(resolve => {
     console.log(dx, dz)
     let interval = setInterval(function(){
         if((loc.z - pos.z != 0) || (loc.x - pos.x != 0)){
+            if(obj_loader != null){
+                obj_loader.PlayerWalk()
+            }
             if(loc.z - pos.z != 0){
                 obj_chara.position.z += dz
                 pos = obj_chara.position
@@ -442,6 +555,9 @@ var moveChara = (obj_chara, loc) => new Promise(resolve => {
                 pos = obj_chara.position
             }
         } else {
+            if(obj_loader != null){
+                obj_loader.PlayerStop()
+            }
             clearInterval(interval)
             resolve()
         }
@@ -450,9 +566,11 @@ var moveChara = (obj_chara, loc) => new Promise(resolve => {
 
 var distributeChara = (player_direction) => new Promise(resolve => {
     let obj = [];
+    let loader = [];
     let location = [];
     if(player_direction[0]==-1){
         obj[0] = Catcher[ROW]
+        loader[0] = CATCHER_LOADER[ROW]
         location[0] = {
             x: 320+(player_direction[0]*75),
             y: 30,
@@ -460,6 +578,7 @@ var distributeChara = (player_direction) => new Promise(resolve => {
         }
     } else{
         obj[0] = Catcher[ROW]
+        loader[0] = CATCHER_LOADER[ROW]
         location[0] = {
             x: 320+(player_direction[0]*50),
             y: 30,
@@ -468,6 +587,7 @@ var distributeChara = (player_direction) => new Promise(resolve => {
     }
     if(player_direction[1]==-1){
         obj[1] = Player2
+        loader[1] = PLAYER_LOADER
         location[1] = {
             x: 295+(player_direction[1]*50),
             y: 30,
@@ -475,14 +595,14 @@ var distributeChara = (player_direction) => new Promise(resolve => {
         }
     } else {
         obj[1] = Player2
+        loader[1] = PLAYER_LOADER
         location[1] = {
             x: 295+(player_direction[1]*75),
             y: 30,
             z: PLAYER_POSITION[ROW]-50
         }
     }
-    Promise.all([moveChara(obj[0],location[0]),moveChara(obj[1],location[1])]).then(result => {
-        console.log("selesai movethen distribute")
+    Promise.all([moveChara(loader[0],obj[0],location[0]),moveChara(loader[1],obj[1],location[1])]).then(result => {
         resolve(null)
     })
 })
@@ -490,6 +610,8 @@ var distributeChara = (player_direction) => new Promise(resolve => {
 
 function bentenganGame(player_input){
     if(!ONGOING_TURN){
+        SCENE.remove(ROW_RING[0])
+        ROW_RING.pop()
         ONGOING_TURN = true
         let player_direction = [0,0];
         for (let i = 0; i < 2; i++) {            
@@ -515,12 +637,12 @@ function bentenganGame(player_input){
                     PLAYER_POINT[0]++;
                 }
                 promiseArray.push(
-                    moveChara(Player2, {
+                    moveChara(PLAYER_LOADER, Player2, {
                         x: 295,
                         y: 30,
                         z: PLAYER_POSITION[ROW]
                     }),
-                    moveChara(Catcher[ROW], {
+                    moveChara(CATCHER_LOADER[ROW], Catcher[ROW], {
                         x: 320,
                         y: 30,
                         z: CATCHER_POSITION[ROW]
@@ -536,12 +658,12 @@ function bentenganGame(player_input){
                 }
                 ROW++;
                 promiseArray.push(
-                    moveChara(Player2,{
+                    moveChara(PLAYER_LOADER, Player2,{
                         x: 295,
                         y: 30,
                         z: PLAYER_POSITION[ROW]
                     }),
-                    moveChara(CAMERA,{
+                    moveChara(null, CAMERA,{
                         x: 200,
                         y: 110,
                         z: CAMERA_POSITION[ROW]
@@ -549,27 +671,60 @@ function bentenganGame(player_input){
                 )
             }
             Promise.all(promiseArray).then(result => {
-                console.log("Player 1: " + PLAYER_POINT[0] + " Player 2: " + PLAYER_POINT[1])
-                document.getElementById('player1-point').innerHTML = PLAYER_POINT[0]
-                document.getElementById('player2-point').innerHTML = PLAYER_POINT[1]
-                document.getElementById('player1-status').innerHTML = "Waiting..."
-                document.getElementById('player2-status').innerHTML = "Waiting..."
+                let geometry = new TextGeometry(PLAYER_POINT[0].toString(), {
+                    font: FONT_USED,
+                    size: 20,
+                    height: 0,
+                    bevelEnabled: false,
+                } );
+                let mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0x000000}))
+                mesh.rotation.y = -Math.PI/4
+                mesh.position.set(-152.5,85,49)
+                UI.remove(P1_POINT)
+                P1_POINT = mesh
+                UI.add(P1_POINT)
+        
+                geometry = new TextGeometry(PLAYER_POINT[1].toString(), {
+                    font: FONT_USED,
+                    size: 20,
+                    height: 0,
+                    bevelEnabled: false,
+                } );
+                mesh = new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0x000000}))
+                mesh.rotation.y = -Math.PI/4
+                mesh.position.set(45,85,246)
+                UI.remove(P2_POINT)
+                P2_POINT = mesh
+                UI.add(P2_POINT)
+
+                let indicator_ring = new THREE.RingGeometry(11,15,25,25)
+                let turn_ring = new THREE.Mesh(indicator_ring,new THREE.MeshBasicMaterial({color: 0xFF3366}))
+                turn_ring.rotation.x = -Math.PI/2
+                turn_ring.position.set(320,5.4,CATCHER_POSITION[ROW])
+                ROW_RING.push(turn_ring)
+                
+                SCENE.add(turn_ring)
+            
+
+                UI.remove(P1_UI[2])
+                UI.remove(P2_UI[2])
+                UI.add(P1_UI[1])
+                UI.add(P2_UI[1])
+
                 PLAYER_CHOOSE = [null,null];
                 GAME_ROUND++;
                 ONGOING_TURN = false;
                 console.log(GAME_ROUND)
                 if(GAME_ROUND == 6){
                     end_game = true
-                    let string
-                    document.getElementById("end-screen").style.display = "block"
+                    UI.add(END_SCREEN[0])
                     if(PLAYER_POINT[0]>PLAYER_POINT[1]){
-                        string = "Player 1 Win!"
+                        UI.add(END_SCREEN[1])
                     } else if (PLAYER_POINT[0]<PLAYER_POINT[1]){
-                        string = "Player 2 Win!"
+                        UI.add(END_SCREEN[2])
                     } else {
-                        string = "Tie."
+                        UI.add(END_SCREEN[3])
                     }
-                    document.getElementById("end-screen").innerHTML = string
                     console.log("Game Ended")
                 }
             })
