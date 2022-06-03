@@ -18,7 +18,7 @@ const Register = () => {
     const [searchParams] = useSearchParams();
 
     const dispatch = useDispatch();
-    const redirect = searchParams.get("redirect") ? searchParams.get("redirect") : "/";
+    const redirect = searchParams.get("redirect") ? searchParams.get("redirect") : "/lobby";
 
     const userRegister = useSelector((state) => state.userRegister);
 

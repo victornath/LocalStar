@@ -202,7 +202,7 @@ button:hover {
   margin-top: 20px;
   border: 1px solid #2F131E;
   border-radius: 5px;
-  color: #A5908D;
+  color: #2F131E;
   background-color: #CEC3C1;
 }
 
@@ -331,7 +331,7 @@ button:hover {
   border: 1px solid black;
 }
 
-/* DESK */
+/* DESK AND LOBBY*/
 
 .desk {
   width: 100vw;
@@ -358,4 +358,14 @@ button:hover {
   height: 20px;
   background: white;
   border: none;
+}
+
+#ui-holder {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+#canvas-holder {
+  background-color: #CEC3C1;
 }

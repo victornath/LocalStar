@@ -14,7 +14,7 @@ const Login = () => {
     const [searchParams] = useSearchParams();
 
     const dispatch = useDispatch();
-    const redirect = searchParams.get("redirect") ? searchParams.get("redirect") : "/";
+    const redirect = searchParams.get("redirect") ? searchParams.get("redirect") : "/lobby";
 
     const userLogin = useSelector((state) => state.userLogin);
 
@@ -34,6 +34,8 @@ const Login = () => {
     return (
         <>
             <Header />
+            <br />
+            <br />
             <div className="container d-flex flex-column justify-content-center align-items-center login-center">
 
                 {error && <Message variant="alert-danger">{error}</Message>}
