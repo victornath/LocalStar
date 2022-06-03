@@ -6,6 +6,7 @@ body {
   font-size: 17px;
   padding: 0;
   box-sizing: border-box;
+  background-color: #CEC3C1;
 }
 
 a {
@@ -46,7 +47,7 @@ textarea:focus {
 
 /* Header */
 .header {
-  background-color: #DBBEBB;
+  background-color: #A5908D;
   padding: 10px 0px 10px 0px;
 }
 
@@ -150,19 +151,18 @@ button {
   width: 200px;
   padding: 15px 0;
   text-align: center;
-  margin: 20px 10px;
   border-radius: 25px;
   font-weight: bold;
-  border: 2px solid #009688;
+  border: 2px solid #2F131E;
   background: transparent;
-  color: #fff;
+  color: #CEC3C1;
   cursor: pointer;
   position: relative;
   overflow: hidden;
 }
 
 span {
-  background: #009688;
+  background: #2F131E;
   height: 100%;
   width: 0;
   border-radius: 25px;
@@ -188,7 +188,7 @@ button:hover {
 
 .Login,
 .Login2 {
-  background: #fff;
+  background: #A5908D;
   border-radius: 5px;
   position: relative;
   padding: 35px 30px 30px;
@@ -200,9 +200,10 @@ button:hover {
   width: 100%;
   padding: 20px 20px;
   margin-top: 20px;
-  border: 1px solid #e4e4e4;
+  border: 1px solid #2F131E;
   border-radius: 5px;
-  color: #8a8a8a;
+  color: #A5908D;
+  background-color: #CEC3C1;
 }
 
 .Login input:focus {
@@ -215,10 +216,10 @@ button:hover {
   margin-top: 20px;
   padding: 20px 0;
   border: 0;
-  background-color: #DBBEBB;
+  background-color: #2F131E;
   border-radius: 5px;
   text-transform: uppercase;
-  color: white;
+  color: #CEC3C1;
 }
 
 .Login button a,
@@ -232,7 +233,7 @@ button:hover {
 }
 
 .Login p a {
-  color: #7a7a7a;
+  color: #2F131E;
 }
 
 /* PROFILE */

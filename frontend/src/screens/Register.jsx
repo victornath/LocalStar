@@ -51,7 +51,7 @@ const Register = () => {
                     <button type="submit">Register</button>
                     <p>
                         <Link to={redirect ? `/login?redirect=${redirect}` : "/login"}>
-                            I Have Account <strong>Login</strong>
+                            I have an account, <strong>Login</strong>
                         </Link>
                     </p>
                 </form>
