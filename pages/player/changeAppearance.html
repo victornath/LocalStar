@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Star</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow:hidden;
+        }
+        #progress {
+            width: 200px;
+            height: 20px;
+            background: #333;
+            border: 2px solid #333;
+            opacity: 0.5;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            margin-left: -100px;
+            margin-top: -10px;
+        }
+        #progress-bar {
+            width: 200px;
+            width: 0%;
+            height: 20px;
+            background: white;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- HTML Page -->
+    <div id='ui-holder' style="position:absolute; width:100%; height:100%"></div>
+    <div id='canvas-holder'></div>
+
+    <!-- Scripts -->
+    <script src="../../WebGL.min.js"></script>
+    <script src="./changeAppearance.js" type="module"></script>
+</body>
+</html>
