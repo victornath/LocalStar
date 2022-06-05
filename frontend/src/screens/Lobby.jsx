@@ -17,7 +17,7 @@ const Lobby = () => {
     const FONT_LOADER = new FontLoader(MANAGER);
     const TEXTURE_LOADER = new THREE.TextureLoader(MANAGER)
     // const PLAYER_LOADER = new PlayerLoader();
-    const FONT_SIZE = 16;
+    let FONT_SIZE = 16;
 
     let CONTAINER
     let UI_CONTAINER
@@ -46,8 +46,8 @@ const Lobby = () => {
     let GAME_NAME = []
     let BOTTOM_MENU = []
     let TOP_MENU = []
-    let EDIT_POPUP = []
-
+    let ACTIVE_GAME = 0
+    
     // Support check
     if (!('getContext' in document.createElement('canvas'))) {
         alert('Sorry, it looks like your browser does not support canvas!');
@@ -147,7 +147,7 @@ const Lobby = () => {
         dirLight.position.set(0, 20, 10); // x, y, z
         UI.add(dirLight);
 
-        let base_material = new THREE.MeshLambertMaterial({
+        let base_material = new THREE.MeshBasicMaterial({
             color: 0xcec3c1
         })
         let other_material = new THREE.MeshBasicMaterial({
@@ -257,9 +257,16 @@ const Lobby = () => {
         TOP_MENU.push(player_name_shadow)
         UI.add(player_name_shadow)
 
-        const name_geometry = new TextGeometry(userInfo.name, {
+        let PLAYER_NAME = userInfo.name
+        if(PLAYER_NAME.length > 8){
+            FONT_SIZE = 8.5
+        } else {
+            FONT_SIZE = 12
+        }    
+
+        const name_geometry = new TextGeometry(PLAYER_NAME, {
             font: LOADED_FONT,
-            size: 12,
+            size: FONT_SIZE,
             height: 0,
             bevelEnabled: false,
         });
@@ -342,6 +349,50 @@ const Lobby = () => {
         TOP_MENU.push(player_background)
         UI.add(player_background)
 
+        let game_image_material = [base_material,other_material,material,material2]
+    
+        let game_image = new THREE.Mesh(new THREE.PlaneGeometry(180,120), game_image_material[ACTIVE_GAME])
+        game_image.position.set(90,155,2)
+        GAME_MENU.push(game_image)
+        UI.add(game_image)
+    
+        let game_help = new THREE.Mesh(new THREE.PlaneGeometry(15,15), material)
+        game_help.position.set(170,205,3)
+        game_help.name = "help_button"
+        UI.add(game_help)
+    
+        let game_button = new THREE.Mesh(new THREE.PlaneGeometry(115,45), material)
+        game_button.position.set(87.5,92.5,4)
+        game_button.name = "play_0"+ACTIVE_GAME
+        GAME_MENU.push(game_button)
+        UI.add(game_button)
+        game_button = new THREE.Mesh(new THREE.PlaneGeometry(115,45), material2)
+        game_button.position.set(92.5,87.5,3)
+        GAME_MENU.push(game_button)
+        UI.add(game_button)
+    
+        let game_name = ["Congklak","Gobak Sodor","Tarik Tambang","Balap Karung"]
+        let game_text = new TextGeometry("Play\n"+game_name[ACTIVE_GAME], {
+            font: LOADED_FONT,
+            size: 10,
+            height: 0,
+            bevelEnabled: false
+        })
+        let game_text_mesh = new THREE.Mesh(game_text, other_material)
+        centerText(game_text,game_text_mesh,87.5,92.5,5)
+        GAME_MENU.push(game_text_mesh)
+        UI.add(game_text_mesh)
+    
+        let game_next = new THREE.Mesh(new THREE.PlaneGeometry(30,35), material)
+        game_next.position.set(170,97.5,3)
+        game_next.name = "button_next"
+        UI.add(game_next)
+    
+        let game_prev = new THREE.Mesh(new THREE.PlaneGeometry(30,35), material)
+        game_prev.position.set(10,97.5,3)
+        game_prev.name = "button_prev"
+        UI.add(game_prev)
+
         document.addEventListener("click", function (event) {
             /* which = 1 itu click kiri */
             /* which = 2 itu scroll click */
@@ -350,37 +401,32 @@ const Lobby = () => {
                 let mouse = {}
                 let w = window.innerWidth
                 let h = window.innerHeight
-                mouse.x = event.clientX / w * 2 - 1
-                mouse.y = event.clientY / h * (-2) + 1
-
-                RAYCAST.setFromCamera(mouse, UI_CAMERA)
-                let items = RAYCAST.intersectObjects(UI.children, false)
+                mouse.x = event.clientX/w *2 -1
+                mouse.y = event.clientY/h *(-2) + 1
+            
+                RAYCAST.setFromCamera(mouse,UI_CAMERA)
+                let items = RAYCAST.intersectObjects(UI.children,false)
                 console.log(items)
-                items.forEach(i => {
+                items.forEach(i=>{
                     console.log(i.object.name)
                     let obj_name = i.object.name
-                    let choice = parseInt(obj_name.charAt(obj_name.length - 1))
-                    if (obj_name.startsWith("help_")) {
-                        switch (choice) {
-                            case 1:
-                                break;
-                            case 2:
-                                break;
-                            case 3:
+                    let choice = parseInt(obj_name.charAt(obj_name.length-1))
+                    if(obj_name.startsWith("help_")){
+                        switch(obj_name){
+                            case "help_button":
                                 break;
                         }
-                        items.splice(0, 2)
-                    } else if (obj_name.startsWith("top_")) {
-                        switch (choice) {
+                    } else if (obj_name.startsWith("top_")){
+                        switch(choice){
                             case 1:
+                                // Link to Edit Profile
                                 break;
                             case 2:
                                 break;
                             case 3:
                                 break;
                             case 4:
-                                break;
-                            case 5:
+                                // Mute / Unmute Sound
                                 break;
                         }
                     } else if (obj_name.startsWith("bottom_")) {
@@ -396,33 +442,38 @@ const Lobby = () => {
                                 break;
                             case 3:
                                 break;
+                        }                    } else if(obj_name.startsWith("button_")){
+                            switch(obj_name){
+                                case "button_next":
+                                    ACTIVE_GAME++;
+                                    if(ACTIVE_GAME > 3){
+                                        ACTIVE_GAME = 0;
+                                    }
+                                    changeGameMode()
+                                    break;
+                                case "button_prev":
+                                    ACTIVE_GAME--;
+                                    if(ACTIVE_GAME < 0){
+                                        ACTIVE_GAME = 3
+                                    }
+                                    changeGameMode()
+                                    break;
+                                }
+                        } else if (obj_name.startsWith("play_")){
+                            switch(choice){
+                                case 0:
+                                    break;
+                                case 1:
+                                    break;
+                                case 2:
+                                    break;
+                                case 3:
+                                    break;
+                            }
                         }
-                    } else if (obj_name.startsWith("choice_")) {
-                        switch (choice) {
-                            case 1:
-                                window.open(i.object.userData.URL, "_self");
-                                break;
-                            case 2:
-                                window.open(i.object.userData.URL, "_self");
-                                break;
-                        }
-                        items.splice(0, 3)
-                    } else if (obj_name.startsWith("game_")) {
-                        switch (choice) {
-                            case 1:
-                                window.open(i.object.userData.URL, "_self");
-                                break;
-                            case 2:
-                                window.open(i.object.userData.URL, "_self");
-                                break;
-                            case 3:
-                                break;
-                        }
-                    }
-                })
-            }
-        })
-
+                    })
+                }
+            })
     }
 
     function initGame() {
@@ -456,43 +507,54 @@ const Lobby = () => {
         SCENE.add(PLAYER_PREVIEW)
     }
 
-    function editAvatarChoice() {
-        if (EDIT_POPUP.length > 0) {
-            EDIT_POPUP.forEach(e => {
+    function changeGameMode(){
+        if(GAME_MENU.length > 0){
+            GAME_MENU.forEach(e => {
                 UI.remove(e)
             });
-            EDIT_POPUP = []
-        } else {
-            const material = new THREE.MeshBasicMaterial({
-                map: LOADED_TEXTURE["edit_avatar_click"],
-                side: THREE.DoubleSide,
-                transparent: true
-            })
-            let plane = new THREE.PlaneGeometry(105, 100)
-            let mesh = new THREE.Mesh(plane, material)
-            mesh.position.set(10, 35, 80)
-            EDIT_POPUP.push(mesh)
-            UI.add(mesh)
-
-            let button = ["appearance", "closet"]
-            for (let i = 0; i < 2; i++) {
-                const material = new THREE.MeshBasicMaterial({
-                    map: LOADED_TEXTURE[button[i]],
-                    side: THREE.DoubleSide,
-                    transparent: true
-                })
-                plane = new THREE.PlaneGeometry(40, 45)
-                let choice1 = new THREE.Mesh(plane, material)
-                choice1.position.set(-10 + (35 * i), 45, 65 + (35 * i))
-                choice1.scale.set(1, 1.075, 1)
-                choice1.name = "choice_0" + (i + 1)
-                choice1.userData = {
-                    URL: "../../pages/player/change" + button[i] + ".html"
-                }
-                EDIT_POPUP.push(choice1)
-                UI.add(choice1)
-            }
         }
+
+        let base_material = new THREE.MeshBasicMaterial({
+            color: 0xcec3c1
+        })
+        let other_material = new THREE.MeshBasicMaterial({
+            color: 0x240115
+        })
+        let material = new THREE.MeshBasicMaterial({
+            color:0xA5908D
+        })
+        let material2 = new THREE.MeshBasicMaterial({
+            color:0x2F131E
+        })
+
+        let game_image_material = [base_material,other_material,material,material2]
+        
+        let game_image = new THREE.Mesh(new THREE.PlaneGeometry(180,120), game_image_material[ACTIVE_GAME])
+        game_image.position.set(90,155,2)
+        GAME_MENU.push(game_image)
+        UI.add(game_image)
+        
+        let game_name = ["Congklak","Gobak Sodor","Tarik Tambang","Balap Karung"]
+        let game_text = new TextGeometry("Play\n"+game_name[ACTIVE_GAME], {
+            font: LOADED_FONT,
+            size: 10,
+            height: 0,
+            bevelEnabled: false
+        })
+        let game_text_mesh = new THREE.Mesh(game_text, other_material)
+        centerText(game_text,game_text_mesh,87.5,92.5,5)
+        GAME_MENU.push(game_text_mesh)
+        UI.add(game_text_mesh)
+        
+        let game_button = new THREE.Mesh(new THREE.PlaneGeometry(115,45), material)
+        game_button.position.set(87.5,92.5,4)
+        game_button.name = "play_0"+ACTIVE_GAME
+        GAME_MENU.push(game_button)
+        UI.add(game_button)
+        game_button = new THREE.Mesh(new THREE.PlaneGeometry(115,45), material2)
+        game_button.position.set(92.5,87.5,3)
+        GAME_MENU.push(game_button)
+        UI.add(game_button)
     }
 
     function gameLoop() {
