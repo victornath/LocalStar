@@ -232,6 +232,20 @@ const Inventory = () => {
         TOP_MENU.push(player_background)
         UI.add(player_background)
 
+        let save_button = new THREE.Mesh(new THREE.PlaneGeometry(100,30),material2)
+        save_button.position.set(-142.5,45,3)
+        save_button.name = "button_save"
+        UI.add(save_button)
+        let save_text = new TextGeometry("Save", {
+            font: LOADED_FONT,
+            size: 10,
+            height: 0,
+            bevelEnabled: false
+        })
+        let save_mesh = new THREE.Mesh(save_text, base_material)
+        centerText(save_text,save_mesh, -142.5, 45, 4)
+        save_mesh.name = "button_save"
+        UI.add(save_mesh)
 
         // Main UI
         let inventory_bg = new THREE.Mesh(new THREE.PlaneGeometry(270, 200), material2)
@@ -269,7 +283,7 @@ const Inventory = () => {
                     console.log(i.object.name)
                     let obj_name = i.object.name
                     let choice = parseInt(obj_name.charAt(obj_name.length - 1))
-                    if (obj_name.startsWith("help_")) {
+                    if (obj_name.startsWith("item_")) {
                         switch (choice) {
                             case 1:
                                 break;
@@ -283,6 +297,9 @@ const Inventory = () => {
                         switch (obj_name) {
                             case "button_back":
                                 window.open("../lobby", "_self")
+                                break;
+                            case "button_save":
+                                // Save avatar
                                 break;
                         }
                     }
