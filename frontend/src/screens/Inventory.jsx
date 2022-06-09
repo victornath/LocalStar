@@ -22,25 +22,24 @@ const Inventory = () => {
     const UI_CAMERA = new THREE.OrthographicCamera((-135 * (window.innerWidth / window.innerHeight)), (135 * (window.innerWidth / window.innerHeight)), 135, -135, -1000, 1000)
     const RENDERER = new THREE.WebGLRenderer({
         antialias: false,
-        localClippingEnabled: true
     });
     const UI_RENDERER = new THREE.WebGLRenderer({
         antialias: false,
-        localClippingEnabled: true,
         alpha: true
     });
 
     let LOADED_FONT = []
     let LOADED_TEXTURE = []
-    // const CAMERA_CONTROL = new MapControls(CAMERA, RENDERER.domElement)
     const RAYCAST = new THREE.Raycaster()
     RAYCAST.layers.set = 1
     let PLAYER_PREVIEW
     let CATEGORY = []
+    let ACTIVE_CATEGORY = 0
+    let ACTIVE_PAGE = 0
     let GAME_NAME = []
+    let ITEM_LIST = []
     let MAIN_UI = []
     let TOP_MENU = []
-    let EDIT_POPUP = []
 
     var time, delta, moveTimer = 0;
     var useDeltaTiming = true, weirdTiming = 0;
@@ -61,6 +60,7 @@ const Inventory = () => {
         let warning = WebGL.getWebGLErrorMessage();
         document.body.appendChild(warning);
         CONTAINER.remove();
+        UI_CONTAINER.remove();
         throw 'WebGL disabled or not supported';
     }
 
@@ -86,10 +86,6 @@ const Inventory = () => {
             console.log('Loading file: ' + managerUrl + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
         };
         MANAGER.onLoad = function () {
-            // Only allow control once content is fully loaded
-            // CANVAS_HOLDER.addEventListener('click', function () {
-            //     CONTROLS.lock();
-            // }, false);
             CONTAINER = document.getElementById('canvas-holder');
             UI_CONTAINER = document.getElementById('ui-holder');
             init()
@@ -105,15 +101,120 @@ const Inventory = () => {
         });
     }
 
+
+    function loadPlayerInventory(){
+        if(ITEM_LIST.length > 0){
+            ITEM_LIST.forEach(e => {
+                UI.remove(e)
+            })
+            ITEM_LIST = []
+        }
+        if(CATEGORY.length > 0){
+            CATEGORY.forEach(e => {
+                UI.remove(e)
+            })
+            CATEGORY = []
+        }
+    
+        if(ACTIVE_PAGE < 0){
+            ACTIVE_PAGE = 0
+        }
+    
+        let itemArray = ["Item1","Item2","Item3","Item4","Item5","Item6","Item7","Item","Item","Item","Item","Item","Item", "Item","Item","Item","Item","Item","Item"]
+        let base_material = new THREE.MeshBasicMaterial({
+            color: 0xcec3c1
+        })
+        let other_material = new THREE.MeshBasicMaterial({
+            color: 0x240115
+        })
+        let material = new THREE.MeshBasicMaterial({
+            color:0xA5908D
+        })
+        let material2 = new THREE.MeshBasicMaterial({
+            color:0x2F131E
+        })
+        let activeMaterial = new THREE.MeshBasicMaterial({
+            color:0x652941
+        })
+    
+        for (let i = 0; i < 6; i++) {
+            let category_bg = new THREE.Mesh(new THREE.PlaneGeometry(30,30),material2)
+            if(ACTIVE_CATEGORY == i){
+                category_bg.material = activeMaterial
+            }
+            category_bg.position.set(221,192.5-(i*31),-2)
+            category_bg.name = "category_0"+i
+            CATEGORY.push(category_bg)
+            UI.add(category_bg)
+        }
+    
+        if(itemArray.length > 15){
+            for (let j = 0; j < 3; j++) {
+                for (let i = 0; i < 5; i++) {                
+                    let item = new THREE.Mesh(new THREE.PlaneGeometry(45,45), material2)
+                    item.position.set(-25+(50*i),180-(j*51.5),2)
+                    item.name = "item_0"+((j*5)+i)
+                    UI.add(item)
+                    let item_thumbnail = new THREE.Mesh(new THREE.PlaneGeometry(38,38), material)
+                    item_thumbnail.position.set(-25+(50*i),180-(j*51.5),3)
+                    ITEM_LIST.push(item)
+                    ITEM_LIST.push(item_thumbnail)
+                    UI.add(item_thumbnail)
+                }
+            }
+            let item_page = new THREE.Mesh(new THREE.PlaneGeometry(25,25),material2)
+            item_page.position.set(25,35,2)
+            item_page.name = "button_prev"
+            ITEM_LIST.push(item_page)
+            UI.add(item_page)
+            item_page = new THREE.Mesh(new THREE.PlaneGeometry(25,25),material2)
+            item_page.position.set(125,35,2)
+            item_page.name = "button_next"
+            ITEM_LIST.push(item_page)
+            UI.add(item_page)
+    
+            let page_text = new TextGeometry((ACTIVE_PAGE+1).toString(), {
+                font: LOADED_FONT,
+                size: 10,
+                height: 0,
+                bevelEnabled: false
+            })
+            let page_number = new THREE.Mesh(page_text,material2)
+            centerText(page_text, page_number, 75,35,2)
+            ITEM_LIST.push(page_number)
+            UI.add(page_number)
+    
+            // item loader (e)
+    
+        } else {
+            let i = 0
+            let j = 0
+            itemArray.forEach(e => {
+                let item = new THREE.Mesh(new THREE.PlaneGeometry(45,45), material2)
+                item.position.set(-25+(50*i),175-(j*57.5),2)
+                ITEM_LIST.push(item)
+                UI.add(item)
+    
+                let item_thumbnail = new THREE.Mesh(new THREE.PlaneGeometry(38,38), material)
+                item_thumbnail.position.set(-25+(50*i),175-(j*57.5),3)
+                ITEM_LIST.push(item_thumbnail)
+                UI.add(item_thumbnail)
+    
+                // item loader (e)
+                i++
+                if(i == 5){
+                    j++;
+                    i = 0;
+                }
+            });
+        }
+    }
     function initRenderer() {
         RENDERER.setSize(window.innerWidth, window.innerHeight)
         RENDERER.setClearColor(0xcec3c1)
-        RENDERER.shadowMap.enabled = true
-
+    
         UI_RENDERER.setSize(window.innerWidth, window.innerHeight)
         UI_RENDERER.setClearColor(0xcec3c1, 0)
-        UI_RENDERER.shadowMap.enabled = true
-
     }
 
     function initCamera() {
@@ -155,8 +256,11 @@ const Inventory = () => {
         })
         let material2 = new THREE.MeshBasicMaterial({
             color: 0x2F131E
+        })    
+        let activeMaterial = new THREE.MeshBasicMaterial({
+            color:0x652941
         })
-
+    
         let page_text = new TextGeometry("Inventory", {
             font: LOADED_FONT,
             size: 14,
@@ -257,13 +361,7 @@ const Inventory = () => {
         MAIN_UI.push(inventory_bg)
         UI.add(inventory_bg)
 
-        for (let i = 0; i < 6; i++) {
-            let category_bg = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), material2)
-            category_bg.position.set(221, 192.5 - (i * 31), 0)
-            category_bg.name = "category_" + (i + 1)
-            CATEGORY.push(category_bg)
-            UI.add(category_bg)
-        }
+        loadPlayerInventory()
 
         document.addEventListener("click", function (event) {
             /* which = 1 itu click kiri */
@@ -292,7 +390,29 @@ const Inventory = () => {
                             case 3:
                                 break;
                         }
-                        items.splice(0, 2)
+                        items.splice(1,3)
+                    } else if(obj_name.startsWith("category_")){
+                        switch(choice){
+                            case 0:
+                                ACTIVE_CATEGORY= 0
+                                break;
+                            case 1:
+                                ACTIVE_CATEGORY= 1
+                                break;
+                            case 2:
+                                ACTIVE_CATEGORY= 2
+                                break;
+                            case 3:
+                                ACTIVE_CATEGORY= 3
+                                break;
+                            case 4:
+                                ACTIVE_CATEGORY= 4
+                                break;
+                            case 5:
+                                ACTIVE_CATEGORY= 5
+                                break;
+                        }
+                        loadPlayerInventory()
                     } else {
                         switch (obj_name) {
                             case "button_back":
@@ -301,6 +421,15 @@ const Inventory = () => {
                             case "button_save":
                                 // Save avatar
                                 break;
+                            case "button_next":
+                                ACTIVE_PAGE++;
+                                loadPlayerInventory()
+                                break;
+                            case "button_prev":
+                                ACTIVE_PAGE--;
+                                console.log(ACTIVE_PAGE)
+                                loadPlayerInventory()
+                                break;    
                         }
                     }
                 })
@@ -333,49 +462,10 @@ const Inventory = () => {
         player_background.position.set(-0.5, -57.5, -88.25)
 
         SCENE.add(player_background)
-        SCENE.add(PLAYER_PREVIEW)
+        // SCENE.add(PLAYER_PREVIEW)
     }
 
-    function editAvatarChoice() {
-        if (EDIT_POPUP.length > 0) {
-            EDIT_POPUP.forEach(e => {
-                UI.remove(e)
-            });
-            EDIT_POPUP = []
-        } else {
-            const material = new THREE.MeshBasicMaterial({
-                map: LOADED_TEXTURE["edit_avatar_click"],
-                side: THREE.DoubleSide,
-                transparent: true
-            })
-            let plane = new THREE.PlaneGeometry(105, 100)
-            let mesh = new THREE.Mesh(plane, material)
-            mesh.position.set(10, 35, 80)
-            EDIT_POPUP.push(mesh)
-            UI.add(mesh)
-
-            let button = ["appearance", "closet"]
-            for (let i = 0; i < 2; i++) {
-                const material = new THREE.MeshBasicMaterial({
-                    map: LOADED_TEXTURE[button[i]],
-                    side: THREE.DoubleSide,
-                    transparent: true
-                })
-                plane = new THREE.PlaneGeometry(40, 45)
-                let choice1 = new THREE.Mesh(plane, material)
-                choice1.position.set(-10 + (35 * i), 45, 65 + (35 * i))
-                choice1.scale.set(1, 1.075, 1)
-                choice1.name = "choice_0" + (i + 1)
-                choice1.userData = {
-                    URL: "../../pages/player/change" + button[i] + ".html"
-                }
-                EDIT_POPUP.push(choice1)
-                UI.add(choice1)
-            }
-        }
-    }
-
-    function gameLoop() {
+function gameLoop() {
         requestAnimationFrame(gameLoop);
 
 

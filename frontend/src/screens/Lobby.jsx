@@ -43,10 +43,10 @@ const Lobby = () => {
     RAYCAST.layers.set = 1
     let PLAYER_PREVIEW
     let GAME_MENU = []
+    let ACTIVE_GAME = 0
     let GAME_NAME = []
     let BOTTOM_MENU = []
     let TOP_MENU = []
-    let ACTIVE_GAME = 0
     
     // Support check
     if (!('getContext' in document.createElement('canvas'))) {
@@ -160,64 +160,6 @@ const Lobby = () => {
             color: 0x2F131E
         })
 
-        //     const geometry = new TextGeometry( 'Available Games:', {
-        //         font: LOADED_FONT,
-        //         size: FONT_SIZE,
-        //         height: 0,
-        //         bevelEnabled: false,
-        //     } );
-        //     let mesh = new THREE.Mesh(geometry,gray_material)
-        //     mesh.position.set(65,150,65)
-        //     UI.add(mesh)
-
-        // let gameName = ["Congklak", "Gobak Sodor", ""]
-        // for (let i = 1; i <= 3; i++) {
-        //     const material = new THREE.MeshBasicMaterial({
-        //         map: LOADED_TEXTURE["game_"+i],
-        //         side: THREE.DoubleSide,
-        //         transparent: true
-        //     })
-        //     const shadow = new THREE.MeshBasicMaterial({
-        //         color: 0x151515,
-        //         opacity: 0.30,
-        //         transparent: true
-        //     })
-        //     let player_background = new THREE.Mesh(new THREE.PlaneGeometry(100,160), material)
-        //     player_background.position.set(-25+(77.5*i),46.5,-25+(77.5*i))
-        //     player_background.name = "game_menu_0"+i
-        //     player_background.userData = { URL: "../../index.html" }
-        //     GAME_MENU.push(player_background)
-        //     UI.add(player_background)
-
-        //     player_background = new THREE.Mesh(new THREE.PlaneGeometry(100,160), shadow)
-        //     player_background.position.set(-20+(77.5*i),48,-25+(77.5*i))
-        //     GAME_MENU.push(player_background)
-        //     UI.add(player_background)
-
-        //     if(i != 3){
-        //         const material = new THREE.MeshBasicMaterial({
-        //             map: LOADED_TEXTURE["help"],
-        //             side: THREE.DoubleSide,
-        //             transparent: true
-        //         })
-        //         let player_background = new THREE.Mesh(new THREE.CircleGeometry(10,32), material)
-        //         player_background.position.set(-10+(77.5*i),120,10+(77.5*i))
-        //         player_background.name = "help_menu_0"+i
-        //         UI.add(player_background)
-        //     }
-
-        //         const geometry = new TextGeometry( gameName[i-1], {
-        //             font: LOADED_FONT,
-        //             size: 10,
-        //             height: 0,
-        //             bevelEnabled: false,
-        //         } );
-        //         let mesh = new THREE.Mesh(geometry,other_material)
-        //         mesh.position.set(-75+(77.5*i),-6,-40+(77.5*i))
-        //         GAME_NAME.push(mesh)
-        //         UI.add(mesh)
-        // }    
-
         let bottom_menu = ["Shop", "Inventory", "Friends"]
         for (let i = 0; i < 3; i++) {
             let player_background = new THREE.Mesh(new THREE.PlaneGeometry(87, 36), material)
@@ -279,7 +221,33 @@ const Lobby = () => {
         player_experience.position.set(-140, 32.5, 1)
         GAME_NAME.push(player_experience)
         UI.add(player_experience)
-
+        let current_experience = new THREE.Mesh(new THREE.PlaneGeometry(107.5*(354/588),2), material)
+        let excess = (107.5 - (107.5*(354/588)))/2
+        current_experience.position.set(-140-excess,32.5,2)
+        GAME_NAME.push(current_experience)
+        UI.add(current_experience)
+    
+        // PLAYER LEVEL DISINI
+        let level_text = new TextGeometry("3",{
+            font: LOADED_FONT,
+            size: 8,
+            height: 0,
+            bevelEnabled: false
+        })
+        let level_number = new THREE.Mesh(level_text, material2)
+        centerText(level_text,level_number, -180,55,4)
+        UI.add(level_number)
+     
+        let experience_text = new TextGeometry("354/588",{
+            font: LOADED_FONT,
+            size: 7,
+            height: 0,
+            bevelEnabled: false
+        })
+        let experience_number = new THREE.Mesh(experience_text, material2)
+        alignText(experience_text,experience_number, -85,42.5,3)
+        UI.add(experience_number)
+        
         let player_level = new THREE.Mesh(new THREE.CircleGeometry(12.5, 6), base_material)
         player_level.position.set(-180, 55, 2)
         player_level.rotation.z = Math.PI / 2
@@ -345,7 +313,6 @@ const Lobby = () => {
         UI.add(player_background)
         player_background = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), material2)
         player_background.position.set(219.75, 238.5, -1)
-        player_background.name = "top_menu_04"
         TOP_MENU.push(player_background)
         UI.add(player_background)
 
@@ -440,9 +407,8 @@ const Lobby = () => {
                             case 2:
                                 window.open("../pages/friends.html", "_self")
                                 break;
-                            case 3:
-                                break;
-                        }                    } else if(obj_name.startsWith("button_")){
+                        }
+                    } else if(obj_name.startsWith("button_")){
                             switch(obj_name){
                                 case "button_next":
                                     ACTIVE_GAME++;
