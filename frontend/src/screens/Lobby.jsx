@@ -530,10 +530,10 @@ const Lobby = () => {
         RENDERER.render(SCENE, CAMERA);
         UI_RENDERER.render(UI, UI_CAMERA);
     }
-    
+
     function alignText(textGeo, textMesh, x,y,z){
         textGeo.computeBoundingBox();
-        const center = textGeo.boundingBox.getCenter(new Vector3())
+        const center = textGeo.boundingBox.getCenter(new THREE.Vector3())
         textMesh.updateMatrixWorld();
         center.applyMatrix4(textMesh.matrixWorld);
         textMesh.geometry.translate(x-(2*center.x),y-center.y,z-center.z)
