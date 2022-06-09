@@ -217,18 +217,22 @@ const Lobby = () => {
         GAME_NAME.push(name_mesh)
         UI.add(name_mesh)
 
+        let PLAYER_EXP = userInfo.experience
+        console.log(userInfo)
+
         let player_experience = new THREE.Mesh(new THREE.PlaneGeometry(110.5, 5), material2)
         player_experience.position.set(-140, 32.5, 1)
         GAME_NAME.push(player_experience)
         UI.add(player_experience)
-        let current_experience = new THREE.Mesh(new THREE.PlaneGeometry(107.5*(354/588),2), material)
-        let excess = (107.5 - (107.5*(354/588)))/2
+        let current_experience = new THREE.Mesh(new THREE.PlaneGeometry(107.5*(PLAYER_EXP/588),2), material)
+        let excess = (107.5 - (107.5*(PLAYER_EXP/588)))/2
         current_experience.position.set(-140-excess,32.5,2)
         GAME_NAME.push(current_experience)
         UI.add(current_experience)
     
         // PLAYER LEVEL DISINI
-        let level_text = new TextGeometry("3",{
+        let PLAYER_LEVEL = userInfo.level
+        let level_text = new TextGeometry(PLAYER_LEVEL.toString(),{
             font: LOADED_FONT,
             size: 8,
             height: 0,
@@ -238,7 +242,7 @@ const Lobby = () => {
         centerText(level_text,level_number, -180,55,4)
         UI.add(level_number)
      
-        let experience_text = new TextGeometry("354/588",{
+        let experience_text = new TextGeometry(""+PLAYER_EXP+"/588",{
             font: LOADED_FONT,
             size: 7,
             height: 0,
@@ -272,7 +276,7 @@ const Lobby = () => {
         TOP_MENU.push(player_background)
         UI.add(player_background)
 
-        let point_geometry = new TextGeometry("Player Point", {
+        let point_geometry = new TextGeometry(userInfo.point.toString(), {
             font: LOADED_FONT,
             size: 10,
             height: 0,
@@ -295,7 +299,7 @@ const Lobby = () => {
         UI.add(player_background)
 
 
-        point_geometry = new TextGeometry("Player Gold", {
+        point_geometry = new TextGeometry(userInfo.gold.toString(), {
             font: LOADED_FONT,
             size: 10,
             height: 0,
