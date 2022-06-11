@@ -9,6 +9,7 @@ import NotFound from './screens/NotFound';
 import Lobby from './screens/Lobby';
 import Shop from './screens/Shop';
 import Inventory from './screens/Inventory';
+import PlayerLoader from './screens/Playroom';
 
 
 const App = () => {
@@ -22,7 +23,7 @@ const App = () => {
         <Route path='/lobby' element={<Lobby />} />;
         <Route path='/shop' element={<Shop />} />;
         <Route path='/inventory' element={<Inventory />} />;
-
+        <Route path='/playroom' element={<PlayerLoader />} />;
       </Routes>
     </Router>
   )
