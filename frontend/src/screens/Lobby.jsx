@@ -38,6 +38,7 @@ const Lobby = () => {
 
     let LOADED_FONT = []
     let LOADED_TEXTURE = []
+    let LOADED_MATERIAL = []
     // const CAMERA_CONTROL = new MapControls(CAMERA, RENDERER.domElement)
     const RAYCAST = new THREE.Raycaster()
     RAYCAST.layers.set = 1
@@ -45,8 +46,10 @@ const Lobby = () => {
     let GAME_MENU = []
     let ACTIVE_GAME = 0
     let GAME_NAME = []
-    let BOTTOM_MENU = []
     let TOP_MENU = []
+    let MAIN_UI = []
+    let ROOM_UI = []
+
     
     // Support check
     if (!('getContext' in document.createElement('canvas'))) {
@@ -106,269 +109,134 @@ const Lobby = () => {
         FONT_LOADER.load('./Bahnschrift_Regular.json', function (font) {
             LOADED_FONT = font
         });
+        
+        // Materials
+        LOADED_MATERIAL.push(
+            new THREE.MeshBasicMaterial({color:0xcec3c1}),
+            new THREE.MeshBasicMaterial({color:0x240115}),
+            new THREE.MeshBasicMaterial({color:0xA5908D}),
+            new THREE.MeshBasicMaterial({color:0x2F131E})
+        )
     }
 
-    function initRenderer() {
+    function initRenderer(){
         RENDERER.setSize(window.innerWidth, window.innerHeight)
         RENDERER.setClearColor(0xcec3c1)
         RENDERER.shadowMap.enabled = true
-
+        
         UI_RENDERER.setSize(window.innerWidth, window.innerHeight)
         UI_RENDERER.setClearColor(0xcec3c1, 0)
         UI_RENDERER.shadowMap.enabled = true
-
+    
     }
-
-    function initCamera() {
-        CAMERA.position.set(0, 0, 0)
+    
+    function initCamera(){
+        CAMERA.position.set(0,0,0)
         CAMERA.zoom = 2.5
         CAMERA.updateProjectionMatrix();
         CAMERA.rotation.order = 'YXZ';
         CAMERA.rotation.y = - Math.PI / 4;
-        CAMERA.rotation.x = Math.atan(- 1 / Math.sqrt(2));
-
-        UI_CAMERA.position.set(20, 140, 150)
+        CAMERA.rotation.x = Math.atan( - 1 / Math.sqrt( 2 ) );
+        
+        UI_CAMERA.position.set(20,140,150)
         UI_CAMERA.updateProjectionMatrix();
-        // UI_CAMERA.rotation.order = 'YXZ';
-        // UI_CAMERA.rotation.y = - Math.PI / 4;
-        // UI_CAMERA.rotation.x = Math.atan( - 1 / Math.sqrt( 2 ) );
     }
-
-    function initScene() {
+    
+    function initScene(){
         CONTAINER.appendChild(RENDERER.domElement)
         UI_CONTAINER.appendChild(UI_RENDERER.domElement)
     }
-
-    function initUI() {
+    
+    function initUI(){
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         UI.add(ambientLight);
-
+    
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-        dirLight.position.set(0, 20, 10); // x, y, z
+        dirLight.position.set(0, 20, 10);
         UI.add(dirLight);
-
-        let base_material = new THREE.MeshBasicMaterial({
-            color: 0xcec3c1
-        })
-        let other_material = new THREE.MeshBasicMaterial({
-            color: 0x240115
-        })
-        let material = new THREE.MeshBasicMaterial({
-            color: 0xA5908D
-        })
-        let material2 = new THREE.MeshBasicMaterial({
-            color: 0x2F131E
-        })
-
-        let bottom_menu = ["Shop", "Inventory", "Friends"]
-        for (let i = 0; i < 3; i++) {
-            let player_background = new THREE.Mesh(new THREE.PlaneGeometry(87, 36), material)
-            player_background.position.set(-16.25 + (102 * i), 37.5, 0)
-            player_background.name = "bottom_menu_0" + i
-            BOTTOM_MENU.push(player_background)
-            UI.add(player_background)
-
-            player_background = new THREE.Mesh(new THREE.PlaneGeometry(87, 36), material2)
-            player_background.position.set(-11.25 + (102 * i), 32.5, -1)
-            player_background.name = "bottom_menu_0" + i
-            BOTTOM_MENU.push(player_background)
-            UI.add(player_background)
-
-            const name_geometry = new TextGeometry(bottom_menu[i], {
-                font: LOADED_FONT,
-                size: 10,
-                height: 0,
-                bevelEnabled: false,
-            });
-            let name_mesh = new THREE.Mesh(name_geometry, other_material)
-            centerText(name_geometry, name_mesh, -16.25 + (102 * i), 37.5, 1)
-            GAME_NAME.push(name_mesh)
-            UI.add(name_mesh)
-
-        }
-
-        let player_background = new THREE.Mesh(new THREE.PlaneGeometry(130.5, 60), material)
-        player_background.position.set(-140, 230, 0)
+        
+        loadUI_main()
+    
+        let player_background = new THREE.Mesh(new THREE.PlaneGeometry(130.5,60), LOADED_MATERIAL[2])
+        player_background.position.set(-140,230,0)
         player_background.name = "top_menu_01"
         TOP_MENU.push(player_background)
         UI.add(player_background)
-
-        let player_name_shadow = new THREE.Mesh(new THREE.PlaneGeometry(130.5, 60), material2)
-        player_name_shadow.position.set(-135, 225, -1)
-        player_name_shadow.name = "top_menu_01"
+    
+        let player_name_shadow = new THREE.Mesh(new THREE.PlaneGeometry(130.5,60), LOADED_MATERIAL[3])
+        player_name_shadow.position.set(-135,225,-1)
         TOP_MENU.push(player_name_shadow)
         UI.add(player_name_shadow)
-
+    
+    
         let PLAYER_NAME = userInfo.name
         if(PLAYER_NAME.length > 8){
             FONT_SIZE = 8.5
         } else {
             FONT_SIZE = 12
-        }    
-
-        const name_geometry = new TextGeometry(PLAYER_NAME, {
+        }
+    
+        const name_geometry = new TextGeometry( PLAYER_NAME, {
             font: LOADED_FONT,
             size: FONT_SIZE,
             height: 0,
             bevelEnabled: false,
-        });
-        let name_mesh = new THREE.Mesh(name_geometry, other_material)
+        } );
+        let name_mesh = new THREE.Mesh(name_geometry,LOADED_MATERIAL[1])
         centerText(name_geometry, name_mesh, -140, 230, 1)
         GAME_NAME.push(name_mesh)
         UI.add(name_mesh)
-
-        let PLAYER_EXP = userInfo.experience
-        console.log(userInfo)
-
-        let player_experience = new THREE.Mesh(new THREE.PlaneGeometry(110.5, 5), material2)
-        player_experience.position.set(-140, 32.5, 1)
+    
+        let player_experience = new THREE.Mesh(new THREE.PlaneGeometry(110.5,5), LOADED_MATERIAL[3])
+        player_experience.position.set(-140,32.5,1)
         GAME_NAME.push(player_experience)
         UI.add(player_experience)
-        let current_experience = new THREE.Mesh(new THREE.PlaneGeometry(107.5*(PLAYER_EXP/588),2), material)
-        let excess = (107.5 - (107.5*(PLAYER_EXP/588)))/2
+    
+        let current_experience = new THREE.Mesh(new THREE.PlaneGeometry(107.5*(userInfo.experience/588),2), LOADED_MATERIAL[2])
+        let excess = (107.5 - (107.5*(userInfo.experience/588)))/2
         current_experience.position.set(-140-excess,32.5,2)
         GAME_NAME.push(current_experience)
         UI.add(current_experience)
     
         // PLAYER LEVEL DISINI
-        let PLAYER_LEVEL = userInfo.level
-        let level_text = new TextGeometry(PLAYER_LEVEL.toString(),{
+        let level_text = new TextGeometry(userInfo.level.toString(),{
             font: LOADED_FONT,
             size: 8,
             height: 0,
             bevelEnabled: false
         })
-        let level_number = new THREE.Mesh(level_text, material2)
+        let level_number = new THREE.Mesh(level_text, LOADED_MATERIAL[3])
         centerText(level_text,level_number, -180,55,4)
         UI.add(level_number)
      
-        let experience_text = new TextGeometry(""+PLAYER_EXP+"/588",{
+        let PLAYER_EXP = userInfo.experience 
+        let experience_text = new TextGeometry(PLAYER_EXP.toString()+"/588",{
             font: LOADED_FONT,
             size: 7,
             height: 0,
             bevelEnabled: false
         })
-        let experience_number = new THREE.Mesh(experience_text, material2)
+        let experience_number = new THREE.Mesh(experience_text, LOADED_MATERIAL[3])
         alignText(experience_text,experience_number, -85,42.5,3)
         UI.add(experience_number)
-        
-        let player_level = new THREE.Mesh(new THREE.CircleGeometry(12.5, 6), base_material)
-        player_level.position.set(-180, 55, 2)
-        player_level.rotation.z = Math.PI / 2
+    
+        let player_level = new THREE.Mesh(new THREE.CircleGeometry(12.5,6), LOADED_MATERIAL[0])
+        player_level.position.set(-180,55,2)
+        player_level.rotation.z = Math.PI/2
         GAME_NAME.push(player_level)
         UI.add(player_level)
-        player_level = new THREE.Mesh(new THREE.CircleGeometry(15, 6), material2)
-        player_level.position.set(-180, 55, 1)
-        player_level.rotation.z = Math.PI / 2
+        player_level = new THREE.Mesh(new THREE.CircleGeometry(15,6), LOADED_MATERIAL[3])
+        player_level.position.set(-180,55,1)
+        player_level.rotation.z = Math.PI/2
         GAME_NAME.push(player_level)
         UI.add(player_level)
-
-        let currency_plane = new THREE.PlaneGeometry(109, 31)
-        let currency_shadow_plane = new THREE.PlaneGeometry(114, 36)
-        player_background = new THREE.Mesh(currency_plane, material)
-        player_background.position.set(-2.75, 242, 0)
-        player_background.name = "top_menu_02"
-        TOP_MENU.push(player_background)
-        UI.add(player_background)
-        player_background = new THREE.Mesh(currency_shadow_plane, material2)
-        player_background.position.set(-2.75, 242, -1)
-        player_background.name = "top_menu_02"
-        TOP_MENU.push(player_background)
-        UI.add(player_background)
-
-        let point_geometry = new TextGeometry(userInfo.point.toString(), {
-            font: LOADED_FONT,
-            size: 10,
-            height: 0,
-            bevelEnabled: false,
-        });
-        let mesh = new THREE.Mesh(point_geometry, other_material)
-        centerText(point_geometry, mesh, -2.75, 242, 1)
-        GAME_NAME.push(mesh)
-        UI.add(mesh)
-
-        player_background = new THREE.Mesh(currency_plane, material)
-        player_background.position.set(126.25, 242, 0)
-        player_background.name = "top_menu_03"
-        TOP_MENU.push(player_background)
-        UI.add(player_background)
-        player_background = new THREE.Mesh(currency_shadow_plane, material2)
-        player_background.position.set(126.25, 242, -1)
-        player_background.name = "top_menu_03"
-        TOP_MENU.push(player_background)
-        UI.add(player_background)
-
-
-        point_geometry = new TextGeometry(userInfo.gold.toString(), {
-            font: LOADED_FONT,
-            size: 10,
-            height: 0,
-            bevelEnabled: false,
-        });
-        mesh = new THREE.Mesh(point_geometry, other_material)
-        centerText(point_geometry, mesh, 126.25, 242, 1)
-        GAME_NAME.push(mesh)
-        UI.add(mesh)
-
-        player_background = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), material)
-        player_background.position.set(214.75, 243.5, 0)
-        player_background.name = "top_menu_04"
-        TOP_MENU.push(player_background)
-        UI.add(player_background)
-        player_background = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), material2)
-        player_background.position.set(219.75, 238.5, -1)
-        TOP_MENU.push(player_background)
-        UI.add(player_background)
-
-        let game_image_material = [base_material,other_material,material,material2]
     
-        let game_image = new THREE.Mesh(new THREE.PlaneGeometry(180,120), game_image_material[ACTIVE_GAME])
-        game_image.position.set(90,155,2)
-        GAME_MENU.push(game_image)
-        UI.add(game_image)
-    
-        let game_help = new THREE.Mesh(new THREE.PlaneGeometry(15,15), material)
-        game_help.position.set(170,205,3)
-        game_help.name = "help_button"
-        UI.add(game_help)
-    
-        let game_button = new THREE.Mesh(new THREE.PlaneGeometry(115,45), material)
-        game_button.position.set(87.5,92.5,4)
-        game_button.name = "play_0"+ACTIVE_GAME
-        GAME_MENU.push(game_button)
-        UI.add(game_button)
-        game_button = new THREE.Mesh(new THREE.PlaneGeometry(115,45), material2)
-        game_button.position.set(92.5,87.5,3)
-        GAME_MENU.push(game_button)
-        UI.add(game_button)
-    
-        let game_name = ["Congklak","Gobak Sodor","Tarik Tambang","Balap Karung"]
-        let game_text = new TextGeometry("Play\n"+game_name[ACTIVE_GAME], {
-            font: LOADED_FONT,
-            size: 10,
-            height: 0,
-            bevelEnabled: false
-        })
-        let game_text_mesh = new THREE.Mesh(game_text, other_material)
-        centerText(game_text,game_text_mesh,87.5,92.5,5)
-        GAME_MENU.push(game_text_mesh)
-        UI.add(game_text_mesh)
-    
-        let game_next = new THREE.Mesh(new THREE.PlaneGeometry(30,35), material)
-        game_next.position.set(170,97.5,3)
-        game_next.name = "button_next"
-        UI.add(game_next)
-    
-        let game_prev = new THREE.Mesh(new THREE.PlaneGeometry(30,35), material)
-        game_prev.position.set(10,97.5,3)
-        game_prev.name = "button_prev"
-        UI.add(game_prev)
-
+        loadUI_currency()
         document.addEventListener("click", function (event) {
             /* which = 1 itu click kiri */
             /* which = 2 itu scroll click */
             /* which = 3 itu click kanan */
-            if (event.which == 1) {
+            if (event.which === 1) {
                 let mouse = {}
                 let w = window.innerWidth
                 let h = window.innerHeight
@@ -413,91 +281,247 @@ const Lobby = () => {
                                 break;
                         }
                     } else if(obj_name.startsWith("button_")){
-                            switch(obj_name){
-                                case "button_next":
-                                    ACTIVE_GAME++;
-                                    if(ACTIVE_GAME > 3){
-                                        ACTIVE_GAME = 0;
-                                    }
-                                    changeGameMode()
-                                    break;
-                                case "button_prev":
-                                    ACTIVE_GAME--;
-                                    if(ACTIVE_GAME < 0){
-                                        ACTIVE_GAME = 3
-                                    }
-                                    changeGameMode()
-                                    break;
+                        switch(obj_name){
+                            case "button_next":
+                                ACTIVE_GAME++;
+                                if(ACTIVE_GAME > 3){
+                                    ACTIVE_GAME = 0;
                                 }
-                        } else if (obj_name.startsWith("play_")){
-                            switch(choice){
-                                case 0:
-                                    break;
-                                case 1:
-                                    break;
-                                case 2:
-                                    break;
-                                case 3:
-                                    break;
+                                changeGameMode()
+                                break;
+                            case "button_prev":
+                                ACTIVE_GAME--;
+                                if(ACTIVE_GAME < 0){
+                                    ACTIVE_GAME = 3
+                                }
+                                changeGameMode()
+                                break;
+                            case "button_close_choice":
+                                loadUI_main()
+                                break;
                             }
+                        } else if (obj_name.startsWith("play_")){
+                            showRoom(choice)
                         }
                     })
                 }
             })
     }
 
-    function initGame() {
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        SCENE.add(ambientLight);
-
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-        dirLight.position.set(0, 20, 10); // x, y, z
-        SCENE.add(dirLight);
-
-        // PLAYER_PREVIEW = PLAYER_LOADER.Load()
-        // PLAYER_PREVIEW.scale.set(0.75,0.75,0.75)
-        // PLAYER_PREVIEW.position.set(-55,-4,-35)
-
-        let material = new THREE.MeshBasicMaterial({
-            color: 0xA5908D
+    function showRoom(gameId){
+        MAIN_UI.forEach(e => {
+            UI.remove(e)
+        });
+        MAIN_UI = []
+        GAME_MENU.forEach(e => {
+            UI.remove(e)
         })
-        let material2 = new THREE.MeshBasicMaterial({
-            color: 0x2F131E
-        })
-        let player_background = new THREE.Mesh(new THREE.PlaneGeometry(52, 83.5), material)
-        player_background.rotation.y = -Math.PI / 4
-        player_background.position.set(-15.25, -47.5, -75.25)
-        SCENE.add(player_background)
-
-        player_background = new THREE.Mesh(new THREE.PlaneGeometry(51, 83.5), material2)
-        player_background.rotation.y = -Math.PI / 4
-        player_background.position.set(0.5, -63.5, -87.25)
-
-        SCENE.add(player_background)
-        SCENE.add(PLAYER_PREVIEW)
+        GAME_MENU = []
+    
+        let back_arrow = new THREE.Mesh(new THREE.PlaneGeometry(20,20),LOADED_MATERIAL[0])
+        back_arrow.position.set(-45,200,100)
+        back_arrow.name = "button_close_choice"
+        ROOM_UI.push(back_arrow)
+        UI.add(back_arrow)
+    
+        let room_choice = new THREE.Mesh(new THREE.PlaneGeometry(296,200), LOADED_MATERIAL[2])
+        room_choice.position.set(88,115,99)
+        ROOM_UI.push(room_choice)
+        UI.add(room_choice)
+        for (let j = 0; j < 2; j++) {
+            for (let i = 0; i < 3; i++) {
+                if( i === 2 && j === 1) break;
+                let room = new THREE.Mesh(new THREE.PlaneGeometry(60,60), LOADED_MATERIAL[0])
+                room.position.set(20+(i*70),150-(j*85),100)
+                room.name = "room_"+gameId+"_"+(i+(j*3)+1)
+                ROOM_UI.push(room)
+                UI.add(room)
+        
+                let point_geometry = new TextGeometry( "0/10", {
+                    font: LOADED_FONT,
+                    size: 8,
+                    height: 0,
+                    bevelEnabled: false,
+                } );
+                let mesh = new THREE.Mesh(point_geometry,LOADED_MATERIAL[1])
+                centerText(point_geometry,mesh, 20+(i*70),112.5-(j*85),100)
+                ROOM_UI.push(mesh)
+                UI.add(mesh)
+            }
+        }
+    
+    
     }
-
+    
+    function loadUI_main(){
+    
+        if(ROOM_UI.length > 0){
+            ROOM_UI.forEach(e => {
+                UI.remove(e)
+            })
+            ROOM_UI = []
+        }
+        let bottom_menu = ["Shop","Inventory","Friends"]
+        for (let i = 0; i < bottom_menu.length; i++) {
+            let player_background = new THREE.Mesh(new THREE.PlaneGeometry(87,36), LOADED_MATERIAL[2])
+            player_background.position.set(-16.25+(102*i),37.5,0)
+            player_background.name = "bottom_menu_0"+i
+            MAIN_UI.push(player_background)
+            UI.add(player_background)
+    
+            player_background = new THREE.Mesh(new THREE.PlaneGeometry(87,36), LOADED_MATERIAL[3])
+            player_background.position.set(-11.25+(102*i),32.5,-1)
+            player_background.name = "bottom_menu_0"+i
+            MAIN_UI.push(player_background)
+            UI.add(player_background)
+    
+            const name_geometry = new TextGeometry( bottom_menu[i], {
+                font: LOADED_FONT,
+                size: 10,
+                height: 0,
+                bevelEnabled: false,
+            } );
+            let name_mesh = new THREE.Mesh(name_geometry,LOADED_MATERIAL[1])
+            centerText(name_geometry, name_mesh, -16.25+(102*i), 37.5, 1)
+            MAIN_UI.push(name_mesh)
+            UI.add(name_mesh)
+        }
+    
+        let game_image_material = [LOADED_MATERIAL[0],LOADED_MATERIAL[1],LOADED_MATERIAL[2],LOADED_MATERIAL[3]]
+        
+        let game_image = new THREE.Mesh(new THREE.PlaneGeometry(180,120), game_image_material[ACTIVE_GAME])
+        game_image.position.set(90,155,2)
+        GAME_MENU.push(game_image)
+        UI.add(game_image)
+    
+        let game_help = new THREE.Mesh(new THREE.PlaneGeometry(15,15), LOADED_MATERIAL[0])
+        game_help.position.set(170,205,3)
+        game_help.name = "help_button"
+        GAME_MENU.push(game_help)
+        UI.add(game_help)
+    
+        let game_button = new THREE.Mesh(new THREE.PlaneGeometry(115,45), LOADED_MATERIAL[2])
+        game_button.position.set(87.5,92.5,4)
+        game_button.name = "play_0"+(ACTIVE_GAME+1)
+        GAME_MENU.push(game_button)
+        UI.add(game_button)
+        game_button = new THREE.Mesh(new THREE.PlaneGeometry(115,45), LOADED_MATERIAL[3])
+        game_button.position.set(92.5,87.5,3)
+        GAME_MENU.push(game_button)
+        UI.add(game_button)
+    
+        let game_name = ["Congklak","Gobak Sodor","Tarik Tambang","Balap Karung"]
+        let game_text = new TextGeometry("Play\n"+game_name[ACTIVE_GAME], {
+            font: LOADED_FONT,
+            size: 10,
+            height: 0,
+            bevelEnabled: false
+        })
+        let game_text_mesh = new THREE.Mesh(game_text, LOADED_MATERIAL[1])
+        centerText(game_text,game_text_mesh,87.5,92.5,5)
+        GAME_MENU.push(game_text_mesh)
+        UI.add(game_text_mesh)
+    
+        let game_next_arrow = new THREE.Mesh(new THREE.PlaneGeometry(22,22), LOADED_MATERIAL[2])
+        game_next_arrow.position.set(170,97.5,4)
+        GAME_MENU.push(game_next_arrow)
+        UI.add(game_next_arrow)
+        let game_next = new THREE.Mesh(new THREE.PlaneGeometry(30,35), LOADED_MATERIAL[2])
+        game_next.position.set(170,97.5,3)
+        game_next.name = "button_next"
+        GAME_MENU.push(game_next)
+        UI.add(game_next)
+        
+        let game_prev_arrow = new THREE.Mesh(new THREE.PlaneGeometry(22,22), LOADED_MATERIAL[2])
+        game_prev_arrow.position.set(10,97.5,4)
+        GAME_MENU.push(game_prev_arrow)
+        UI.add(game_prev_arrow)
+        let game_prev = new THREE.Mesh(new THREE.PlaneGeometry(30,35), LOADED_MATERIAL[2])
+        game_prev.position.set(10,97.5,3)
+        game_prev.name = "button_prev"
+        GAME_MENU.push(game_prev)
+        UI.add(game_prev)
+    }
+    
+    function loadUI_currency(){
+        let currency_plane = new THREE.PlaneGeometry(115,31)
+        let currency_shadow_plane = new THREE.PlaneGeometry(120,36)
+        let player_background = new THREE.Mesh(currency_plane, LOADED_MATERIAL[2])
+        player_background.position.set(0.25,242,0)
+        player_background.name = "top_menu_02"
+        TOP_MENU.push(player_background)
+        UI.add(player_background)
+        player_background = new THREE.Mesh(currency_shadow_plane, LOADED_MATERIAL[3])
+        player_background.position.set(0.25,242,-1)
+        player_background.name = "top_menu_02"
+        TOP_MENU.push(player_background)
+        UI.add(player_background)
+    
+        let point_geometry = new TextGeometry( userInfo.point.toString(), {
+            font: LOADED_FONT,
+            size: 10,
+            height: 0,
+            bevelEnabled: false,
+        } );
+        let mesh = new THREE.Mesh(point_geometry,LOADED_MATERIAL[1])
+        alignText(point_geometry,mesh, 28.5,242,1)
+        GAME_NAME.push(mesh)
+        UI.add(mesh)
+    
+        let currency_logo = new THREE.Mesh(new THREE.PlaneGeometry(22.5,25), LOADED_MATERIAL[0])
+        currency_logo.position.set(45,242,2)
+        UI.add(currency_logo)
+        currency_logo = new THREE.Mesh(new THREE.PlaneGeometry(37.5,25), LOADED_MATERIAL[0])
+        currency_logo.position.set(165,242,2)
+        UI.add(currency_logo)
+    
+        player_background = new THREE.Mesh(currency_plane, LOADED_MATERIAL[2])
+        player_background.position.set(129.25,242,0)
+        player_background.name = "top_menu_03"
+        TOP_MENU.push(player_background)
+        UI.add(player_background)
+        player_background = new THREE.Mesh(currency_shadow_plane, LOADED_MATERIAL[3])
+        player_background.position.set(129.25,242,-1)
+        player_background.name = "top_menu_03"
+        TOP_MENU.push(player_background)
+        UI.add(player_background)
+    
+    
+        point_geometry = new TextGeometry( userInfo.gold.toString(), {
+                font: LOADED_FONT,
+                size: 10,
+                height: 0,
+                bevelEnabled: false,
+            } );
+        mesh = new THREE.Mesh(point_geometry,LOADED_MATERIAL[1])
+        alignText(point_geometry,mesh,145,242,1)
+        GAME_NAME.push(mesh)
+        UI.add(mesh)
+        
+        let sound_icon = new THREE.Mesh(new THREE.PlaneGeometry(33,33), LOADED_MATERIAL[0])
+        sound_icon.position.set(214.75,243.5,1)
+        UI.add(sound_icon)
+    
+        player_background = new THREE.Mesh(new THREE.PlaneGeometry(33,33), LOADED_MATERIAL[2])
+        player_background.position.set(214.75,243.5,0)
+        player_background.name = "top_menu_04"
+        TOP_MENU.push(player_background)
+        UI.add(player_background)
+        player_background = new THREE.Mesh(new THREE.PlaneGeometry(33,33), LOADED_MATERIAL[3])
+        player_background.position.set(219.75,238.5,-1)
+        TOP_MENU.push(player_background)
+        UI.add(player_background)
+    }
+    
     function changeGameMode(){
         if(GAME_MENU.length > 0){
             GAME_MENU.forEach(e => {
                 UI.remove(e)
             });
+            GAME_MENU = []
         }
-
-        let base_material = new THREE.MeshBasicMaterial({
-            color: 0xcec3c1
-        })
-        let other_material = new THREE.MeshBasicMaterial({
-            color: 0x240115
-        })
-        let material = new THREE.MeshBasicMaterial({
-            color:0xA5908D
-        })
-        let material2 = new THREE.MeshBasicMaterial({
-            color:0x2F131E
-        })
-
-        let game_image_material = [base_material,other_material,material,material2]
+    
+        let game_image_material = [LOADED_MATERIAL[0],LOADED_MATERIAL[1],LOADED_MATERIAL[2],LOADED_MATERIAL[3]]
         
         let game_image = new THREE.Mesh(new THREE.PlaneGeometry(180,120), game_image_material[ACTIVE_GAME])
         game_image.position.set(90,155,2)
@@ -511,29 +535,80 @@ const Lobby = () => {
             height: 0,
             bevelEnabled: false
         })
-        let game_text_mesh = new THREE.Mesh(game_text, other_material)
+        let game_text_mesh = new THREE.Mesh(game_text, LOADED_MATERIAL[1])
         centerText(game_text,game_text_mesh,87.5,92.5,5)
         GAME_MENU.push(game_text_mesh)
         UI.add(game_text_mesh)
         
-        let game_button = new THREE.Mesh(new THREE.PlaneGeometry(115,45), material)
+        let game_help = new THREE.Mesh(new THREE.PlaneGeometry(15,15), LOADED_MATERIAL[0])
+        game_help.position.set(170,205,3)
+        game_help.name = "help_button"
+        GAME_MENU.push(game_help)
+        UI.add(game_help)
+        
+        let game_button = new THREE.Mesh(new THREE.PlaneGeometry(115,45), LOADED_MATERIAL[2])
         game_button.position.set(87.5,92.5,4)
-        game_button.name = "play_0"+ACTIVE_GAME
+        game_button.name = "play_0"+(ACTIVE_GAME+1)
         GAME_MENU.push(game_button)
         UI.add(game_button)
-        game_button = new THREE.Mesh(new THREE.PlaneGeometry(115,45), material2)
+        game_button = new THREE.Mesh(new THREE.PlaneGeometry(115,45), LOADED_MATERIAL[3])
         game_button.position.set(92.5,87.5,3)
         GAME_MENU.push(game_button)
         UI.add(game_button)
+    
+        
+        let game_next_arrow = new THREE.Mesh(new THREE.PlaneGeometry(22,22), LOADED_MATERIAL[0])
+        game_next_arrow.position.set(170,97.5,4)
+        GAME_MENU.push(game_next_arrow)
+        UI.add(game_next_arrow)
+        let game_next = new THREE.Mesh(new THREE.PlaneGeometry(30,35), LOADED_MATERIAL[2])
+        game_next.position.set(170,97.5,3)
+        game_next.name = "button_next"
+        GAME_MENU.push(game_next)
+        UI.add(game_next)
+        
+        let game_prev_arrow = new THREE.Mesh(new THREE.PlaneGeometry(22,22), LOADED_MATERIAL[0])
+        game_prev_arrow.position.set(10,97.5,4)
+        GAME_MENU.push(game_prev_arrow)
+        UI.add(game_prev_arrow)
+        let game_prev = new THREE.Mesh(new THREE.PlaneGeometry(30,35), LOADED_MATERIAL[2])
+        game_prev.position.set(10,97.5,3)
+        game_prev.name = "button_prev"
+        GAME_MENU.push(game_prev)
+        UI.add(game_prev)
+    }
+    
+    function initGame(){
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        SCENE.add(ambientLight);
+    
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        dirLight.position.set(0, 20, 10);
+        SCENE.add(dirLight);
+    
+        // PLAYER_PREVIEW = PLAYER_LOADER.PLAYER.player
+        // PLAYER_PREVIEW.scale.set(0.85,0.85,0.85)
+        // PLAYER_PREVIEW.position.set(-55,-2.5,-35)
+    
+        let player_background = new THREE.Mesh(new THREE.PlaneGeometry(52,83.5), LOADED_MATERIAL[2])
+        player_background.rotation.y = -Math.PI/4
+        player_background.position.set(-15.25,-47.5,-75.25)
+        SCENE.add(player_background)
+    
+        player_background = new THREE.Mesh(new THREE.PlaneGeometry(51,83.5), LOADED_MATERIAL[3])
+        player_background.rotation.y = -Math.PI/4
+        player_background.position.set(0.5,-63.5,-87.25)
+    
+        SCENE.add(player_background)
+        // SCENE.add(PLAYER_PREVIEW)
     }
 
     function gameLoop() {
         requestAnimationFrame(gameLoop);
 
-
         RENDERER.render(SCENE, CAMERA);
         UI_RENDERER.render(UI, UI_CAMERA);
-    }
+}
 
     function alignText(textGeo, textMesh, x,y,z){
         textGeo.computeBoundingBox();
