@@ -20,6 +20,7 @@ userRouter.post("/login", asyncHandler(async (req, res) => {
             experience: user.experience,
             point: user.point,
             gold: user.gold,
+            numOfWin: user.numOfWin,
             token: generateToken(user._id),
             createdAt: user.createdAt,
         })

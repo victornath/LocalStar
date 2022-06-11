@@ -4,6 +4,8 @@ import User from "./models/UserModel.js";
 import users from "./data/Users.js";
 import Item from "./models/ItemModel.js";
 import items from "./data/Items.js";
+import Playroom from "./models/PlayroomModel.js";
+import playrooms from "./data/Playrooms.js";
 
 const ImportData = express.Router()
 
@@ -17,6 +19,12 @@ ImportData.post("/item", asyncHandler(async (req, res) => {
     await Item.remove({});
     const importItem = await Item.insertMany(items);
     res.send({ importItem });
+}));
+
+ImportData.post("/playroom", asyncHandler(async (req, res) => {
+    await Playroom.remove({});
+    const importPlayroom = await Playroom.insertMany(playrooms);
+    res.send({ importPlayroom });
 }));
 
 export default ImportData;

@@ -170,7 +170,7 @@ const Lobby = () => {
     
     
         let PLAYER_NAME = userInfo.name
-        if(PLAYER_NAME.length > 8){
+        if (PLAYER_NAME.length > 8) {
             FONT_SIZE = 8.5
         } else {
             FONT_SIZE = 12
@@ -197,7 +197,7 @@ const Lobby = () => {
         current_experience.position.set(-140-excess,32.5,2)
         GAME_NAME.push(current_experience)
         UI.add(current_experience)
-    
+
         // PLAYER LEVEL DISINI
         let level_text = new TextGeometry(userInfo.level.toString(),{
             font: LOADED_FONT,
@@ -240,23 +240,23 @@ const Lobby = () => {
                 let mouse = {}
                 let w = window.innerWidth
                 let h = window.innerHeight
-                mouse.x = event.clientX/w *2 -1
-                mouse.y = event.clientY/h *(-2) + 1
-            
-                RAYCAST.setFromCamera(mouse,UI_CAMERA)
-                let items = RAYCAST.intersectObjects(UI.children,false)
+                mouse.x = event.clientX / w * 2 - 1
+                mouse.y = event.clientY / h * (-2) + 1
+
+                RAYCAST.setFromCamera(mouse, UI_CAMERA)
+                let items = RAYCAST.intersectObjects(UI.children, false)
                 console.log(items)
-                items.forEach(i=>{
+                items.forEach(i => {
                     console.log(i.object.name)
                     let obj_name = i.object.name
-                    let choice = parseInt(obj_name.charAt(obj_name.length-1))
-                    if(obj_name.startsWith("help_")){
-                        switch(obj_name){
+                    let choice = parseInt(obj_name.charAt(obj_name.length - 1))
+                    if (obj_name.startsWith("help_")) {
+                        switch (obj_name) {
                             case "help_button":
                                 break;
                         }
-                    } else if (obj_name.startsWith("top_")){
-                        switch(choice){
+                    } else if (obj_name.startsWith("top_")) {
+                        switch (choice) {
                             case 1:
                                 // Link to Edit Profile
                                 break;
@@ -303,9 +303,9 @@ const Lobby = () => {
                         } else if (obj_name.startsWith("play_")){
                             showRoom(choice)
                         }
-                    })
-                }
-            })
+                })
+            }
+        })
     }
 
     function showRoom(gameId){
@@ -527,9 +527,9 @@ const Lobby = () => {
         game_image.position.set(90,155,2)
         GAME_MENU.push(game_image)
         UI.add(game_image)
-        
-        let game_name = ["Congklak","Gobak Sodor","Tarik Tambang","Balap Karung"]
-        let game_text = new TextGeometry("Play\n"+game_name[ACTIVE_GAME], {
+
+        let game_name = ["Congklak", "Gobak Sodor", "Tarik Tambang", "Balap Karung"]
+        let game_text = new TextGeometry("Play\n" + game_name[ACTIVE_GAME], {
             font: LOADED_FONT,
             size: 10,
             height: 0,
@@ -610,13 +610,13 @@ const Lobby = () => {
         UI_RENDERER.render(UI, UI_CAMERA);
 }
 
-    function alignText(textGeo, textMesh, x,y,z){
+    function alignText(textGeo, textMesh, x, y, z) {
         textGeo.computeBoundingBox();
         const center = textGeo.boundingBox.getCenter(new THREE.Vector3())
         textMesh.updateMatrixWorld();
         center.applyMatrix4(textMesh.matrixWorld);
-        textMesh.geometry.translate(x-(2*center.x),y-center.y,z-center.z)
-    }    
+        textMesh.geometry.translate(x - (2 * center.x), y - center.y, z - center.z)
+    }
 
     function centerText(textGeo, textMesh, x, y, z) {
         textGeo.computeBoundingBox();
