@@ -302,12 +302,20 @@ const Lobby = () => {
                         }
                     } else if (obj_name.startsWith("play_")) {
                         showRoom(choice)
+                        getPlayrooms("/api/playroom/lobby")
                     } else if (obj_name.startsWith("room_")) {
                         window.open("/playroom", "_self")
                     }
                 })
             }
         })
+    }
+
+    async function getPlayrooms(url){
+        const response = await fetch(url);
+        var data = await response.json();
+
+        console.log(data)
     }
 
     function showRoom(gameId) {
