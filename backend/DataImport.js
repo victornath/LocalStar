@@ -29,9 +29,9 @@ ImportData.post("/playroom", asyncHandler(async (req, res) => {
     res.send({ importPlayroom });
 }));
 
-ImportData.post("/tables", asyncHandler(async (req, res) => {
-    await Tables.remove({});
-    const importTables = await Tables.insertMany(tables);
+ImportData.post("/table", asyncHandler(async (req, res) => {
+    await Table.remove({});
+    const importTables = await Table.insertMany(tables);
     res.send({ importTables });
 }));
 

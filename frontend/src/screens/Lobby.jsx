@@ -302,7 +302,7 @@ const Lobby = () => {
                         }
                     } else if (obj_name.startsWith("play_")) {
                         showRoom(choice)
-                        getPlayrooms("/api/playroom/lobby")
+                        getPlayrooms("/api/playrooms/lobby")
                     } else if (obj_name.startsWith("room_")) {
                         window.open("/playroom", "_self")
                     }
@@ -311,7 +311,7 @@ const Lobby = () => {
         })
     }
 
-    async function getPlayrooms(url){
+    async function getPlayrooms(url) {
         const response = await fetch(url);
         var data = await response.json();
 
