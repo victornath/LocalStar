@@ -1,11 +1,6 @@
 import mongoose from "mongoose";
 
 const playroomSchema = mongoose.Schema({
-    table_id: {
-        type: Number,
-        required: true,
-        unique: true,
-    },
     game_name: {
         type: String,
         required: true,
@@ -14,9 +9,18 @@ const playroomSchema = mongoose.Schema({
         type: Number,
         required: true,
     },
-    user_id: {
+    furniture_ids: {
+        type: [String],
+        default: null,
+    },
+    user_ids: {
         type: [mongoose.Types.ObjectId],
         default: null,
+    },
+    table_ids: {
+        type: [Number],
+        unique: true,
+        required: true,
     },
     _id: false,
 })

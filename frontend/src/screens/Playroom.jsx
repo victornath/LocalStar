@@ -160,7 +160,7 @@ const Playroom = () => {
         mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0xffffff }))
         mesh.rotation.y = -Math.PI / 4
         mesh.position.set(-5, -150, -150)
-        mesh.userData = { URL: "./pages/lobby.html" }
+        mesh.userData = { URL: "./lobby" }
         mesh.name = "ui_back_btn"
         UI.add(mesh)
 
@@ -168,7 +168,7 @@ const Playroom = () => {
         mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x000000, opacity: 0.2, transparent: true }))
         mesh.rotation.y = -Math.PI / 4
         mesh.position.set(17.5, -150, -127.5)
-        mesh.userData = { URL: "./pages/lobby.html" }
+        mesh.userData = { URL: "./lobby" }
         mesh.name = "ui_back_btn"
         UI.add(mesh)
         document.addEventListener("click", function (event) {
