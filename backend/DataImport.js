@@ -8,6 +8,8 @@ import Playroom from "./models/PlayroomModel.js";
 import playrooms from "./data/Playrooms.js";
 import Table from "./models/TableModel.js";
 import tables from "./data/Tables.js";
+import Gacha from "./models/GachaModel.js";
+import gachas from "./data/Gachas.js";
 
 const ImportData = express.Router()
 
@@ -31,8 +33,14 @@ ImportData.post("/playroom", asyncHandler(async (req, res) => {
 
 ImportData.post("/table", asyncHandler(async (req, res) => {
     await Table.remove({});
-    const importTables = await Table.insertMany(tables);
-    res.send({ importTables });
+    const importTable = await Table.insertMany(tables);
+    res.send({ importTable });
+}));
+
+ImportData.post("/gacha", asyncHandler(async (req, res) => {
+    await Gacha.remove({});
+    const importGacha = await Gacha.insertMany(gachas);
+    res.send({ importGacha });
 }));
 
 export default ImportData;
