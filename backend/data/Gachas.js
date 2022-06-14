@@ -1,6 +1,6 @@
 const gachas = [
     {
-        gacha_name: "Basic Gacha",
+        name: "Basic Gacha",
         currency: "point",
         price: 150,
         item_ids: ["bottom_pants_l_bk", "bottom_pants_l_dbl", "bottom_pants_l_kh", "bottom_pants_l_lbl",

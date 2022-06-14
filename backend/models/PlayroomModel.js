@@ -1,12 +1,13 @@
 import mongoose from "mongoose";
 
 const playroomSchema = mongoose.Schema({
-    game_name: {
-        type: String,
-        required: true,
-    },
     playroom_id: {
         type: Number,
+        unique: true,
+        required: true,
+    },
+    game_name: {
+        type: String,
         required: true,
     },
     furniture_ids: {

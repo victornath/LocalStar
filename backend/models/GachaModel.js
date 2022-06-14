@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const gachaSchema = mongoose.Schema({
-    gacha_name: {
+    name: {
         type: String,
         required: true,
         unique: true,
