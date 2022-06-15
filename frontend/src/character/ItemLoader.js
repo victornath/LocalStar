@@ -1,4 +1,4 @@
-import * as THREE from '../three.js/build/three.module.js'
+import * as THREE from 'three';
 
 const TEXTURE_LOADER = new THREE.TextureLoader()
 class ItemLoader
@@ -6,8 +6,8 @@ class ItemLoader
     constructor(){
     }
     async load(itemId){
-        let item = await import('../item/item/'+itemId+'.js');
-        let temp = TEXTURE_LOADER.load('../texture/item/preview/'+itemId+'.png')
+        let item = await import('../character/item/'+itemId+'.js');
+        let temp = TEXTURE_LOADER.load('./images/texture/item/preview/'+itemId+'.png')
         return new Promise(resolve => {
             resolve({
                 texture: new THREE.MeshBasicMaterial({
