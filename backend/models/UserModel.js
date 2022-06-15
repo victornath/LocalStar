@@ -34,7 +34,11 @@ const userSchema = mongoose.Schema({
         type: Number,
         default: 5,
     },
-    numOfWin: {
+    item_ids: {
+        type: [String],
+        default: null,
+    },
+    num_of_win: {
         type: [Number],
         default: [0, 0, 0, 0],
     }
