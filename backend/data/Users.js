@@ -14,13 +14,149 @@ const users = [
         level: 10,
         point: 1000,
         gold: 1000,
-        item_ids: ["bottom_pants_l_bk", "bottom_pants_l_dbl", "bottom_pants_l_kh", "bottom_pants_l_lbl",
-            "bottom_pants_s_bk", "bottom_pants_s_dbl", "bottom_pants_s_kh", "bottom_pants_s_lbl", "hair_long_bk",
-            "hair_long_br", "hair_long_gr", "hair_long_yw", "hair_short_bk", "hair_short_br", "hair_short_gr",
-            "hair_short_yw", "hat_cap_bl", "hat_cap_gn", "hat_cap_rd", "hat_cap_yw", "hat_fedora_bk",
-            "hat_fedora_br", "shoes_basic_bk", "shoes_basic_bl", "shoes_basic_br", "shoes_basic_rd",
-            "shoes_basic_wh", "top_shirt_bk", "top_shirt_bl", "top_shirt_gn", "top_shirt_pk", "top_shirt_rd"],
-        num_of_win: [1, 2, 3, 4],
+        item_owned: [
+            {
+                item_id: "bottom_pants_l_bk",
+                category: "bottom",
+            },
+            {
+                item_id: "bottom_pants_l_dbl",
+                category: "bottom",
+            },
+            {
+                item_id: "bottom_pants_l_kh",
+                category: "bottom",
+            },
+            {
+                item_id: "bottom_pants_l_lbl",
+                category: "bottom",
+            },
+            {
+                item_id: "bottom_pants_s_bk",
+                category: "bottom",
+            },
+            {
+                item_id: "bottom_pants_s_dbl",
+                category: "bottom",
+            },
+            {
+                item_id: "bottom_pants_s_kh",
+                category: "bottom",
+            },
+            {
+                item_id: "bottom_pants_s_lbl",
+                category: "bottom",
+            },
+            {
+                item_id: "hair_long_bk",
+                category: "hair",
+            },
+            {
+                item_id: "hair_long_br",
+                category: "hair",
+            },
+            {
+                item_id: "hair_long_gr",
+                category: "hair",
+            },
+            {
+                item_id: "hair_long_yw",
+                category: "hair",
+            },
+            {
+                item_id: "hair_short_bk",
+                category: "hair",
+            },
+            {
+                item_id: "hair_short_br",
+                category: "hair",
+            },
+            {
+                item_id: "hair_short_gr",
+                category: "hair",
+            },
+            {
+                item_id: "hair_short_yw",
+                category: "hair",
+            },
+            {
+                item_id: "hat_cap_bl",
+                category: "hat",
+            },
+            {
+                item_id: "hat_cap_gn",
+                category: "hat",
+            },
+            {
+                item_id: "hat_cap_rd",
+                category: "hat",
+            },
+            {
+                item_id: "hat_cap_yw",
+                category: "hat",
+            },
+            {
+                item_id: "hat_fedora_bk",
+                category: "hat",
+            },
+            {
+                item_id: "hat_fedora_br",
+                category: "hat",
+            },
+            {
+                item_id: "shoes_basic_bk",
+                category: "shoes",
+            },
+            {
+                item_id: "shoes_basic_bl",
+                category: "shoes",
+            },
+            {
+                item_id: "shoes_basic_br",
+                category: "shoes",
+            },
+            {
+                item_id: "shoes_basic_rd",
+                category: "shoes",
+            },
+            {
+                item_id: "shoes_basic_wh",
+                category: "shoes",
+            },
+            {
+                item_id: "top_shirt_bk",
+                category: "top",
+            },
+            {
+                item_id: "top_shirt_bl",
+                category: "top",
+            },
+            {
+                item_id: "top_shirt_gn",
+                category: "top",
+            },
+            {
+                item_id: "top_shirt_pk",
+                category: "top",
+            },
+            {
+                item_id: "top_shirt_rd",
+                category: "top",
+            },
+        ],
+        num_of_win: {
+            congklak: 0,
+            gobak_sodor: 0,
+            tarik_tambang: 0,
+            balap_karung: 0,
+        },
+        equipped_items: {
+            hat: "hat_cap_gn",
+            hair: "hair_long_gr",
+            top: "top_shirt_rd",
+            bottom: "bottom_pants_l_bk",
+            shoes: "shoes_basic_br",
+        }
     },
 ];
 

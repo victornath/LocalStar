@@ -34,14 +34,29 @@ const userSchema = mongoose.Schema({
         type: Number,
         default: 5,
     },
-    item_ids: {
-        type: [String],
+    item_owned: {
+        type: [Object],
         default: null,
     },
     num_of_win: {
-        type: [Number],
-        default: [0, 0, 0, 0],
-    }
+        type: Object,
+        default: {
+            congklak: 0,
+            gobak_sodor: 0,
+            tarik_tambang: 0,
+            balap_karung: 0,
+        },
+    },
+    equipped_items: {
+        type: Object,
+        default: {
+            hat: "",
+            hair: "",
+            top: "",
+            bottom: "",
+            shoes: "",
+        },
+    },
 },
     {
         timestamps: true,

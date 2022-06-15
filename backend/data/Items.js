@@ -165,31 +165,31 @@ const items = [
     {
         id: "top_shirt_bk",
         name: "Plain Black Shirt",
-        category: "shirt",
+        category: "top",
         rarity: "common",
     },
     {
         id: "top_shirt_bl",
         name: "Plain Blue Shirt",
-        category: "shirt",
+        category: "top",
         rarity: "common",
     },
     {
         id: "top_shirt_gn",
         name: "Plain Green Shirt",
-        category: "shirt",
+        category: "top",
         rarity: "common",
     },
     {
         id: "top_shirt_pk",
         name: "Plain Pink Shirt",
-        category: "shirt",
+        category: "top",
         rarity: "common",
     },
     {
         id: "top_shirt_rd",
         name: "Plain Red Shirt",
-        category: "shirt",
+        category: "top",
         rarity: "common",
     },
 ];
