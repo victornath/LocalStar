@@ -22,7 +22,7 @@ userRouter.post("/login", asyncHandler(async (req, res) => {
             point: user.point,
             gold: user.gold,
             item_owned: user.item_owned,
-            num_of_win: user.numOfWin,
+            num_of_win: user.num_of_win,
             equipped_items: user.equipped_items,
             token: generateToken(user._id),
             createdAt: user.createdAt,
