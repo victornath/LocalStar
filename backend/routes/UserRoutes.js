@@ -60,7 +60,7 @@ userRouter.post("/", asyncHandler(async (req, res) => {
     }
 }));
 
-// PROFILE
+// GET USER PROFILE DATA
 userRouter.get("/profile", protect, asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id);
     if (user) {
@@ -77,7 +77,7 @@ userRouter.get("/profile", protect, asyncHandler(async (req, res) => {
     }
 }));
 
-// GET USER ITEM
+// GET FILTERED USER ITEM
 
 userRouter.get("/inventory", protect, asyncHandler(async (req, res) => {
     const { category } = req.body
@@ -131,13 +131,19 @@ userRouter.get("/inventory", protect, asyncHandler(async (req, res) => {
             res.json(query)
             break;
         default:
+            query = await User.aggregate([
+                { $match: { _id: user._id } },
+                { $unwind: "$item_owned" },
+                { $group: { _id: "$_id", item_owned: { $push: "$item_owned.item_id" } } }
+            ])
+            res.json(query)
             break;
     }
 
 }
 ));
 
-// UPDATE EQUIPPED ITEM FOR USER
+// SAVE EQUIPPED ITEM FOR USER
 userRouter.patch("/inventory", protect, asyncHandler(async (req, res) => {
     const { equipped_items } = req.body
     const user = await User.findById(req.user._id);
@@ -149,13 +155,17 @@ userRouter.patch("/inventory", protect, asyncHandler(async (req, res) => {
             equipped_items: equipped_items,
         }
         )
-
+        res.json({
+            message: "Successfully save equipped items."
+        })
     } catch (error) {
         res.status(500);
         throw new Error("Internal Server Error: Failed to Save Equipped Items.");
     }
 }
 ));
+
+
 
 
 
