@@ -301,8 +301,7 @@ const Lobby = () => {
                                 break;
                         }
                     } else if (obj_name.startsWith("play_")) {
-                        showRoom(choice)
-                        getPlayrooms("/api/playrooms/lobby")
+                        getPlayrooms(choice,"/api/playrooms/lobby")
                     } else if (obj_name.startsWith("room_")) {
                         window.open("/playroom", "_self")
                     }
@@ -311,14 +310,15 @@ const Lobby = () => {
         })
     }
 
-    async function getPlayrooms(url) {
+    async function getPlayrooms(gameId, url) {
         const response = await fetch(url);
-        var data = await response.json();
-
-        console.log(data)
+        var data = await response.json()
+        if(response){
+            showRoom(gameId, data)
+        }
     }
 
-    function showRoom(gameId) {
+    function showRoom(gameId, data) {
         MAIN_UI.forEach(e => {
             UI.remove(e)
         });
@@ -347,7 +347,9 @@ const Lobby = () => {
                 ROOM_UI.push(room)
                 UI.add(room)
 
-                let point_geometry = new TextGeometry("0/10", {
+                let userCount = data[((gameId-1)*5)+(i+(j*3)+1)].user_ids.length.toString()
+                console.log(userCount)
+                let point_geometry = new TextGeometry(userCount+"/10", {
                     font: LOADED_FONT,
                     size: 8,
                     height: 0,
