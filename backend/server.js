@@ -5,6 +5,7 @@ import ImportData from "./DataImport.js";
 import { errorHandler, notFound } from "./middleware/Errors.js";
 import userRouter from "./routes/UserRoutes.js";
 import playroomRouter from "./routes/PlayroomRoutes.js";
+import itemRouter from "./routes/ItemRoutes.js";
 
 dotenv.config();
 connectDatabase();
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use("/api/import", ImportData);
 app.use("/api/users", userRouter);
 app.use("/api/playrooms", playroomRouter);
+app.use("/api/items", itemRouter);
 
 
 app.use(notFound);
