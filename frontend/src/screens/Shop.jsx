@@ -33,9 +33,9 @@ const RAYCAST = new THREE.Raycaster()
 let LOADED_FONT
 let LOADED_MATERIAL = []
 let LOADED_TEXTURE = []
-let LOADED_ITEM = []
 let TOP_MENU = [];
 let GACHA_UI = [];
+let RESULT_UI = []
 let GACHA = []
 let PLAYER_DATA
 
@@ -63,6 +63,7 @@ function init() {
     initRenderer()
     initCamera()
     loadData("/api/users/getData")
+    initRaycast()
     initScene()
     window.addEventListener('resize', onWindowResize, false);
 }
@@ -116,7 +117,8 @@ function load(){
         new THREE.MeshBasicMaterial({color:0xcec3c1}),
         new THREE.MeshBasicMaterial({color:0x240115}),
         new THREE.MeshBasicMaterial({color:0xA5908D}),
-        new THREE.MeshBasicMaterial({color:0x2F131E})
+        new THREE.MeshBasicMaterial({color:0x2F131E}),
+        new THREE.MeshBasicMaterial({color:0x87F5FB})
     )
 }
 
@@ -154,6 +156,7 @@ async function spinGacha(url,id){
     var data = await response.json()
     if(data){
         console.log(data)
+        showResult(data)
     }
 }
 
@@ -177,12 +180,26 @@ function initScene(){
 }
 
 function initUI(loadedData){
+    if(RESULT_UI.length>0){
+        RESULT_UI.forEach(e =>{
+            UI.remove(e)
+        })
+        RESULT_UI = []
+    }
+    if(TOP_MENU.length>0){
+        TOP_MENU.forEach(e =>{
+            UI.remove(e)
+        })
+        TOP_MENU = []
+    }
     PLAYER_DATA = loadedData
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    GACHA_UI.push(ambientLight)
     UI.add(ambientLight);
 
     const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
     dirLight.position.set(0, 20, 10); // x, y, z
+    GACHA_UI.push(dirLight)
     UI.add(dirLight);
 
 
@@ -287,10 +304,11 @@ function initUI(loadedData){
         GACHA_UI.push(gacha_bg)
         UI.add(gacha_bg)
 
-        let save_button = new THREE.Mesh(new THREE.PlaneGeometry(100,30),LOADED_MATERIAL[3])
-        save_button.position.set(-142.5+(150.55*i),45,2)
-        save_button.name = "button_spin_"+i
-        UI.add(save_button)
+        let spin_button = new THREE.Mesh(new THREE.PlaneGeometry(100,30),LOADED_MATERIAL[3])
+        spin_button.position.set(-142.5+(150.55*i),45,2)
+        spin_button.name = "button_spin_"+i
+        GACHA_UI.push(spin_button)
+        UI.add(spin_button)
         let spin_text = new TextGeometry("Spin", {
             font: LOADED_FONT,
             size: 10,
@@ -300,6 +318,7 @@ function initUI(loadedData){
         let spin_mesh = new THREE.Mesh(spin_text, LOADED_MATERIAL[0])
         centerText(spin_text,spin_mesh, -142.5+(150.55*i), 45, 4)
         spin_mesh.name = "button_spin"
+        GACHA_UI.push(spin_mesh)
         UI.add(spin_mesh)
 
         let price_text = new TextGeometry(gacha_prices[i], {
@@ -310,6 +329,7 @@ function initUI(loadedData){
         })
         let price_mesh = new THREE.Mesh(price_text, LOADED_MATERIAL[1])
         centerText(price_text,price_mesh, -142.5+(150.55*i), 85, 4)
+        GACHA_UI.push(price_mesh)
         UI.add(price_mesh)
 
         let name_text = new TextGeometry(gacha_names[i], {
@@ -320,10 +340,12 @@ function initUI(loadedData){
         })
         let name_mesh = new THREE.Mesh(name_text, LOADED_MATERIAL[1])
         centerText(name_text,name_mesh, -142.5+(150.55*i), 100, 4)
+        GACHA_UI.push(name_mesh)
         UI.add(name_mesh)
     }
+}
 
-
+function initRaycast(){
     document.addEventListener("click", function(event){
         /* which = 1 itu click kiri */
         /* which = 2 itu scroll click */
@@ -353,13 +375,16 @@ function initUI(loadedData){
                             case "button_back":
                                 window.open("./lobby", "_self")
                                 break;
+                            case "button_close_result":
+                                loadData("/api/users/getData")
+                                break;
                     }
                     }
                 })
             }
         })
-
 }
+
 function gameLoop() {
         requestAnimationFrame(gameLoop);
 
@@ -368,6 +393,64 @@ function gameLoop() {
         // }
 
         UI_RENDERER.render(UI, UI_CAMERA);
+}
+
+function showResult(data){
+    loadItem(data.result).then(result =>{
+        if(GACHA_UI.length>0){
+            GACHA_UI.forEach(e =>{
+                UI.remove(e)
+            })
+            GACHA_UI = []
+        }
+        
+        let name_text = new TextGeometry("You got:", {
+            font: LOADED_FONT,
+            size: 10,
+            height: 0,
+            bevelEnabled: false
+        })
+        let name_mesh = new THREE.Mesh(name_text, LOADED_MATERIAL[1])
+        centerText(name_text,name_mesh, 0, 175, 2)
+        RESULT_UI.push(name_mesh)
+        UI.add(name_mesh)
+    
+        let back_arrow = new THREE.Mesh(new THREE.PlaneGeometry(25,25), LOADED_MATERIAL[1])
+        back_arrow.position.set(-192.5,195,1)
+        back_arrow.name = "button_close_result"
+        RESULT_UI.push(back_arrow)
+        UI.add(back_arrow)
+    
+        name_text = new TextGeometry(data.result, {
+            font: LOADED_FONT,
+            size: 12,
+            height: 0,
+            bevelEnabled: false
+        })
+        name_mesh = new THREE.Mesh(name_text, LOADED_MATERIAL[1])
+        centerText(name_text,name_mesh, 0, 50, 2)
+        RESULT_UI.push(name_mesh)
+        UI.add(name_mesh)
+    
+        let item = new THREE.Mesh(new THREE.PlaneGeometry(45,45), result.texture)
+        item.position.set(0,115,2)
+        RESULT_UI.push(item)
+        UI.add(item)
+
+        let circle = new THREE.Mesh(new THREE.CircleGeometry(50,50), LOADED_MATERIAL[4])
+        circle.position.set(0,115,1)
+        RESULT_UI.push(circle)
+        UI.add(circle)
+    
+        let gacha_bg = new THREE.Mesh(new THREE.PlaneGeometry(440,190), LOADED_MATERIAL[2])
+        gacha_bg.position.set(10,117.5,0)
+        RESULT_UI.push(gacha_bg)
+        UI.add(gacha_bg)
+        gacha_bg = new THREE.Mesh(new THREE.PlaneGeometry(440,190), LOADED_MATERIAL[3])
+        gacha_bg.position.set(15,112.5,-1)
+        RESULT_UI.push(gacha_bg)
+        UI.add(gacha_bg)    
+    })
 }
 
 function centerText(textGeo, textMesh, x,y,z){
