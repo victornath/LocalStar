@@ -1,5 +1,4 @@
-import * as THREE from '../../three.js/build/three.module.js'
-
+import * as THREE from 'three';
 /*
 
     Gunakan file ini sebagai TEMPLATE PEMBUATAN OBJECT.

@@ -311,7 +311,14 @@ const Lobby = () => {
     }
 
     async function getPlayrooms(gameId, url) {
-        const response = await fetch(url);
+        const response = await fetch(url,{
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + userInfo.token,
+            }
+        });
         var data = await response.json()
         if(response){
             showRoom(gameId, data)
