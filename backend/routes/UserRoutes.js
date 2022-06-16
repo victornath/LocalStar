@@ -190,17 +190,18 @@ userRouter.patch("/inventory", protect, asyncHandler(async (req, res) => {
 // GACHA SYSTEM
 userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
     const { gacha_name } = req.body
-    let gachaResult
+    let result
     switch (gacha_name) {
         case "Basic Gacha":
             const gacha = await Gacha.find({ gacha_name: "Basic Gacha" });
-            gachaResult = await Gacha.aggregate([
+            let gachaResult = await Gacha.aggregate([
                 { $match: { gacha_name: gacha.gacha_name } },
                 { $unwind: "$item_ids" },
                 { $sample: { size: 1 } },
                 { $group: { _id: "$gacha_name", item_ids: { $push: "$item_ids" } } },
             ])
-            console.log("GACHA RESULT :  " + gachaResult[0].item_ids)
+            result = gachaResult[0].item_ids
+            console.log("GACHA RESULT :  " + result)
 
             break;
 
@@ -222,10 +223,19 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
 
     for (let i = 0; i < userItem[0].item_owned.length; i++) {
         let element = userItem[0].item_owned[i];
-        if (element == gachaResult[0].item_ids) {
+        if (element == result) {
             foundGachaResult = true
             console.log("BEFORE FOUNDED: " + user)
-            user.point += 75
+            let newPoint = user.point += 75
+            await User.updateOne({ _id: user._id }, {
+                $set: {
+                    point: newPoint,
+                }
+            }).catch(
+                error => {
+                    console.log(error);
+                }
+            );
             console.log("AFTER FOUNDED: " + user)
             res.json({
                 message: "You have already owned the item."
@@ -235,13 +245,21 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
     }
     if (foundGachaResult == false) {
         console.log("NOT FOUNDED: " + user)
+        let resultToString = result.toString()
         await User.updateOne({
             _id: user._id,
         }, {
-            $push: { item_owned: { gachaResult } },
+            $push: {
+                item_owned: {
+                    item_id: resultToString,
+                    category: resultToString.substring(0, resultToString.indexOf('_'))
+                }
+            },
         }
         )
-        res.json(user)
+        res.json({
+            message: "Congratulations."
+        })
     }
 
 
