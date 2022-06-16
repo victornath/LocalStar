@@ -202,17 +202,38 @@ userRouter.patch("/inventory", protect, asyncHandler(async (req, res) => {
 userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
     const { gacha_name } = req.body
     let result
+    const user = await User.findById(req.user._id);
     switch (gacha_name) {
         case "Basic Gacha":
             const gacha = await Gacha.find({ gacha_name: "Basic Gacha" });
-            let gachaResult = await Gacha.aggregate([
-                { $match: { gacha_name: gacha.gacha_name } },
-                { $unwind: "$item_ids" },
-                { $sample: { size: 1 } },
-                { $group: { _id: "$gacha_name", item_ids: { $push: "$item_ids" } } },
-            ])
-            result = gachaResult[0].item_ids
-            console.log("GACHA RESULT :  " + result)
+
+            if (user.point < 150) {
+                res.json({
+                    message: "Point is not sufficient."
+                })
+            }
+
+            else {
+                let newPoint = user.point -= 150
+                await User.updateOne({ _id: user._id }, {
+                    $set: {
+                        point: newPoint,
+                    }
+                }).catch(
+                    error => {
+                        console.log(error);
+                    }
+                );
+                let gachaResult = await Gacha.aggregate([
+                    { $match: { gacha_name: gacha.gacha_name } },
+                    { $unwind: "$item_ids" },
+                    { $sample: { size: 1 } },
+                    { $group: { _id: "$gacha_name", item_ids: { $push: "$item_ids" } } },
+                ])
+                result = gachaResult[0].item_ids
+                console.log("GACHA RESULT :  " + result)
+
+            }
 
             break;
 
@@ -221,14 +242,12 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
     }
     let userItem
     // CHECK IF ITEM HAS OWNED BY USER OR NOT
-    const user = await User.findById(req.user._id);
+
     userItem = await User.aggregate([
         { $match: { _id: user._id } },
         { $unwind: "$item_owned" },
         { $group: { _id: "$_id", item_owned: { $push: "$item_owned.item_id" } } }
     ])
-
-    console.log("UNMODIFIED USER DATA" + userItem)
 
     let foundGachaResult = false
 
