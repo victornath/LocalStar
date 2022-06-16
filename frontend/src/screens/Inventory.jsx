@@ -17,7 +17,7 @@ const { userInfo } = userLogin;
 const MANAGER = new THREE.LoadingManager();
 const FONT_LOADER = new FontLoader(MANAGER);
 const TEXTURE_LOADER = new THREE.TextureLoader(MANAGER)
-const PLAYER_LOADER = new PlayerLoader();
+const PLAYER_LOADER = new PlayerLoader(userInfo._id);
 const ITEM_LOADER = new ItemLoader();
 const FONT_SIZE = 16;
 
@@ -142,41 +142,41 @@ function load(){
     //         alphaTest: 1
     //     })    
     // })
-    // TEXTURE_LOADER.load('../../texture/ui/sound_on.png', function ( texture ) {
-    //     LOADED_TEXTURE["sound_on"] = new THREE.MeshBasicMaterial({
-    //         map: texture,
-    //         side: THREE.DoubleSide,
-    //         alphaTest: 0.6
-    //     })    
-    // })
-    // TEXTURE_LOADER.load('../../texture/ui/sound_off.png', function ( texture ) {
-    //     LOADED_TEXTURE["sound_off"] = new THREE.MeshBasicMaterial({
-    //         map: texture,
-    //         side: THREE.DoubleSide,
-    //         alphaTest: 0.6
-    //     })    
-    // })
-    // TEXTURE_LOADER.load('../../texture/ui/arrow_l_back.png', function ( texture ) {
-    //     LOADED_TEXTURE["arrow_back"] = new THREE.MeshBasicMaterial({
-    //         map: texture,
-    //         side: THREE.DoubleSide,
-    //         alphaTest: 0.6
-    //     })    
-    // })
-    // TEXTURE_LOADER.load('../../texture/ui/arrow_l_2.png', function ( texture ) {
-    //     LOADED_TEXTURE["arrow_l"] = new THREE.MeshBasicMaterial({
-    //         map: texture,
-    //         side: THREE.DoubleSide,
-    //         alphaTest: 0.6
-    //     })    
-    // })
-    // TEXTURE_LOADER.load('../../texture/ui/arrow_r_2.png', function ( texture ) {
-    //     LOADED_TEXTURE["arrow_r"] = new THREE.MeshBasicMaterial({
-    //         map: texture,
-    //         side: THREE.DoubleSide,
-    //         alphaTest: 0.6
-    //     })    
-    // })
+    TEXTURE_LOADER.load('./images/texture/ui/sound/sound_on.png', function ( texture ) {
+        LOADED_TEXTURE["sound_on"] = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+            alphaTest: 0.6
+        })    
+    })
+    TEXTURE_LOADER.load('./images/texture/ui/sound/sound_off.png', function ( texture ) {
+        LOADED_TEXTURE["sound_off"] = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+            alphaTest: 0.6
+        })    
+    })
+    TEXTURE_LOADER.load('./images/texture/ui/arrow/arrow_l_back.png', function ( texture ) {
+        LOADED_TEXTURE["arrow_back"] = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+            alphaTest: 0.6
+        })    
+    })
+    TEXTURE_LOADER.load('./images/texture/ui/arrow/arrow_l_2.png', function ( texture ) {
+        LOADED_TEXTURE["arrow_l"] = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+            alphaTest: 0.6
+        })    
+    })
+    TEXTURE_LOADER.load('./images/texture/ui/arrow/arrow_r_2.png', function ( texture ) {
+        LOADED_TEXTURE["arrow_r"] = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+            alphaTest: 0.6
+        })    
+    })
 
     // Material
     LOADED_MATERIAL.push(
@@ -200,15 +200,18 @@ async function saveClothes(url){
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + userInfo.token,
         },
-        body: {
+        body: JSON.stringify({
             "hat": EQUIPPED[0],
             "hair": EQUIPPED[1],
             "top": EQUIPPED[2],
             "bottom": EQUIPPED[3],
             "shoes": EQUIPPED[4]
-        }
+        })
     });
     var data = await response.json()
+    if(data){
+        window.open('/lobby', "_self")
+    }
 }
 
 async function getInventory(url){
@@ -558,6 +561,8 @@ function initUI(){
 }
 
 function initGame(){
+    EQUIPPED_OBJ = PLAYER_LOADER.PLAYER.equip_obj
+    EQUIPPED = PLAYER_LOADER.PLAYER.equip
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     SCENE.add(ambientLight);
 
