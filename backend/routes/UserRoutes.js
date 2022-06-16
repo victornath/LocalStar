@@ -81,7 +81,8 @@ userRouter.get("/profile", protect, asyncHandler(async (req, res) => {
 // GET FILTERED USER ITEM
 
 userRouter.get("/inventory", protect, asyncHandler(async (req, res) => {
-    const { category } = req.body
+    let category = req.query.category
+
     const user = await User.findById(req.user._id);
     let filteredItem
 
@@ -198,14 +199,24 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
 
     console.log(userItem)
 
-    const foundGachaResult = User.some()
+    let foundGachaResult = false
 
+    for (let i = 0; i < userItem[0].item_owned.length; i++) {
+        let element = userItem[0].item_owned[i];
+        if (element == gachaResult) {
+            foundGachaResult = true
+            console.log(user)
+            user.point += 75
+            console.log(user)
+        }
+
+    }
     if (foundGachaResult == false) {
         console.log(user)
         await User.updateOne({
             _id: user._id,
         }, {
-            $push: { item_owned: gachaResult },
+            $push: { item_owned: { gachaResult } },
         }
         )
         res.json(user)
