@@ -27,11 +27,11 @@ const Lobby = () => {
     const CAMERA = new THREE.OrthographicCamera((-135 * (window.innerWidth / window.innerHeight)), (135 * (window.innerWidth / window.innerHeight)), 135, -135, -1000, 1000)
     const UI_CAMERA = new THREE.OrthographicCamera((-135 * (window.innerWidth / window.innerHeight)), (135 * (window.innerWidth / window.innerHeight)), 135, -135, -1000, 1000)
     const RENDERER = new THREE.WebGLRenderer({
-        antialias: false,
+        antialias: true,
         localClippingEnabled: true
     });
     const UI_RENDERER = new THREE.WebGLRenderer({
-        antialias: false,
+        antialias: true,
         localClippingEnabled: true,
         alpha: true
     });

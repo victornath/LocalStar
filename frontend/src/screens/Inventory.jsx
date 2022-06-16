@@ -9,7 +9,6 @@ import { useSelector } from "react-redux";
 
 
 const Inventory = () => {
-// Library Imports
 const userLogin = useSelector((state) => state.userLogin);
 const { userInfo } = userLogin;
 

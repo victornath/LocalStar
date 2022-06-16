@@ -249,6 +249,7 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
             );
             console.log("AFTER FOUNDED: " + user)
             res.json({
+                result: result[0],
                 message: "You have already owned the item."
             })
         }
@@ -269,6 +270,7 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
         }
         )
         res.json({
+            result: result[0],
             message: "Congratulations."
         })
     }

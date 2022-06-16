@@ -2,274 +2,387 @@ import React from 'react';
 import * as THREE from 'three';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+import Gacha from '../3DObject/Gacha/gacha.js'
+import ItemLoader from '../character/ItemLoader.js';
 import WebGL from '../WebGL.js';
+import { useSelector } from "react-redux";
 
 const Shop = () => {
-    // Library Imports
+const userLogin = useSelector((state) => state.userLogin);
+const { userInfo } = userLogin;
+    
+// Variables
+const MANAGER = new THREE.LoadingManager();
+const FONT_LOADER = new FontLoader(MANAGER);
+const TEXTURE_LOADER = new THREE.TextureLoader(MANAGER)
+const ITEM_LOADER = new ItemLoader();
+const FONT_SIZE = 0.08;
 
+let CONTAINER
+let UI_CONTAINER
 
-    // Variables
-    const MANAGER = new THREE.LoadingManager();
-    const FONT_LOADER = new FontLoader(MANAGER);
-    const TEXTURE_LOADER = new THREE.TextureLoader(MANAGER)
+const UI = new THREE.Scene();
+const UI_CAMERA = new THREE.OrthographicCamera((-135*(window.innerWidth/window.innerHeight)), (135*(window.innerWidth/window.innerHeight)), 135, -135, -1000,1000)
+const UI_RENDERER = new THREE.WebGLRenderer({
+    antialias: true,
+    localClippingEnabled: true,
+    alpha: true
+});
+// const CAMERA_CONTROL = new MapControls(CAMERA, RENDERER.domElement)
+const RAYCAST = new THREE.Raycaster()
+let LOADED_FONT
+let LOADED_MATERIAL = []
+let LOADED_TEXTURE = []
+let LOADED_ITEM = []
+let TOP_MENU = [];
+let GACHA_UI = [];
+let GACHA = []
+let PLAYER_DATA
 
-    let CONTAINER
-    let UI_CONTAINER
+// Support check
+if (!('getContext' in document.createElement('canvas'))) {
+    alert('Sorry, it looks like your browser does not support canvas!');
+}
 
-    const UI = new THREE.Scene();
-    const UI_CAMERA = new THREE.OrthographicCamera((-135 * (window.innerWidth / window.innerHeight)), (135 * (window.innerWidth / window.innerHeight)), 135, -135, -1000, 1000)
-    const UI_RENDERER = new THREE.WebGLRenderer({
-        antialias: false,
-        localClippingEnabled: true,
-        alpha: true
+// Also make sure webgl is enabled on the current machine
+if (WebGL.isWebGLAvailable()) {
+    // If everything is possible, start the app, otherwise show an error
+    load();
+    gameLoop();
+} else {
+    let warning = WebGL.getWebGLErrorMessage();
+    document.body.appendChild(warning);
+    CONTAINER.remove();
+    throw 'WebGL disabled or not supported';
+}
+
+function init() {
+    // Initiate Loading
+
+    // Initiate the Game
+    initRenderer()
+    initCamera()
+    loadData("/api/users/getData")
+    initScene()
+    window.addEventListener('resize', onWindowResize, false);
+}
+
+function initManager() {
+    MANAGER.onStart = function(managerUrl, itemsLoaded, itemsTotal) {
+        console.log('Started loading: ' + managerUrl + '\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
+    };
+
+    MANAGER.onProgress = function(managerUrl, itemsLoaded, itemsTotal) {
+        console.log('Loading file: ' + managerUrl + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
+    };
+    MANAGER.onLoad = function () {
+        CONTAINER = document.getElementById('canvas-holder');
+        UI_CONTAINER = document.getElementById('ui-holder');
+        init()
+        console.log('Loading complete!');
+    };
+}
+
+function load(){
+    initManager()
+    FONT_LOADER.load( './Bahnschrift_Regular.json', function ( font ) {
+        LOADED_FONT = font
     });
-    // const CAMERA_CONTROL = new MapControls(CAMERA, RENDERER.domElement)
-    const RAYCAST = new THREE.Raycaster()
-    let LOADED_FONT
-    let PLAYER_PREVIEW
-    let ui_item_list = [];
-    let TOP_MENU = [];
-    let GACHA_UI = [];
-    let USED_FONT;
-    let ui_preview = [];
+    TEXTURE_LOADER.load('./images/texture/ui/sound/sound_on.png', function ( texture ) {
+        LOADED_TEXTURE["sound_on"] = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+            alphaTest: 0.6
+        })    
+    })
+    TEXTURE_LOADER.load('./images/texture/ui/sound/sound_off.png', function ( texture ) {
+        LOADED_TEXTURE["sound_off"] = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+            alphaTest: 0.6
+        })    
+    })
+    TEXTURE_LOADER.load('./images/texture/ui/arrow/arrow_l_back.png', function ( texture ) {
+        LOADED_TEXTURE["arrow_back"] = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+            alphaTest: 0.5,
+            alphaToCoverage: true
+        })    
+    })
 
-    let ActiveCategory = 0;
-    // 0 = Brow, 1 = Eye, 2 = Nose, 3 = Mouth
+    // Material
+    LOADED_MATERIAL.push(
+        new THREE.MeshBasicMaterial({color:0xcec3c1}),
+        new THREE.MeshBasicMaterial({color:0x240115}),
+        new THREE.MeshBasicMaterial({color:0xA5908D}),
+        new THREE.MeshBasicMaterial({color:0x2F131E})
+    )
+}
 
-    // Support check
-    if (!('getContext' in document.createElement('canvas'))) {
-        alert('Sorry, it looks like your browser does not support canvas!');
-    }
-
-    // Also make sure webgl is enabled on the current machine
-    if (WebGL.isWebGLAvailable()) {
-        // If everything is possible, start the app, otherwise show an error
-        load();
-        gameLoop();
-    } else {
-        let warning = WebGL.getWebGLErrorMessage();
-        document.body.appendChild(warning);
-        CONTAINER.remove();
-        throw 'WebGL disabled or not supported';
-    }
-
-    function init() {
-        // Initiate Loading
-
-        // Initiate the Game
-        initRenderer()
-        initCamera()
-        initUI()
-        initScene()
-        window.addEventListener('resize', onWindowResize, false);
-    }
-
-    function initManager() {
-        MANAGER.onStart = function (managerUrl, itemsLoaded, itemsTotal) {
-            console.log('Started loading: ' + managerUrl + '\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
-        };
-
-        MANAGER.onProgress = function (managerUrl, itemsLoaded, itemsTotal) {
-            console.log('Loading file: ' + managerUrl + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
-        };
-        MANAGER.onLoad = function () {
-            CONTAINER = document.getElementById('canvas-holder');
-            UI_CONTAINER = document.getElementById('ui-holder');
-            init()
-            console.log('Loading complete!');
-
-        };
-    }
-
-    function load() {
-        initManager()
-        FONT_LOADER.load('./Bahnschrift_Regular.json', function (font) {
-            LOADED_FONT = font
+async function loadData(url){
+    const response = await fetch(url,{
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + userInfo.token,
+            }
         });
+    var data = await response.json()
+    initUI(data)
+}
 
-    }
 
-    function initRenderer() {
-        UI_RENDERER.setSize(window.innerWidth, window.innerHeight)
-        UI_RENDERER.setClearColor(0xcec3c1)
-        UI_RENDERER.shadowMap.enabled = true
+async function loadItem(itemId){
+    return await ITEM_LOADER.load(itemId)
+}
 
-    }
-
-    function initCamera() {
-        UI_CAMERA.position.set(20, 140, 150)
-        UI_CAMERA.updateProjectionMatrix();
-    }
-
-    function initScene() {
-        UI_CONTAINER.appendChild(UI_RENDERER.domElement)
-    }
-
-    function initUI() {
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        UI.add(ambientLight);
-
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-        dirLight.position.set(0, 20, 10); // x, y, z
-        UI.add(dirLight);
-
-        let base_material = new THREE.MeshLambertMaterial({
-            color: 0xcec3c1
+async function spinGacha(url,id){
+    const gacha_names = ["Basic Gacha","Gacha 2", "Gacha 3"]
+    const response = await fetch(url,{
+        method: 'PATCH',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + userInfo.token,
+        },
+        body: JSON.stringify({
+            "gacha_name": gacha_names[id]
         })
-        let other_material = new THREE.MeshBasicMaterial({
-            color: 0x240115
-        })
-        let material = new THREE.MeshBasicMaterial({
-            color: 0xA5908D
-        })
-        let material2 = new THREE.MeshBasicMaterial({
-            color: 0x2F131E
-        })
+    });
+    var data = await response.json()
+    if(data){
+        console.log(data)
+    }
+}
+
+function initRenderer(){
+    UI_RENDERER.setSize(window.innerWidth, window.innerHeight)
+    UI_RENDERER.setClearColor(0xcec3c1)
+    UI_RENDERER.shadowMap.enabled = true
+
+}
+
+function initCamera(){
+    UI_CAMERA.position.set(20,140,150)
+    UI_CAMERA.updateProjectionMatrix();
+}
+
+function initScene(){
+    UI_CONTAINER.appendChild(UI_RENDERER.domElement)
+    loadItem('bottom_pants_l_bk').then(e => {
+        console.log(e)
+    })
+}
+
+function initUI(loadedData){
+    PLAYER_DATA = loadedData
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    UI.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    dirLight.position.set(0, 20, 10); // x, y, z
+    UI.add(dirLight);
 
 
-        let page_text = new TextGeometry("Shop", {
-            font: LOADED_FONT,
-            size: 14,
-            height: 0,
-            bevelEnabled: false,
-        });
-        let page_mesh = new THREE.Mesh(page_text, other_material)
-        centerText(page_text, page_mesh, -145, 242, 0)
-        TOP_MENU.push(page_mesh)
-        UI.add(page_mesh)
+    let page_text = new TextGeometry( "Shop", {
+        font: LOADED_FONT,
+        size: 14,
+        height: 0,
+        bevelEnabled: false,
+    } );
+    let page_mesh = new THREE.Mesh(page_text,LOADED_MATERIAL[1])
+    centerText(page_text,page_mesh,-145,242,0)
+    TOP_MENU.push(page_mesh)
+    UI.add(page_mesh)
 
-        let back_button = new THREE.Mesh(new THREE.PlaneGeometry(38, 38), material2)
-        back_button.position.set(-190, 242, -1)
-        back_button.name = "button_back"
-        TOP_MENU.push(back_button)
-        UI.add(back_button)
+    let back_button = new THREE.Mesh(new THREE.PlaneGeometry(38,38), LOADED_MATERIAL[3])
+    back_button.position.set(-190,242,-1)
+    back_button.name = "button_back"
+    TOP_MENU.push(back_button)
+    UI.add(back_button)
+    let back = new THREE.Mesh(new THREE.PlaneGeometry(20,20), LOADED_TEXTURE["arrow_back"])
+    back.position.set(-190,242,1)
+    UI.add(back)
 
-        let currency_plane = new THREE.PlaneGeometry(109, 31)
-        let currency_shadow_plane = new THREE.PlaneGeometry(114, 36)
-        let player_background = new THREE.Mesh(currency_plane, material)
-        player_background.position.set(-2.75, 242, 0)
-        player_background.name = "top_menu_02"
-        TOP_MENU.push(player_background)
-        UI.add(player_background)
-        player_background = new THREE.Mesh(currency_shadow_plane, material2)
-        player_background.position.set(-2.75, 242, -1)
-        player_background.name = "top_menu_02"
-        TOP_MENU.push(player_background)
-        UI.add(player_background)
+    let currency_plane = new THREE.PlaneGeometry(109,31)
+    let currency_shadow_plane = new THREE.PlaneGeometry(114,36)
+    let player_background = new THREE.Mesh(currency_plane, LOADED_MATERIAL[2])
+    player_background.position.set(-2.75,242,0)
+    player_background.name = "top_menu_02"
+    TOP_MENU.push(player_background)
+    UI.add(player_background)
+    player_background = new THREE.Mesh(currency_shadow_plane, LOADED_MATERIAL[3])
+    player_background.position.set(-2.75,242,-1)
+    player_background.name = "top_menu_02"
+    TOP_MENU.push(player_background)
+    UI.add(player_background)
 
+    
+    let point_geometry = new TextGeometry( PLAYER_DATA.point.toString(), {
+        font: LOADED_FONT,
+        size: 10,
+        height: 0,
+        bevelEnabled: false,
+    } );
+    let mesh = new THREE.Mesh(point_geometry,LOADED_MATERIAL[1])
+    centerText(point_geometry,mesh, -2.75,242,1)
+    TOP_MENU.push(mesh)
+    UI.add(mesh)
 
-        let point_geometry = new TextGeometry("Player Point", {
+    player_background = new THREE.Mesh(currency_plane, LOADED_MATERIAL[2])
+    player_background.position.set(126.25,242,0)
+    player_background.name = "top_menu_03"
+    TOP_MENU.push(player_background)
+    UI.add(player_background)
+    player_background = new THREE.Mesh(currency_shadow_plane, LOADED_MATERIAL[3])
+    player_background.position.set(126.25,242,-1)
+    player_background.name = "top_menu_03"
+    TOP_MENU.push(player_background)
+    UI.add(player_background)
+
+    let sound_icon = new THREE.Mesh(new THREE.PlaneGeometry(33,33), LOADED_TEXTURE["sound_off"])
+    sound_icon.position.set(214.75,243.5,1)
+    UI.add(sound_icon)
+        
+    point_geometry = new TextGeometry( PLAYER_DATA.gold.toString(), {
+        font: LOADED_FONT,
+        size: 10,
+        height: 0,
+        bevelEnabled: false,
+    } );
+    mesh = new THREE.Mesh(point_geometry,LOADED_MATERIAL[1])
+    centerText(point_geometry,mesh,126.25,242,1)
+    TOP_MENU.push(mesh)
+    UI.add(mesh)
+
+    player_background = new THREE.Mesh(new THREE.PlaneGeometry(33,33), LOADED_MATERIAL[2])
+    player_background.position.set(214.75,243.5,0)
+    player_background.name = "top_menu_04"
+    TOP_MENU.push(player_background)
+    UI.add(player_background)
+    player_background = new THREE.Mesh(new THREE.PlaneGeometry(33,33), LOADED_MATERIAL[3])
+    player_background.position.set(219.75,238.5,-1)
+    player_background.name = "top_menu_04"
+    TOP_MENU.push(player_background)
+    UI.add(player_background)
+    
+    const gacha_names = ["Basic Gacha","Gacha 2", "Gacha 3"]
+    const gacha_color = ["#FF0000","#00FF00","#0000FF"]
+    const gacha_prices = ["150 Points","150 Points","50 Gold"]
+    for (let i = 0; i < 3; i++) {
+        GACHA.push(new Gacha(gacha_color[i]))
+        let gacha_machine = GACHA[i].group
+        gacha_machine.scale.set(0.75,0.75,0.75)
+        gacha_machine.position.set(-160+(150.55*i),137.5,1)
+        GACHA_UI.push(gacha_machine)
+        UI.add(gacha_machine)
+        let gacha_bg = new THREE.Mesh(new THREE.PlaneGeometry(140,190), LOADED_MATERIAL[2])
+        gacha_bg.position.set(-140+(150.55*i),117.5,0)
+        GACHA_UI.push(gacha_bg)
+        UI.add(gacha_bg)
+        gacha_bg = new THREE.Mesh(new THREE.PlaneGeometry(140,190), LOADED_MATERIAL[3])
+        gacha_bg.position.set(-135+(150.55*i),112.5,-1)
+        GACHA_UI.push(gacha_bg)
+        UI.add(gacha_bg)
+
+        let save_button = new THREE.Mesh(new THREE.PlaneGeometry(100,30),LOADED_MATERIAL[3])
+        save_button.position.set(-142.5+(150.55*i),45,2)
+        save_button.name = "button_spin_"+i
+        UI.add(save_button)
+        let spin_text = new TextGeometry("Spin", {
             font: LOADED_FONT,
             size: 10,
             height: 0,
-            bevelEnabled: false,
-        });
-        let mesh = new THREE.Mesh(point_geometry, other_material)
-        centerText(point_geometry, mesh, -2.75, 242, 1)
-        TOP_MENU.push(mesh)
-        UI.add(mesh)
+            bevelEnabled: false
+        })
+        let spin_mesh = new THREE.Mesh(spin_text, LOADED_MATERIAL[0])
+        centerText(spin_text,spin_mesh, -142.5+(150.55*i), 45, 4)
+        spin_mesh.name = "button_spin"
+        UI.add(spin_mesh)
 
-        player_background = new THREE.Mesh(currency_plane, material)
-        player_background.position.set(126.25, 242, 0)
-        player_background.name = "top_menu_03"
-        TOP_MENU.push(player_background)
-        UI.add(player_background)
-        player_background = new THREE.Mesh(currency_shadow_plane, material2)
-        player_background.position.set(126.25, 242, -1)
-        player_background.name = "top_menu_03"
-        TOP_MENU.push(player_background)
-        UI.add(player_background)
+        let price_text = new TextGeometry(gacha_prices[i], {
+            font: LOADED_FONT,
+            size: 8,
+            height: 0,
+            bevelEnabled: false
+        })
+        let price_mesh = new THREE.Mesh(price_text, LOADED_MATERIAL[1])
+        centerText(price_text,price_mesh, -142.5+(150.55*i), 85, 4)
+        UI.add(price_mesh)
 
-
-        point_geometry = new TextGeometry("Player Gold", {
+        let name_text = new TextGeometry(gacha_names[i], {
             font: LOADED_FONT,
             size: 10,
             height: 0,
-            bevelEnabled: false,
-        });
-        mesh = new THREE.Mesh(point_geometry, other_material)
-        centerText(point_geometry, mesh, 126.25, 242, 1)
-        TOP_MENU.push(mesh)
-        UI.add(mesh)
-
-        player_background = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), material)
-        player_background.position.set(214.75, 243.5, 0)
-        player_background.name = "top_menu_04"
-        TOP_MENU.push(player_background)
-        UI.add(player_background)
-        player_background = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), material2)
-        player_background.position.set(219.75, 238.5, -1)
-        player_background.name = "top_menu_04"
-        TOP_MENU.push(player_background)
-        UI.add(player_background)
-
-        for (let i = 0; i < 3; i++) {
-            let gacha_bg = new THREE.Mesh(new THREE.PlaneGeometry(140, 190), material)
-            gacha_bg.position.set(-140 + (150.55 * i), 117.5, 0)
-            gacha_bg.name = "top_menu_04"
-            GACHA_UI.push(gacha_bg)
-            UI.add(gacha_bg)
-            gacha_bg = new THREE.Mesh(new THREE.PlaneGeometry(140, 190), material2)
-            gacha_bg.position.set(-135 + (150.55 * i), 112.5, -1)
-            gacha_bg.name = "top_menu_04"
-            GACHA_UI.push(gacha_bg)
-            UI.add(gacha_bg)
-        }
+            bevelEnabled: false
+        })
+        let name_mesh = new THREE.Mesh(name_text, LOADED_MATERIAL[1])
+        centerText(name_text,name_mesh, -142.5+(150.55*i), 100, 4)
+        UI.add(name_mesh)
+    }
 
 
-        document.addEventListener("click", function (event) {
-            /* which = 1 itu click kiri */
-            /* which = 2 itu scroll click */
-            /* which = 3 itu click kanan */
-            if (event.which == 1) {
+    document.addEventListener("click", function(event){
+        /* which = 1 itu click kiri */
+        /* which = 2 itu scroll click */
+        /* which = 3 itu click kanan */
+            if(event.which == 1){
                 let mouse = {}
                 let w = window.innerWidth
                 let h = window.innerHeight
-                mouse.x = event.clientX / w * 2 - 1
-                mouse.y = event.clientY / h * (-2) + 1
-
-                RAYCAST.setFromCamera(mouse, UI_CAMERA)
-                let items = RAYCAST.intersectObjects(UI.children, false)
+                mouse.x = event.clientX/w *2 -1
+                mouse.y = event.clientY/h *(-2) + 1
+            
+                RAYCAST.setFromCamera(mouse,UI_CAMERA)
+                let items = RAYCAST.intersectObjects(UI.children,false)
                 console.log(items)
-                items.forEach(i => {
+                items.forEach(i=>{
                     console.log(i.object.name)
                     let obj_name = i.object.name
-                    if (obj_name.startsWith("button_")) {
-                        switch (obj_name) {
+                    let choice = parseInt(obj_name.substring(obj_name.length-1,obj_name.length))
+                    if(obj_name.startsWith("button_spin_")){
+                        spinGacha("/api/users/shop", choice)
+                    } else if (obj_name.startsWith("button_")){
+                        switch(obj_name){
                             case "button_next":
                                 break;
                             case "button_prev":
                                 break;
                             case "button_back":
-                                window.open("../lobby", "_self")
+                                window.open("./lobby", "_self")
                                 break;
-                            case "button_save": break;
-                        }
+                    }
                     }
                 })
             }
         })
 
-    }
-    function gameLoop() {
+}
+function gameLoop() {
         requestAnimationFrame(gameLoop);
 
+        // if(PLAYER_CHOOSE[0] != null && PLAYER_CHOOSE[1] != null){
+        //     bentenganGame(PLAYER_CHOOSE)
+        // }
+
         UI_RENDERER.render(UI, UI_CAMERA);
-    }
+}
 
-    function centerText(textGeo, textMesh, x, y, z) {
-        textGeo.computeBoundingBox();
-        const center = textGeo.boundingBox.getCenter(new THREE.Vector3())
-        textMesh.updateMatrixWorld();
-        center.applyMatrix4(textMesh.matrixWorld);
-        textMesh.geometry.translate(x - center.x, y - center.y, z - center.z,)
-    }
+function centerText(textGeo, textMesh, x,y,z){
+    textGeo.computeBoundingBox();
+    const center = textGeo.boundingBox.getCenter(new THREE.Vector3())
+    textMesh.updateMatrixWorld();
+    center.applyMatrix4(textMesh.matrixWorld);
+    textMesh.geometry.translate(x-center.x,y-center.y,z-center.z,)
+}
 
-    function onWindowResize() {
-        UI_CAMERA.aspect = window.innerWidth / window.innerHeight;
-        UI_CAMERA.updateProjectionMatrix();
-        UI_RENDERER.setSize(window.innerWidth, window.innerHeight);
-    }
+function onWindowResize(){
+    UI_CAMERA.aspect = window.innerWidth / window.innerHeight;
+    UI_CAMERA.updateProjectionMatrix();
+    UI_RENDERER.setSize(window.innerWidth, window.innerHeight);
+}
     return (
         <>
             <div id="progress">
