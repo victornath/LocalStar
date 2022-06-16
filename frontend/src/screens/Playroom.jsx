@@ -8,10 +8,14 @@ import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import WebGL from '../WebGL.js';
 import * as PF from 'pathfinding';
+import { useSelector } from "react-redux";
 
 
 
 const Playroom = () => {
+    const userLogin = useSelector((state) => state.userLogin);
+    const { userInfo } = userLogin;
+
     // Variables
     const MANAGER = new THREE.LoadingManager();
     const GLTF_LOADER = new GLTFLoader(MANAGER);
@@ -27,7 +31,7 @@ const Playroom = () => {
     const SCENE = new THREE.Scene();
     const UI = new THREE.Scene();
     const ROOM_LOADER = new RoomLoader(SCENE, MANAGER)
-    let PLAYER_LOADER = new PlayerLoader()
+    let PLAYER_LOADER = new PlayerLoader(userInfo._id)
     const CAMERA = new THREE.OrthographicCamera((-135 * (window.innerWidth / window.innerHeight)), (135 * (window.innerWidth / window.innerHeight)), 135, -135, -1000, 1000)
     const UI_CAMERA = new THREE.OrthographicCamera((-135 * (window.innerWidth / window.innerHeight)), (135 * (window.innerWidth / window.innerHeight)), 135, -135, -1000, 1000)
     const RENDERER = new THREE.WebGLRenderer({
