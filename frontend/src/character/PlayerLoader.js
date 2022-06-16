@@ -30,12 +30,20 @@ class PlayerLoader {
 
     LoadPlayer(data){
         let player = new PLAYER_OBJ().group
-        let appearance = [data.equipped_items.hat,data.equipped_items.hair,data.equipped_items.top,data.equipped_items.bottom,data.equipped_items.shoes]
-        console.log(appearance)
+        let equip = [data.equipped_items.hat,data.equipped_items.hair,data.equipped_items.top,data.equipped_items.bottom,data.equipped_items.shoes]
+        let equip_object = []
+        equip.forEach(i => {
+            if(i.length > 0){
+                this.loadItem(i).then(result => {
+                    equip_object.push(result.object.group)
+                    player.add(result.object.group)
+                })
+            }
+        })
         this.PLAYER = {
             player: player,
             head: player.children[5],
-            equip: appearance
+            equip: equip
         }
     }
 
