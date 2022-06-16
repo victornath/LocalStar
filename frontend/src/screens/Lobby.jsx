@@ -114,7 +114,6 @@ const Lobby = () => {
                 }
             });
         var data = await response.json()
-        console.log(data)
         initUI(data)
         initGame()
     }
@@ -622,7 +621,6 @@ const Lobby = () => {
         SCENE.add(dirLight);
 
         PLAYER_PREVIEW = PLAYER_LOADER.PLAYER.player
-        console.log(PLAYER_LOADER.PLAYER.equip)
         PLAYER_PREVIEW.scale.set(0.85, 0.85, 0.85)
         PLAYER_PREVIEW.position.set(-55, -2.5, -35)
 

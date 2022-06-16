@@ -13,7 +13,7 @@ class ItemLoader
                 texture: new THREE.MeshBasicMaterial({
                     map: temp,
                     side: THREE.DoubleSide,
-                    alphaTest: 0.6
+                    alphaTest: 0.8
                 }),
                 object: new item.default()
             })

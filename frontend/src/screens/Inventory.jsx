@@ -51,7 +51,7 @@ let MAIN_UI = []
 let TOP_MENU = []
 let EQUIPPED = ["","","","",""]
 let EQUIPPED_OBJ = [null,null,null,null,null]
-let MAX_PAGE, PLAYER_ITEMS
+let MAX_PAGE, PLAYER_ITEMS, PLAYER_DATA
 
 
 
@@ -79,9 +79,8 @@ function init() {
     // Initiate the Game
     initRenderer()
     initCamera()
-    initUI()
+    loadData("/api/users/getData")
     initScene()
-    initGame()
     window.addEventListener('resize', onWindowResize, false);
 }
 
@@ -186,6 +185,21 @@ function load(){
         new THREE.MeshBasicMaterial({color:0x2F131E}),
         new THREE.MeshBasicMaterial({color:0x6A5256})
     )
+}
+
+
+async function loadData(url){
+    const response = await fetch(url,{
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + userInfo.token,
+            }
+        });
+    var data = await response.json()
+    initUI(data)
+    initGame()
 }
 
 async function loadItem(itemId){
@@ -425,7 +439,8 @@ function initScene(){
     UI_CONTAINER.appendChild(UI_RENDERER.domElement)
 }
 
-function initUI(){
+function initUI(loadedData){
+    PLAYER_DATA = loadedData
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     UI.add(ambientLight);
 
@@ -601,7 +616,7 @@ function loadUI_currency(){
     TOP_MENU.push(player_background)
     UI.add(player_background)
 
-    let point_geometry = new TextGeometry( "Player Point", {
+    let point_geometry = new TextGeometry( PLAYER_DATA.point.toString(), {
         font: LOADED_FONT,
         size: 10,
         height: 0,
@@ -631,7 +646,7 @@ function loadUI_currency(){
     UI.add(player_background)
 
 
-    point_geometry = new TextGeometry( "Player Gold", {
+    point_geometry = new TextGeometry( PLAYER_DATA.gold.toString(), {
             font: LOADED_FONT,
             size: 10,
             height: 0,

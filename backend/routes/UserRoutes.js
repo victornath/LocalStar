@@ -179,7 +179,6 @@ userRouter.get("/inventory", protect, asyncHandler(async (req, res) => {
 userRouter.patch("/inventory", protect, asyncHandler(async (req, res) => {
     const equipped_items = req.body
     const user = await User.findById(req.user._id);
-    console.log(equipped_items)
     await User.updateOne({ _id: user._id }, {
         $set: {
             "equipped_items.hat": equipped_items.hat,
