@@ -147,23 +147,25 @@ userRouter.get("/inventory", protect, asyncHandler(async (req, res) => {
 
 // SAVE EQUIPPED ITEM FOR USER
 userRouter.patch("/inventory", protect, asyncHandler(async (req, res) => {
-    const { equipped_items } = req.body
+    const equipped_items = req.body
     const user = await User.findById(req.user._id);
-
-    try {
-        await User.updateOne({
-            _id: user._id,
-        }, {
-            equipped_items: equipped_items,
+    console.log(equipped_items)
+    await User.updateOne({ _id: user._id }, {
+        $set: {
+            "equipped_items.hat": equipped_items.hat,
+            "equipped_items.hair": equipped_items.hair,
+            "equipped_items.top": equipped_items.top,
+            "equipped_items.bottom": equipped_items.bottom,
+            "equipped_items.shoes": equipped_items.shoes,
         }
-        )
-        res.json({
-            message: "Successfully save equipped items."
-        })
-    } catch (error) {
-        res.status(500);
-        throw new Error("Internal Server Error: Failed to Save Equipped Items.");
-    }
+    }).catch(
+        error => {
+            console.log(error);
+        }
+    );
+    res.json({
+        message: 'Successfully save items'
+    });
 }
 ));
 
@@ -174,14 +176,13 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
     switch (gacha_name) {
         case "Basic Gacha":
             const gacha = await Gacha.find({ gacha_name: "Basic Gacha" });
-            console.log(gacha)
             gachaResult = await Gacha.aggregate([
                 { $match: { gacha_name: gacha.gacha_name } },
                 { $unwind: "$item_ids" },
                 { $sample: { size: 1 } },
                 { $group: { _id: "$gacha_name", item_ids: { $push: "$item_ids" } } },
             ])
-            console.log(gachaResult)
+            console.log("GACHA RESULT :  " + gachaResult[0].item_ids)
 
             break;
 
@@ -197,22 +198,25 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
         { $group: { _id: "$_id", item_owned: { $push: "$item_owned.item_id" } } }
     ])
 
-    console.log(userItem)
+    console.log("UNMODIFIED USER DATA" + userItem)
 
     let foundGachaResult = false
 
     for (let i = 0; i < userItem[0].item_owned.length; i++) {
         let element = userItem[0].item_owned[i];
-        if (element == gachaResult) {
+        if (element == gachaResult[0].item_ids) {
             foundGachaResult = true
-            console.log(user)
+            console.log("BEFORE FOUNDED: " + user)
             user.point += 75
-            console.log(user)
+            console.log("AFTER FOUNDED: " + user)
+            res.json({
+                message: "You have already owned the item."
+            })
         }
 
     }
     if (foundGachaResult == false) {
-        console.log(user)
+        console.log("NOT FOUNDED: " + user)
         await User.updateOne({
             _id: user._id,
         }, {
