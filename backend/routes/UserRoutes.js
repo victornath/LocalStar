@@ -269,7 +269,7 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
             console.log("AFTER FOUNDED: " + user)
             res.json({
                 result: result[0],
-                message: "You have already owned the item."
+                message: "You have already owned the item. Refunded 50% of Gacha Price"
             })
         }
 

@@ -135,6 +135,17 @@ async function loadData(url){
     initUI(data)
 }
 
+async function getItemName(id){
+    const response = await fetch('api/items?id='+id,{
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            }
+        });
+    return await response.json()
+}
+
 
 async function loadItem(itemId){
     return await ITEM_LOADER.load(itemId)
@@ -174,9 +185,6 @@ function initCamera(){
 
 function initScene(){
     UI_CONTAINER.appendChild(UI_RENDERER.domElement)
-    loadItem('bottom_pants_l_bk').then(e => {
-        console.log(e)
-    })
 }
 
 function initUI(loadedData){
@@ -421,18 +429,31 @@ function showResult(data){
         RESULT_UI.push(back_arrow)
         UI.add(back_arrow)
     
-        name_text = new TextGeometry(data.result, {
+        getItemName(data.result).then(itemName => {
+            name_text = new TextGeometry(itemName, {
+                font: LOADED_FONT,
+                size: 11,
+                height: 0,
+                bevelEnabled: false
+            })
+            name_mesh = new THREE.Mesh(name_text, LOADED_MATERIAL[1])
+            centerText(name_text,name_mesh, 0, 55, 2)
+            RESULT_UI.push(name_mesh)
+            UI.add(name_mesh)
+        })
+
+        name_text = new TextGeometry(data.message, {
             font: LOADED_FONT,
-            size: 12,
+            size: 8,
             height: 0,
             bevelEnabled: false
         })
         name_mesh = new THREE.Mesh(name_text, LOADED_MATERIAL[1])
-        centerText(name_text,name_mesh, 0, 50, 2)
+        centerText(name_text,name_mesh, 0, 37.5, 2)
         RESULT_UI.push(name_mesh)
         UI.add(name_mesh)
     
-        let item = new THREE.Mesh(new THREE.PlaneGeometry(45,45), result.texture)
+        let item = new THREE.Mesh(new THREE.PlaneGeometry(75,75), result.texture)
         item.position.set(0,115,2)
         RESULT_UI.push(item)
         UI.add(item)
