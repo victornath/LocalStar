@@ -1,10 +1,29 @@
 import PLAYER_OBJ from '../3DObject/Player/Player.js';
-
 class PlayerLoader {
-    constructor() {
+
+    constructor(data) {
         this.OTHER_PLAYER = []
+        this.getData()
+    }
+
+    async getData(){
+        const response = await fetch("/api/users/",{
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            }
+        });
+        var data = await response.json()
+        if(response){
+            this.LoadData(data)
+        }
+
+    }
+
+    LoadPlayer(data){
         let player = new PLAYER_OBJ().group
-        let appearance = []
+        let appearance = [data.equipped_items.hat,data.equipped_items.hair,data.equipped_items.top,data.equipped_items.bottom,data.equipped_items.shoes]
         this.PLAYER = {
             player: player,
             head: player.children[5],
