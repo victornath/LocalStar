@@ -1,13 +1,20 @@
 import PLAYER_OBJ from '../3DObject/Player/Player.js';
+import ItemLoader from './ItemLoader.js';
+
 class PlayerLoader {
 
     constructor(data) {
+        this.ITEM_LOADER = new ItemLoader()
         this.OTHER_PLAYER = []
-        this.getData()
+        this.getData(data)
     }
 
-    async getData(){
-        const response = await fetch("/api/users/",{
+    async loadItem(itemId){
+        return await this.ITEM_LOADER.load(itemId)
+    }
+    
+    async getData(data){
+        const response = await fetch("/api/users/?id="+data,{
             method: 'GET',
             headers: {
               'Accept': 'application/json',
@@ -16,7 +23,7 @@ class PlayerLoader {
         });
         var data = await response.json()
         if(response){
-            this.LoadData(data)
+            this.LoadPlayer(data)
         }
 
     }
@@ -24,6 +31,7 @@ class PlayerLoader {
     LoadPlayer(data){
         let player = new PLAYER_OBJ().group
         let appearance = [data.equipped_items.hat,data.equipped_items.hair,data.equipped_items.top,data.equipped_items.bottom,data.equipped_items.shoes]
+        console.log(appearance)
         this.PLAYER = {
             player: player,
             head: player.children[5],

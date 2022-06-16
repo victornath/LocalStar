@@ -16,7 +16,7 @@ const Lobby = () => {
     const MANAGER = new THREE.LoadingManager();
     const FONT_LOADER = new FontLoader(MANAGER);
     const TEXTURE_LOADER = new THREE.TextureLoader(MANAGER)
-    const PLAYER_LOADER = new PlayerLoader();
+    const PLAYER_LOADER = new PlayerLoader(userInfo._id);
     let FONT_SIZE = 16;
 
     let CONTAINER
@@ -49,6 +49,7 @@ const Lobby = () => {
     let TOP_MENU = []
     let MAIN_UI = []
     let ROOM_UI = []
+    let PLAYER_DATA
 
 
     // Support check
@@ -74,9 +75,8 @@ const Lobby = () => {
         // Initiate the Game
         initRenderer()
         initCamera()
-        initUI()
+        loadData("/api/users/getData")
         initScene()
-        initGame()
         window.addEventListener('resize', onWindowResize, false);
     }
 
@@ -102,6 +102,21 @@ const Lobby = () => {
             document.getElementById('progress').hidden = true;
             console.log('Loading complete!');
         };
+    }
+
+    async function loadData(url){
+        const response = await fetch(url,{
+                method: 'GET',
+                headers: {
+                  'Accept': 'application/json',
+                  'Content-Type': 'application/json',
+                  'Authorization': 'Bearer ' + userInfo.token,
+                }
+            });
+        var data = await response.json()
+        console.log(data)
+        initUI(data)
+        initGame()
     }
 
     function load() {
@@ -147,7 +162,8 @@ const Lobby = () => {
         UI_CONTAINER.appendChild(UI_RENDERER.domElement)
     }
 
-    function initUI() {
+    function initUI(loadedData) {
+        PLAYER_DATA = loadedData
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         UI.add(ambientLight);
 
@@ -169,7 +185,7 @@ const Lobby = () => {
         UI.add(player_name_shadow)
 
 
-        let PLAYER_NAME = userInfo.name
+        let PLAYER_NAME = PLAYER_DATA.name
         if (PLAYER_NAME.length > 8) {
             FONT_SIZE = 8.5
         } else {
@@ -192,14 +208,14 @@ const Lobby = () => {
         GAME_NAME.push(player_experience)
         UI.add(player_experience)
 
-        let current_experience = new THREE.Mesh(new THREE.PlaneGeometry(107.5 * (userInfo.experience / 588), 2), LOADED_MATERIAL[2])
-        let excess = (107.5 - (107.5 * (userInfo.experience / 588))) / 2
+        let current_experience = new THREE.Mesh(new THREE.PlaneGeometry(107.5 * (PLAYER_DATA.experience / 588), 2), LOADED_MATERIAL[2])
+        let excess = (107.5 - (107.5 * (PLAYER_DATA.experience / 588))) / 2
         current_experience.position.set(-140 - excess, 32.5, 2)
         GAME_NAME.push(current_experience)
         UI.add(current_experience)
 
         // PLAYER LEVEL DISINI
-        let level_text = new TextGeometry(userInfo.level.toString(), {
+        let level_text = new TextGeometry(PLAYER_DATA.level.toString(), {
             font: LOADED_FONT,
             size: 8,
             height: 0,
@@ -209,7 +225,7 @@ const Lobby = () => {
         centerText(level_text, level_number, -180, 55, 4)
         UI.add(level_number)
 
-        let PLAYER_EXP = userInfo.experience
+        let PLAYER_EXP = PLAYER_DATA.experience
         let experience_text = new TextGeometry(PLAYER_EXP.toString() + "/588", {
             font: LOADED_FONT,
             size: 7,
@@ -476,7 +492,7 @@ const Lobby = () => {
         TOP_MENU.push(player_background)
         UI.add(player_background)
 
-        let point_geometry = new TextGeometry(userInfo.point.toString(), {
+        let point_geometry = new TextGeometry(PLAYER_DATA.point.toString(), {
             font: LOADED_FONT,
             size: 10,
             height: 0,
@@ -506,7 +522,7 @@ const Lobby = () => {
         UI.add(player_background)
 
 
-        point_geometry = new TextGeometry(userInfo.gold.toString(), {
+        point_geometry = new TextGeometry(PLAYER_DATA.gold.toString(), {
             font: LOADED_FONT,
             size: 10,
             height: 0,
@@ -606,6 +622,7 @@ const Lobby = () => {
         SCENE.add(dirLight);
 
         PLAYER_PREVIEW = PLAYER_LOADER.PLAYER.player
+        console.log(PLAYER_LOADER.PLAYER.equip)
         PLAYER_PREVIEW.scale.set(0.85, 0.85, 0.85)
         PLAYER_PREVIEW.position.set(-55, -2.5, -35)
 
