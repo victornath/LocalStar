@@ -111,6 +111,23 @@ function load(){
     });
 
     // Texture
+    let itemCategory = ["all","hat","hair","top","bottom","shoes"]
+    for (let i = 0; i < itemCategory.length; i++) {
+        TEXTURE_LOADER.load('./images/texture/item/category/'+itemCategory[i]+'.png', function ( texture ) {
+            LOADED_TEXTURE[itemCategory[i]] = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide,
+                alphaTest: 0.1
+            })    
+        })
+        TEXTURE_LOADER.load('./images/texture/item/category/'+itemCategory[i]+'_inactive.png', function ( texture ) {
+            LOADED_TEXTURE[itemCategory[i]+"_inactive"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide,
+                alphaTest: 0.1
+            })    
+        })
+    }
     // TEXTURE_LOADER.load('../../texture/ui/coin.png', function ( texture ) {
     //     LOADED_TEXTURE["point"] = new THREE.MeshBasicMaterial({
     //         map: texture,
@@ -192,29 +209,9 @@ async function saveClothes(url){
         }
     });
     var data = await response.json()
-    if(response){
-        loadPlayerInventory(data[0].item_owned)
-    }
 }
 
-async function getInventory(url,category){
-    if(category){
-        const response = await fetch(url,{
-            method: 'GET',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + userInfo.token,
-            },
-            body: {
-                "category": category
-            }
-        });
-        var data = await response.json()
-        if(response){
-            loadPlayerInventory(data[0].item_owned)
-        }
-    } else {
+async function getInventory(url){
         const response = await fetch(url,{
                 method: 'GET',
                 headers: {
@@ -224,11 +221,10 @@ async function getInventory(url,category){
                 }
             });
         var data = await response.json()
+        console.log(data)
         if(response){
             loadPlayerInventory(data[0].item_owned)
         }
-    }
-
 }
 
 function loadPlayerInventory(data){
@@ -248,10 +244,11 @@ function loadPlayerInventory(data){
         CATEGORY = []
     }
 
+    let itemCategory = ["all","hat","hair","top","bottom","shoes"]
     for (let i = 0; i < 6; i++) {
-        let category_bg = new THREE.Mesh(new THREE.PlaneGeometry(30,30),LOADED_MATERIAL[3])
+        let category_bg = new THREE.Mesh(new THREE.PlaneGeometry(30,30),LOADED_TEXTURE[itemCategory[i]+"_inactive"])
         if(ACTIVE_CATEGORY == i){
-            category_bg.material = LOADED_MATERIAL[4]
+            category_bg.material = LOADED_TEXTURE[itemCategory[i]]
         }
         category_bg.position.set(221,192.5-(i*31),-2)
         category_bg.name = "category_0"+i
@@ -513,23 +510,23 @@ function initUI(){
                                 break;
                             case 1:
                                 ACTIVE_CATEGORY= 1
-                                getInventory("/api/users/inventory","hat")
+                                getInventory("/api/users/inventory?category=hat")
                                 break;
                             case 2:
                                 ACTIVE_CATEGORY= 2
-                                getInventory("/api/users/inventory","hair")
+                                getInventory("/api/users/inventory?category=hair")
                                 break;
                             case 3:
                                 ACTIVE_CATEGORY= 3
-                                getInventory("/api/users/inventory","top")
+                                getInventory("/api/users/inventory?category=top")
                                 break;
                             case 4:
                                 ACTIVE_CATEGORY= 4
-                                getInventory("/api/users/inventory","bottom")
+                                getInventory("/api/users/inventory?category=bottom")
                                 break;
                             case 5:
                                 ACTIVE_CATEGORY= 5
-                                getInventory("/api/users/inventory", "shoes")
+                                getInventory("/api/users/inventory?category=shoes")
                                 break;
                         }
                     } else {
