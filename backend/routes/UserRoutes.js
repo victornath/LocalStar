@@ -78,6 +78,24 @@ userRouter.get("/profile", protect, asyncHandler(async (req, res) => {
     }
 }));
 
+// GET USER DATA FOR LOBBY
+userRouter.get("/", protect, asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+    if (user) {
+        res.json({
+            name: user.name,
+            point: user.point,
+            gold: user.gold,
+            equipped_items: user.equipped_items,
+            level: user.level,
+            experience: user.experience,
+        })
+    } else {
+        res.status(404);
+        throw new Error("Error Not Found : Failed to Get User Data.");
+    }
+}));
+
 // GET FILTERED USER ITEM
 
 userRouter.get("/inventory", protect, asyncHandler(async (req, res) => {
