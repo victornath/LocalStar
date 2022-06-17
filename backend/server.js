@@ -35,7 +35,7 @@ io.on("connection", (socket) => {
     // Disconnect listener
     socket.on('disconnect', name => {
         console.log('Client disconnected.');
-        socket.broadcast.emit("user-disconnected", name)
+        socket.broadcast.emit("user-disconnected", users[socket.id])
     });
 
     socket.on("new-user", name => {
