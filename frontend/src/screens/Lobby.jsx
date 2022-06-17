@@ -104,15 +104,15 @@ const Lobby = () => {
         };
     }
 
-    async function loadData(url){
-        const response = await fetch(url,{
-                method: 'GET',
-                headers: {
-                  'Accept': 'application/json',
-                  'Content-Type': 'application/json',
-                  'Authorization': 'Bearer ' + userInfo.token,
-                }
-            });
+    async function loadData(url) {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + userInfo.token,
+            }
+        });
         var data = await response.json()
         initUI(data)
         initGame()
@@ -343,7 +343,7 @@ const Lobby = () => {
                                 window.open("../inventory", "_self")
                                 break;
                             case 2:
-                                window.open("../pages/friends.html", "_self")
+                                window.open("../chat", "_self")
                                 break;
                         }
                     } else if (obj_name.startsWith("button_")) {
@@ -367,7 +367,7 @@ const Lobby = () => {
                                 break;
                         }
                     } else if (obj_name.startsWith("play_")) {
-                        getPlayrooms(choice,"/api/playrooms/lobby")
+                        getPlayrooms(choice, "/api/playrooms/lobby")
                     } else if (obj_name.startsWith("room_")) {
                         window.open("/playroom", "_self")
                     }
@@ -377,16 +377,16 @@ const Lobby = () => {
     }
 
     async function getPlayrooms(gameId, url) {
-        const response = await fetch(url,{
+        const response = await fetch(url, {
             method: 'GET',
             headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + userInfo.token,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + userInfo.token,
             }
         });
         var data = await response.json()
-        if(response){
+        if (response) {
             showRoom(gameId, data)
         }
     }
@@ -420,9 +420,9 @@ const Lobby = () => {
                 ROOM_UI.push(room)
                 UI.add(room)
 
-                let userCount = data[((gameId-1)*5)+(i+(j*3)+1)].user_ids.length.toString()
+                let userCount = data[((gameId - 1) * 5) + (i + (j * 3) + 1)].user_ids.length.toString()
                 console.log(userCount)
-                let point_geometry = new TextGeometry(userCount+"/10", {
+                let point_geometry = new TextGeometry(userCount + "/10", {
                     font: LOADED_FONT,
                     size: 8,
                     height: 0,
@@ -446,7 +446,7 @@ const Lobby = () => {
             })
             ROOM_UI = []
         }
-        let bottom_menu = ["Shop", "Inventory", "Friends"]
+        let bottom_menu = ["Shop", "Inventory", "Chat"]
         for (let i = 0; i < bottom_menu.length; i++) {
             let player_background = new THREE.Mesh(new THREE.PlaneGeometry(87, 36), LOADED_MATERIAL[2])
             player_background.position.set(-16.25 + (102 * i), 37.5, 0)

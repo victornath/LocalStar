@@ -10,6 +10,7 @@ import Lobby from './screens/Lobby';
 import Shop from './screens/Shop';
 import Inventory from './screens/Inventory';
 import PlayerLoader from './screens/Playroom';
+import Chat from "./screens/Chat";
 
 
 const App = () => {
@@ -24,6 +25,7 @@ const App = () => {
         <Route path='/shop' element={<Shop />} />;
         <Route path='/inventory' element={<Inventory />} />;
         <Route path='/playroom' element={<PlayerLoader />} />;
+        <Route path="/chat" element={<Chat />} />;
       </Routes>
     </Router>
   )
