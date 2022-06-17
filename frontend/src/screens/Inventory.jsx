@@ -400,7 +400,7 @@ function equip(object){
     }
     console.log(EQUIPPED_OBJ)
     for (let i = 0; i < EQUIPPED_OBJ.length; i++) {
-        if(EQUIPPED_OBJ[i].length > 0){
+        if(EQUIPPED_OBJ[i]){
             for (let j = 0; j < EQUIPPED_OBJ[i].length; j++) {
                 EQUIPPED_OBJ[i][j].forEach(e =>{
                     PLAYER_LOADER.PLAYER.player.children[j].remove(e)
@@ -426,7 +426,7 @@ function equip(object){
         PLAYER_LOADER.PLAYER.equip[category_id] = object.name.substring(object.name.indexOf("_")+1, object.name.length)
 }
     for (let i = 0; i < EQUIPPED_OBJ.length; i++) {
-        if(EQUIPPED_OBJ[i].length > 0){
+        if(EQUIPPED_OBJ[i]){
             for (let j = 0; j < EQUIPPED_OBJ[i].length; j++) {
                 EQUIPPED_OBJ[i][j].forEach(e =>{
                     PLAYER_LOADER.PLAYER.player.children[j].add(e)
@@ -599,6 +599,7 @@ function initUI(loadedData){
 
 function initGame(){
     EQUIPPED_OBJ = PLAYER_LOADER.PLAYER.equip_obj
+    console.log(EQUIPPED_OBJ)
     EQUIPPED = PLAYER_LOADER.PLAYER.equip
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     SCENE.add(ambientLight);
