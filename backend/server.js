@@ -18,11 +18,20 @@ app.use("/api/users", userRouter);
 app.use("/api/playrooms", playroomRouter);
 app.use("/api/items", itemRouter);
 
-const io = new Server(http.createServer(app));
-
-const users = {}
+const io = new Server(http.createServer(app), {
+    cors: {
+        origin: "http://localhost:3000"
+    }
+});
 
 io.on("connection", (socket) => {
+    console.log('Client connected.');
+
+    // Disconnect listener
+    socket.on('disconnect', function () {
+        console.log('Client disconnected.');
+    });
+
     socket.on("new-user", name => {
         users[socket.id] = name
         socket.broadcast.emit("user-connected", name)
