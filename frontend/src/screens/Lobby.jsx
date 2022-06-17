@@ -124,6 +124,57 @@ const Lobby = () => {
             LOADED_FONT = font
         });
 
+        // Texture
+        // TEXTURE_LOADER.load('../../texture/ui/coin.png', function ( texture ) {
+        //     LOADED_TEXTURE["point"] = new THREE.MeshBasicMaterial({
+        //         map: texture,
+        //         side: THREE.DoubleSide,
+        //         alphaTest: 1
+        //     })    
+        // })
+        // TEXTURE_LOADER.load('../../texture/ui/gold.png', function ( texture ) {
+        //     LOADED_TEXTURE["gold"] = new THREE.MeshBasicMaterial({
+        //         map: texture,
+        //         side: THREE.DoubleSide,
+        //         alphaTest: 1
+        //     })    
+        // })
+        TEXTURE_LOADER.load('./images/texture/ui/sound/sound_on.png', function ( texture ) {
+            LOADED_TEXTURE["sound_on"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide,
+                alphaTest: 0.6
+            })    
+        })
+        TEXTURE_LOADER.load('./images/texture/ui/sound/sound_off.png', function ( texture ) {
+            LOADED_TEXTURE["sound_off"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide,
+                alphaTest: 0.6
+            })    
+        })
+        TEXTURE_LOADER.load('./images/texture/ui/game/help_btn.png', function ( texture ) {
+            LOADED_TEXTURE["help"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide,
+                alphaTest: 0.6
+            })    
+        })
+        TEXTURE_LOADER.load('./images/texture/ui/arrow/arrow_l_1.png', function ( texture ) {
+            LOADED_TEXTURE["arrow_l"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide,
+                alphaTest: 0.6
+            })    
+        })
+        TEXTURE_LOADER.load('./images/texture/ui/arrow/arrow_r_1.png', function ( texture ) {
+            LOADED_TEXTURE["arrow_r"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide,
+                alphaTest: 0.6
+            })    
+        })
+
         // Materials
         LOADED_MATERIAL.push(
             new THREE.MeshBasicMaterial({ color: 0xcec3c1 }),
@@ -350,7 +401,7 @@ const Lobby = () => {
         })
         GAME_MENU = []
 
-        let back_arrow = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), LOADED_MATERIAL[0])
+        let back_arrow = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), LOADED_TEXTURE["arrow_l"])
         back_arrow.position.set(-45, 200, 100)
         back_arrow.name = "button_close_choice"
         ROOM_UI.push(back_arrow)
@@ -428,7 +479,7 @@ const Lobby = () => {
         GAME_MENU.push(game_image)
         UI.add(game_image)
 
-        let game_help = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), LOADED_MATERIAL[0])
+        let game_help = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), LOADED_TEXTURE["help"])
         game_help.position.set(170, 205, 3)
         game_help.name = "help_button"
         GAME_MENU.push(game_help)
@@ -456,7 +507,7 @@ const Lobby = () => {
         GAME_MENU.push(game_text_mesh)
         UI.add(game_text_mesh)
 
-        let game_next_arrow = new THREE.Mesh(new THREE.PlaneGeometry(22, 22), LOADED_MATERIAL[2])
+        let game_next_arrow = new THREE.Mesh(new THREE.PlaneGeometry(22, 22), LOADED_TEXTURE["arrow_r"])
         game_next_arrow.position.set(170, 97.5, 4)
         GAME_MENU.push(game_next_arrow)
         UI.add(game_next_arrow)
@@ -466,7 +517,7 @@ const Lobby = () => {
         GAME_MENU.push(game_next)
         UI.add(game_next)
 
-        let game_prev_arrow = new THREE.Mesh(new THREE.PlaneGeometry(22, 22), LOADED_MATERIAL[2])
+        let game_prev_arrow = new THREE.Mesh(new THREE.PlaneGeometry(22, 22), LOADED_TEXTURE["arrow_l"])
         game_prev_arrow.position.set(10, 97.5, 4)
         GAME_MENU.push(game_prev_arrow)
         UI.add(game_prev_arrow)
@@ -532,7 +583,7 @@ const Lobby = () => {
         GAME_NAME.push(mesh)
         UI.add(mesh)
 
-        let sound_icon = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), LOADED_MATERIAL[0])
+        let sound_icon = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), LOADED_TEXTURE["sound_off"])
         sound_icon.position.set(214.75, 243.5, 1)
         UI.add(sound_icon)
 
@@ -574,7 +625,7 @@ const Lobby = () => {
         GAME_MENU.push(game_text_mesh)
         UI.add(game_text_mesh)
 
-        let game_help = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), LOADED_MATERIAL[0])
+        let game_help = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), LOADED_TEXTURE["help"])
         game_help.position.set(170, 205, 3)
         game_help.name = "help_button"
         GAME_MENU.push(game_help)
@@ -591,7 +642,7 @@ const Lobby = () => {
         UI.add(game_button)
 
 
-        let game_next_arrow = new THREE.Mesh(new THREE.PlaneGeometry(22, 22), LOADED_MATERIAL[0])
+        let game_next_arrow = new THREE.Mesh(new THREE.PlaneGeometry(22, 22), LOADED_TEXTURE["arrow_r"])
         game_next_arrow.position.set(170, 97.5, 4)
         GAME_MENU.push(game_next_arrow)
         UI.add(game_next_arrow)
@@ -601,7 +652,7 @@ const Lobby = () => {
         GAME_MENU.push(game_next)
         UI.add(game_next)
 
-        let game_prev_arrow = new THREE.Mesh(new THREE.PlaneGeometry(22, 22), LOADED_MATERIAL[0])
+        let game_prev_arrow = new THREE.Mesh(new THREE.PlaneGeometry(22, 22), LOADED_TEXTURE["arrow_l"])
         game_prev_arrow.position.set(10, 97.5, 4)
         GAME_MENU.push(game_prev_arrow)
         UI.add(game_prev_arrow)
