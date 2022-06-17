@@ -369,3 +369,20 @@ button:hover {
 #canvas-holder {
   background-color: #CEC3C1;
 }
+
+/* CHAT */
+
+#message-container {
+  width: 80%;
+  max-width: 1200px;
+}
+
+#message-container div {
+  background-color: #CCC;
+  padding: 5px;
+}
+
+#message-container div:nth-child(2n) {
+  background-color: #FFF;
+  padding: 5px;
+}
