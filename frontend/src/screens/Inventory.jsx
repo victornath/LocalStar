@@ -109,6 +109,20 @@ function load(){
     });
 
     // Texture
+    TEXTURE_LOADER.load('./images/texture/ui/currency/points.png', function ( texture ) {
+        LOADED_TEXTURE["point"] = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+            alphaTest: 0.3
+        })    
+    })
+    TEXTURE_LOADER.load('./images/texture/ui/currency/gold.png', function ( texture ) {
+        LOADED_TEXTURE["gold"] = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+            alphaTest: 0.3
+        })    
+    })
     let itemCategory = ["all","hat","hair","top","bottom","shoes"]
     for (let i = 0; i < itemCategory.length; i++) {
         TEXTURE_LOADER.load('./images/texture/item/category/'+itemCategory[i]+'.png', function ( texture ) {
@@ -610,76 +624,75 @@ function initGame(){
     SCENE.add(PLAYER_PREVIEW)
 }
 
-function loadUI_currency(){
-    let currency_plane = new THREE.PlaneGeometry(115,31)
-    let currency_shadow_plane = new THREE.PlaneGeometry(120,36)
+function loadUI_currency() {
+    let currency_plane = new THREE.PlaneGeometry(115, 31)
+    let currency_shadow_plane = new THREE.PlaneGeometry(120, 36)
     let player_background = new THREE.Mesh(currency_plane, LOADED_MATERIAL[2])
-    player_background.position.set(0.25,242,0)
+    player_background.position.set(0.25, 242, 0)
     player_background.name = "top_menu_02"
     TOP_MENU.push(player_background)
     UI.add(player_background)
     player_background = new THREE.Mesh(currency_shadow_plane, LOADED_MATERIAL[3])
-    player_background.position.set(0.25,242,-1)
+    player_background.position.set(0.25, 242, -1)
     player_background.name = "top_menu_02"
     TOP_MENU.push(player_background)
     UI.add(player_background)
 
-    let point_geometry = new TextGeometry( PLAYER_DATA.point.toString(), {
+    let point_geometry = new TextGeometry(PLAYER_DATA.point.toString(), {
         font: LOADED_FONT,
         size: 10,
         height: 0,
         bevelEnabled: false,
-    } );
-    let mesh = new THREE.Mesh(point_geometry,LOADED_MATERIAL[1])
-    alignText(point_geometry,mesh, 28.5,242,1)
+    });
+    let mesh = new THREE.Mesh(point_geometry, LOADED_MATERIAL[1])
+    alignText(point_geometry, mesh, 27.5, 242, 1)
     GAME_NAME.push(mesh)
     UI.add(mesh)
 
-    let currency_logo = new THREE.Mesh(new THREE.PlaneGeometry(22.5,25), LOADED_TEXTURE["point"])
-    currency_logo.position.set(45,242,2)
+    let currency_logo = new THREE.Mesh(new THREE.PlaneGeometry(30,30), LOADED_TEXTURE["point"])
+    currency_logo.position.set(42.5, 242, 2)
     UI.add(currency_logo)
-    currency_logo = new THREE.Mesh(new THREE.PlaneGeometry(37.5,25), LOADED_TEXTURE["gold"])
-    currency_logo.position.set(165,242,2)
+    currency_logo = new THREE.Mesh(new THREE.PlaneGeometry(30,30), LOADED_TEXTURE["gold"])
+    currency_logo.position.set(172.5, 242, 2)
     UI.add(currency_logo)
 
     player_background = new THREE.Mesh(currency_plane, LOADED_MATERIAL[2])
-    player_background.position.set(129.25,242,0)
+    player_background.position.set(129.25, 242, 0)
     player_background.name = "top_menu_03"
     TOP_MENU.push(player_background)
     UI.add(player_background)
     player_background = new THREE.Mesh(currency_shadow_plane, LOADED_MATERIAL[3])
-    player_background.position.set(129.25,242,-1)
+    player_background.position.set(129.25, 242, -1)
     player_background.name = "top_menu_03"
     TOP_MENU.push(player_background)
     UI.add(player_background)
 
 
-    point_geometry = new TextGeometry( PLAYER_DATA.gold.toString(), {
-            font: LOADED_FONT,
-            size: 10,
-            height: 0,
-            bevelEnabled: false,
-        } );
-    mesh = new THREE.Mesh(point_geometry,LOADED_MATERIAL[1])
-    alignText(point_geometry,mesh,145,242,1)
+    point_geometry = new TextGeometry(PLAYER_DATA.gold.toString(), {
+        font: LOADED_FONT,
+        size: 10,
+        height: 0,
+        bevelEnabled: false,
+    });
+    mesh = new THREE.Mesh(point_geometry, LOADED_MATERIAL[1])
+    alignText(point_geometry, mesh, 157.5, 242, 1)
     GAME_NAME.push(mesh)
     UI.add(mesh)
-    
-    let sound_icon = new THREE.Mesh(new THREE.PlaneGeometry(33,33), LOADED_TEXTURE["sound_off"])
-    sound_icon.position.set(214.75,243.5,1)
+
+    let sound_icon = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), LOADED_TEXTURE["sound_off"])
+    sound_icon.position.set(214.75, 243.5, 1)
     UI.add(sound_icon)
 
-    player_background = new THREE.Mesh(new THREE.PlaneGeometry(33,33), LOADED_MATERIAL[2])
-    player_background.position.set(214.75,243.5,0)
+    player_background = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), LOADED_MATERIAL[2])
+    player_background.position.set(214.75, 243.5, 0)
     player_background.name = "top_menu_04"
     TOP_MENU.push(player_background)
     UI.add(player_background)
-    player_background = new THREE.Mesh(new THREE.PlaneGeometry(33,33), LOADED_MATERIAL[3])
-    player_background.position.set(219.75,238.5,-1)
+    player_background = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), LOADED_MATERIAL[3])
+    player_background.position.set(219.75, 238.5, -1)
     TOP_MENU.push(player_background)
     UI.add(player_background)
 }
-
 
 function gameLoop() {
         requestAnimationFrame(gameLoop);

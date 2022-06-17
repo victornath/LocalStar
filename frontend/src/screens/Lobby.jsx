@@ -125,20 +125,20 @@ const Lobby = () => {
         });
 
         // Texture
-        // TEXTURE_LOADER.load('../../texture/ui/coin.png', function ( texture ) {
-        //     LOADED_TEXTURE["point"] = new THREE.MeshBasicMaterial({
-        //         map: texture,
-        //         side: THREE.DoubleSide,
-        //         alphaTest: 1
-        //     })    
-        // })
-        // TEXTURE_LOADER.load('../../texture/ui/gold.png', function ( texture ) {
-        //     LOADED_TEXTURE["gold"] = new THREE.MeshBasicMaterial({
-        //         map: texture,
-        //         side: THREE.DoubleSide,
-        //         alphaTest: 1
-        //     })    
-        // })
+        TEXTURE_LOADER.load('./images/texture/ui/currency/points.png', function ( texture ) {
+            LOADED_TEXTURE["point"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide,
+                alphaTest: 0.3
+            })    
+        })
+        TEXTURE_LOADER.load('./images/texture/ui/currency/gold.png', function ( texture ) {
+            LOADED_TEXTURE["gold"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide,
+                alphaTest: 0.3
+            })    
+        })
         TEXTURE_LOADER.load('./images/texture/ui/sound/sound_on.png', function ( texture ) {
             LOADED_TEXTURE["sound_on"] = new THREE.MeshBasicMaterial({
                 map: texture,
@@ -549,15 +549,15 @@ const Lobby = () => {
             bevelEnabled: false,
         });
         let mesh = new THREE.Mesh(point_geometry, LOADED_MATERIAL[1])
-        alignText(point_geometry, mesh, 28.5, 242, 1)
+        alignText(point_geometry, mesh, 27.5, 242, 1)
         GAME_NAME.push(mesh)
         UI.add(mesh)
 
-        let currency_logo = new THREE.Mesh(new THREE.PlaneGeometry(22.5, 25), LOADED_MATERIAL[0])
-        currency_logo.position.set(45, 242, 2)
+        let currency_logo = new THREE.Mesh(new THREE.PlaneGeometry(30,30), LOADED_TEXTURE["point"])
+        currency_logo.position.set(42.5, 242, 2)
         UI.add(currency_logo)
-        currency_logo = new THREE.Mesh(new THREE.PlaneGeometry(37.5, 25), LOADED_MATERIAL[0])
-        currency_logo.position.set(165, 242, 2)
+        currency_logo = new THREE.Mesh(new THREE.PlaneGeometry(30,30), LOADED_TEXTURE["gold"])
+        currency_logo.position.set(172.5, 242, 2)
         UI.add(currency_logo)
 
         player_background = new THREE.Mesh(currency_plane, LOADED_MATERIAL[2])
@@ -579,7 +579,7 @@ const Lobby = () => {
             bevelEnabled: false,
         });
         mesh = new THREE.Mesh(point_geometry, LOADED_MATERIAL[1])
-        alignText(point_geometry, mesh, 145, 242, 1)
+        alignText(point_geometry, mesh, 157.5, 242, 1)
         GAME_NAME.push(mesh)
         UI.add(mesh)
 
