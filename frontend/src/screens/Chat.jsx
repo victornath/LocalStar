@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 
 
 const socket = io("http://localhost:5000");
-console.log(socket.connected)
+console.log(socket)
 
 
 const Chat = () => {
@@ -31,22 +31,19 @@ const Chat = () => {
         let userData
         loadData("/api/users/getData").then(data => {
             userData = data
+            socket.emit('new-user', userData.name)
         })
 
-
-        const name = "test name"
-        socket.emit('new-user', name)
-
         socket.on('chat-message', data => {
-            appendMessage(`${userData.name}: ${data.message}`)
+            appendMessage(`${data.name}: ${data.message}`)
         })
 
         socket.on('user-connected', name => {
-            appendMessage(`${userData.name} connected`)
+            appendMessage(`${name} connected`)
         })
 
         socket.on('user-disconnected', name => {
-            appendMessage(`${userData.name} disconnected`)
+            appendMessage(`${name} disconnected`)
         })
 
         messageContainer = document.getElementById('message-container')
@@ -55,8 +52,11 @@ const Chat = () => {
 
         messageForm.addEventListener('submit', e => {
             e.preventDefault()
-            const message = messageInput.value
-            appendMessage(`${userData.name}: ${message}`)
+            const message = {
+                name: userData.name,
+                message: messageInput.value
+            }
+            appendMessage(`${userData.name}: ${message.message}`)
             socket.emit('send-chat-message', message)
             messageInput.value = ''
         })

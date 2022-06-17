@@ -8,28 +8,34 @@ import userRouter from "./routes/UserRoutes.js";
 import playroomRouter from "./routes/PlayroomRoutes.js";
 import itemRouter from "./routes/ItemRoutes.js";
 import { Server } from "socket.io";
+import cors from 'cors';
 
 dotenv.config();
 connectDatabase();
 const app = express();
+const server = http.createServer(app)
 app.use(express.json());
+app.use(cors())
 app.use("/api/import", ImportData);
 app.use("/api/users", userRouter);
 app.use("/api/playrooms", playroomRouter);
 app.use("/api/items", itemRouter);
 
-const io = new Server(http.createServer(app), {
+const io = new Server(server, {
     cors: {
-        origin: "http://localhost:3000"
+        origin: "*",
+        methods: ["GET", "POST"]
     }
 });
+let users = []
 
 io.on("connection", (socket) => {
     console.log('Client connected.');
 
     // Disconnect listener
-    socket.on('disconnect', function () {
+    socket.on('disconnect', name => {
         console.log('Client disconnected.');
+        socket.broadcast.emit("user-disconnected", name)
     });
 
     socket.on("new-user", name => {
@@ -47,4 +53,4 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT;
 
-app.listen(PORT, console.log(`server running in port ${PORT}`));
+server.listen(PORT, console.log(`server running in port ${PORT}`));
