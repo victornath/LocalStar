@@ -49,7 +49,7 @@ let ITEM_LIST = []
 let MAIN_UI = []
 let TOP_MENU = []
 let EQUIPPED = ["","","","",""]
-let EQUIPPED_OBJ = [null,null,null,null,null]
+let EQUIPPED_OBJ = [[[],[],[],[],[],[]],[[],[],[],[],[],[]],[[],[],[],[],[],[]],[[],[],[],[],[],[]],[[],[],[],[],[],[]]]
 let MAX_PAGE, PLAYER_ITEMS, PLAYER_DATA
 
 
@@ -384,33 +384,42 @@ function equip(object){
             category_id = 4
             break;
     }
-    EQUIPPED_OBJ.forEach(e =>{
-        if(e){
-            PLAYER_LOADER.PLAYER.player.remove(e)
+    console.log(EQUIPPED_OBJ)
+    for (let i = 0; i < EQUIPPED_OBJ.length; i++) {
+        if(EQUIPPED_OBJ[i].length > 0){
+            for (let j = 0; j < EQUIPPED_OBJ[i].length; j++) {
+                EQUIPPED_OBJ[i][j].forEach(e =>{
+                    PLAYER_LOADER.PLAYER.player.children[j].remove(e)
+                })
+            }
         }
-    })
+    }
     if(EQUIPPED[category_id].length > 0){
         if(EQUIPPED[category_id] === object.name.substring(object.name.indexOf("_")+1, object.name.length)){
             // unequipped current item
             EQUIPPED[category_id] = ""
-            EQUIPPED_OBJ[category_id] = null
+            EQUIPPED_OBJ[category_id] = []
         } else {
             // remove existing item
             // then equip the item
             EQUIPPED[category_id] = object.name.substring(object.name.indexOf("_")+1, object.name.length)
-            EQUIPPED_OBJ[category_id] = object.userData.object.group
+            EQUIPPED_OBJ[category_id] = object.userData.object.object
             PLAYER_LOADER.PLAYER.equip[category_id] = object.name.substring(object.name.indexOf("_")+1, object.name.length)
         }
     } else {
         EQUIPPED[category_id] = object.name.substring(object.name.indexOf("_")+1, object.name.length)
-        EQUIPPED_OBJ[category_id] = object.userData.object.group
+        EQUIPPED_OBJ[category_id] = object.userData.object.object
         PLAYER_LOADER.PLAYER.equip[category_id] = object.name.substring(object.name.indexOf("_")+1, object.name.length)
-    }
-    EQUIPPED_OBJ.forEach(e => {
-        if(e){
-            PLAYER_LOADER.PLAYER.player.add(e)
+}
+    for (let i = 0; i < EQUIPPED_OBJ.length; i++) {
+        if(EQUIPPED_OBJ[i].length > 0){
+            for (let j = 0; j < EQUIPPED_OBJ[i].length; j++) {
+                EQUIPPED_OBJ[i][j].forEach(e =>{
+                    PLAYER_LOADER.PLAYER.player.children[j].add(e)
+                })
+            }
         }
-    });
+    }
 }
 
 function initRenderer(){

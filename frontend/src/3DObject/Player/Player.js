@@ -107,12 +107,12 @@ class Player {
 
         // Group Adding
         this.group = new THREE.Group()
-        this.group.add(leg_l)
-        this.group.add(leg_r)
+        this.group.add(head)
         this.group.add(hand_l)
         this.group.add(hand_r)
         this.group.add(body)
-        this.group.add(head)
+        this.group.add(leg_l)
+        this.group.add(leg_r)
         this.group.add(shadow)
     }
 }
