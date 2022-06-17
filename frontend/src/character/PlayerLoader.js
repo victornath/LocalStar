@@ -45,14 +45,22 @@ class PlayerLoader {
         for (let i = 0; i < equip.length; i++) {
             if(equip[i].length > 0){
                 this.loadItem(equip[i]).then(result => {
-                    equip_object[i] = result.object.group
-                    player.add(result.object.group)
+                    if(result.object.object){
+                        equip_object[i] = result.object.object
+                        for (let i = 0; i < result.object.object.length; i++) {
+                            result.object.object[i].forEach(e => {
+                                player.children[i].add(e)
+                            })
+                        }
+                    } else {
+                        equip_object[i] = []
+                    }
                 })
             }
         }
         this.PLAYER = {
             player: player,
-            head: player.children[5],
+            head: player.children[0],
             equip: equip,
             equip_obj: equip_object
         }
@@ -67,13 +75,15 @@ class PlayerLoader {
                 if(equip[i].length > 0){
                     this.loadItem(equip[i]).then(result => {
                         equip_object[i] = result.object.group
-                        player.add(result.object.group)
+                        for (let i = 0; i < result.object.object.length; i++) {
+                            player.children[0].add(result.object.group)
+                        }
                     })
                 }
             }
             this.OTHER_PLAYER[PlayerID] = {
                 player: player,
-                head: player.children[5],
+                head: player.children[0],
                 equip: equip,
                 equip_obj: equip_object
             }    
@@ -81,10 +91,10 @@ class PlayerLoader {
     }
 
     PlayerWalk() {
-        let player_leg_l = this.PLAYER.player.children[0]
-        let player_leg_r = this.PLAYER.player.children[1]
-        let player_hand_l = this.PLAYER.player.children[2]
-        let player_hand_r = this.PLAYER.player.children[3]
+        let player_leg_l = this.PLAYER.player.children[4]
+        let player_leg_r = this.PLAYER.player.children[5]
+        let player_hand_l = this.PLAYER.player.children[1]
+        let player_hand_r = this.PLAYER.player.children[2]
 
         if (this.pivot == 0) {
             player_leg_l.rotation.x += -Math.PI / 40
@@ -123,10 +133,10 @@ class PlayerLoader {
     }
 
     PlayerStop() {
-        let player_leg_l = this.PLAYER.player.children[0]
-        let player_leg_r = this.PLAYER.player.children[1]
-        let player_hand_l = this.PLAYER.player.children[2]
-        let player_hand_r = this.PLAYER.player.children[3]
+        let player_leg_l = this.PLAYER.player.children[4]
+        let player_leg_r = this.PLAYER.player.children[5]
+        let player_hand_l = this.PLAYER.player.children[1]
+        let player_hand_r = this.PLAYER.player.children[2]
 
         player_leg_l.position.z = 0
         player_leg_l.rotation.x = 0
