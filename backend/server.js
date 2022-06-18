@@ -28,22 +28,28 @@ const io = new Server(server, {
     }
 });
 let users = []
+let _id
 
 io.on("connection", (socket) => {
-    console.log('Client connected.');
-
     // Disconnect listener
-    socket.on('disconnect', name => {
-        console.log('Client disconnected.');
-        socket.broadcast.emit("user-disconnected", users[socket.id])
+    socket.on('disconnect', (reason) => {
+        socket.broadcast.emit("user-disconnected", _id)
     });
-
     socket.on("new-user", name => {
         users[socket.id] = name
         socket.broadcast.emit("user-connected", name)
     })
     socket.on("send-chat-message", message => {
         socket.broadcast.emit("chat-message", message)
+    })
+
+    socket.on("playroom_enter", param => {
+        _id = param._id
+        socket.broadcast.emit("playroom_addplayer", param)
+    })
+
+    socket.on("playroom_walk", param =>{
+        socket.broadcast.emit("playroom_walk", param)
     })
 })
 

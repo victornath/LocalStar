@@ -6,8 +6,6 @@ import PlayerLoader from '../../src/character/PlayerLoader.js'
 import WebGL from '../WebGL.js';
 import { useSelector } from "react-redux";
 
-
-
 const Lobby = () => {
 
     const userLogin = useSelector((state) => state.userLogin);

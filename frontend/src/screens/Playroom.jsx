@@ -9,7 +9,10 @@ import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import WebGL from '../WebGL.js';
 import * as PF from 'pathfinding';
 import { useSelector } from "react-redux";
+import { io } from "socket.io-client";
 
+
+const socket = io("http://localhost:5000");
 
 
 const Playroom = () => {
@@ -48,11 +51,10 @@ const Playroom = () => {
     const RAYCAST = new THREE.Raycaster()
     let ROOM_GRID
     let WALK_FINDER
-    let PLAYER_MOVE = []
-    let PLAYER
-    let PIVOTx = 0
-    let PIVOTz = 0
+    let PLAYER_MOVE = [], OTHER_MOVE = []
+    let PLAYER, OTHER_PLAYER = []
     let UI_Object = []
+    let walking = []
 
     var time, delta, moveTimer = 0;
     var useDeltaTiming = true, weirdTiming = 0;
@@ -90,6 +92,7 @@ const Playroom = () => {
         initCamera()
         initPlayer()
         initUI()
+        initSocket()
         window.addEventListener('resize', onWindowResize, false);
     }
 
@@ -262,11 +265,18 @@ const Playroom = () => {
                             x: Math.floor((PLAYER.position.x + 12.5) / 25) - 1,
                             z: Math.floor((PLAYER.position.z + 12.5) / 25) - 1
                         }
-                        PLAYER_MOVE.pop()
                         var gridClone = ROOM_GRID.clone()
                         var path = WALK_FINDER.findPath(startPos.x, startPos.z, newPoint.x, newPoint.z, gridClone)
                         // PLAYER_MOVE.push([newPoint.x,newPoint.z,startPos.x,startPos.z])
-                        PLAYER_MOVE.push(path)
+                        let walk_path = {
+                            _id: userInfo._id,
+                            path: path,
+                            onProcess: false,
+                            pivot: {x: 0, z:0}
+                        }
+                        socket.emit("playroom_walk", walk_path)
+                        walk_path._id = "self"
+                        PLAYER_MOVE.push(walk_path)
                     }
 
                 })
@@ -274,63 +284,120 @@ const Playroom = () => {
         })
     }
 
+    function initSocket(){
+        socket.emit("playroom_enter", {
+            _id: userInfo._id
+        })
+
+        socket.on("playroom_addplayer", param => {
+            console.log(param._id, userInfo._id)
+            if(param._id != userInfo._id){
+                PLAYER_LOADER.Load(param._id)
+                OTHER_PLAYER[param._id] = PLAYER_LOADER.OTHER_PLAYER[param._id].player
+                OTHER_PLAYER[param._id].position.copy(ROOM_LOADER.spawn)
+                SCENE.add(OTHER_PLAYER[param._id])
+            }
+        })
+
+        socket.on("user-disconnected", _id => {
+            SCENE.remove(OTHER_PLAYER[_id])
+            PLAYER_LOADER.OTHER_PLAYER[_id] = null
+            OTHER_PLAYER[_id] = null
+            walking[_id] = null
+            PLAYER_MOVE.forEach(e =>{
+                if(e._id === _id){
+                    PLAYER_MOVE.splice(PLAYER_MOVE.indexOf(e),1)
+                }
+            })
+        })
+
+        socket.on("playroom_walk", param =>{
+            const walk_path = {
+                _id: param._id,
+                path: param.path,
+                onProcess: param.onProcess,
+                pivot: {x: param.pivot.x, z: param.pivot.z}
+            }
+            PLAYER_MOVE.push(walk_path)
+
+        })
+    }
     function gameLoop() {
         requestAnimationFrame(gameLoop);
 
         // Process player input
         if (PLAYER_MOVE.length > 0) {
-            if (PLAYER_MOVE[0].length > 1) {
-                PLAYER_LOADER.PlayerWalk()
-                let start_position = {
-                    x: PLAYER_MOVE[0][0][0],
-                    z: PLAYER_MOVE[0][0][1]
-                }
-                let end_position = {
-                    x: PLAYER_MOVE[0][1][0],
-                    z: PLAYER_MOVE[0][1][1]
-                }
-                let xMove = 0;
-                let zMove = 0;
-                if (end_position.x - start_position.x > 0) {
-                    xMove = 1;
-                } else xMove = -1
-
-                if (end_position.z - start_position.z > 0) {
-                    zMove = 1;
-                } else zMove = -1
-
-                if (PLAYER.position.x !== (end_position.x * 25) + 12.5) {
-                    PLAYER.position.x += xMove * PLAYER.speedMultiplier
-                } else {
-                    PIVOTx++
-                }
-                if (PLAYER.position.z !== (end_position.z * 25) + 12.5) {
-                    PLAYER.position.z += zMove * PLAYER.speedMultiplier
-                } else {
-                    PIVOTz++
-                }
-                if (xMove == -1 && zMove == -1) {
-                    if (PIVOTx > 0 && PIVOTz == 0) {
-                        PLAYER.rotation.y = Math.PI
-                    } else if (PIVOTz > 0 && PIVOTx == 0) {
-                        PLAYER.rotation.y = -Math.PI / 2
+            PLAYER_MOVE.forEach(e => {
+                if(!walking[e._id] || e.onProcess){
+                    walking[e._id] = true
+                    if (e.path.length > 1) {
+                        let character
+                        if(e._id != "self"){
+                            character = OTHER_PLAYER[PLAYER_MOVE[0]._id]
+                        } else{
+                            character = PLAYER
+                        }
+                        PLAYER_LOADER.walk(character)
+                        let start_position = {
+                            x: e.path[0][0],
+                            z: e.path[0][1]
+                        }
+                        if(!e.onProcess){
+                            character.position.x = (start_position.x * 25) + 12.5
+                            character.position.z = (start_position.z * 25) + 12.5
+                            e.onProcess = true
+                        }
+                        let end_position = {
+                            x: e.path[1][0],
+                            z: e.path[1][1]
+                        }
+                        let xMove = 0;
+                        let zMove = 0;
+                        if (end_position.x - start_position.x > 0) {
+                            xMove = 1;
+                        } else xMove = -1
+        
+                        if (end_position.z - start_position.z > 0) {
+                            zMove = 1;
+                        } else zMove = -1
+        
+                        if (character.position.x !== (end_position.x * 25) + 12.5) {
+                            character.position.x += xMove * PLAYER.speedMultiplier
+                        } else {
+                            e.pivot.x++
+                        }
+                        if (character.position.z !== (end_position.z * 25) + 12.5) {
+                            character.position.z += zMove * PLAYER.speedMultiplier
+                        } else {
+                            e.pivot.z++
+                        }
+                        if (xMove == -1 && zMove == -1) {
+                            if (e.pivot.x > 0 && e.pivot.z == 0) {
+                                character.rotation.y = Math.PI
+                            } else if (e.pivot.z > 0 && e.pivot.x == 0) {
+                                character.rotation.y = -Math.PI / 2
+                            }
+                        } else if (xMove == -1 && zMove == 1) {
+                            character.rotation.y = 0
+                        } else if (xMove == 1 && zMove == -1) {
+                            character.rotation.y = Math.PI / 2
+                        }
+        
+                        if (e.pivot.x !== 0 && e.pivot.z !== 0) {
+                            e.path.shift()
+                            e.pivot.x = 0
+                            e.pivot.z = 0
+                            if (e.path.length === 1) {
+                                PLAYER_MOVE.shift()
+                                PLAYER_LOADER.stop(character)
+                                walking[e._id] = false
+                            }
+                        }
+                    } else {
+                        PLAYER_MOVE.splice(PLAYER_MOVE.indexOf(e),1)
                     }
-                } else if (xMove == -1 && zMove == 1) {
-                    PLAYER.rotation.y = 0
-                } else if (xMove == 1 && zMove == -1) {
-                    PLAYER.rotation.y = Math.PI / 2
                 }
-
-                if (PIVOTx !== 0 && PIVOTz !== 0) {
-                    PLAYER_MOVE[0].shift()
-                    PIVOTx = 0
-                    PIVOTz = 0
-                    if (PLAYER_MOVE[0].length === 1) {
-                        PLAYER_MOVE.shift()
-                        PLAYER_LOADER.PlayerStop()
-                    }
-                }
-            }
+            })
 
         }
 

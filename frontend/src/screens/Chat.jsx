@@ -1,11 +1,9 @@
 import React from 'react'
-import { io } from "socket.io-client";
 import { useSelector } from "react-redux";
+import { io } from "socket.io-client";
 
 
 const socket = io("http://localhost:5000");
-console.log(socket)
-
 
 const Chat = () => {
     const userLogin = useSelector((state) => state.userLogin);
