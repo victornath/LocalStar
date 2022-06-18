@@ -113,6 +113,13 @@ class RoomLoader {
         return this.ROOM_GRID
     }
 
+    blockGrid(x,z){
+        this.ROOM_GRID.setWalkableAt(x,z,false)
+    }
+    openGrid(x,z){
+        this.ROOM_GRID.setWalkableAt(x,z,true)
+    }
+
     getRoomName() {
         return this.room_name
     }

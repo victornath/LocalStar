@@ -63,8 +63,64 @@ class PlayerLoader {
             head: player.children[0],
             equip: equip,
             equip_obj: equip_object,
-            walk: function() {this.walk(player)},
-            stop: function() {this.stop(player)}
+            walk: function() {
+                let player_leg_l = this.player.children[4]
+                let player_leg_r = this.player.children[5]
+                let player_hand_l = this.player.children[1]
+                let player_hand_r = this.player.children[2]
+        
+                if (this.pivot == 0) {
+                    player_leg_l.rotation.x += -Math.PI / 40
+                    player_leg_l.position.z += 1
+        
+                    player_leg_r.rotation.x += Math.PI / 40
+                    player_leg_r.position.z -= 1
+        
+                    player_hand_l.rotation.x += Math.PI / 40
+                    player_hand_l.position.z -= 0.5
+        
+                    player_hand_r.rotation.x += -Math.PI / 40
+                    player_hand_r.position.z += 0.5
+        
+                    if (player_leg_l.rotation.x <= -Math.PI / 4) {
+                        this.pivot = 1
+                    }
+                } else {
+                    player_leg_l.rotation.x += Math.PI / 40
+                    player_leg_l.position.z -= 1
+        
+                    player_leg_r.rotation.x += -Math.PI / 40
+                    player_leg_r.position.z += 1
+        
+                    player_hand_r.rotation.x += Math.PI / 40
+                    player_hand_r.position.z -= 0.5
+        
+                    player_hand_l.rotation.x += -Math.PI / 40
+                    player_hand_l.position.z += 0.5
+        
+                    if (player_leg_l.rotation.x >= Math.PI / 4) {
+                        this.pivot = 0
+                    }
+                }
+            },
+            stop: function() {
+                let player_leg_l = this.player.children[4]
+                let player_leg_r = this.player.children[5]
+                let player_hand_l = this.player.children[1]
+                let player_hand_r = this.player.children[2]
+        
+                player_leg_l.position.z = 0
+                player_leg_l.rotation.x = 0
+        
+                player_leg_r.position.z = 0
+                player_leg_r.rotation.x = 0
+        
+                player_hand_l.position.z = 0
+                player_hand_l.rotation.x = 0
+        
+                player_hand_r.position.z = 0
+                player_hand_r.rotation.x = 0
+            }
         }
     }
 
@@ -98,69 +154,66 @@ class PlayerLoader {
                 head: player.children[0],
                 equip: equip,
                 equip_obj: equip_object,
-                }    
+                walk: function() {
+                    let player_leg_l = this.player.children[4]
+                    let player_leg_r = this.player.children[5]
+                    let player_hand_l = this.player.children[1]
+                    let player_hand_r = this.player.children[2]
+            
+                    if (this.pivot == 0) {
+                        player_leg_l.rotation.x += -Math.PI / 40
+                        player_leg_l.position.z += 1
+            
+                        player_leg_r.rotation.x += Math.PI / 40
+                        player_leg_r.position.z -= 1
+            
+                        player_hand_l.rotation.x += Math.PI / 40
+                        player_hand_l.position.z -= 0.5
+            
+                        player_hand_r.rotation.x += -Math.PI / 40
+                        player_hand_r.position.z += 0.5
+            
+                        if (player_leg_l.rotation.x <= -Math.PI / 4) {
+                            this.pivot = 1
+                        }
+                    } else {
+                        player_leg_l.rotation.x += Math.PI / 40
+                        player_leg_l.position.z -= 1
+            
+                        player_leg_r.rotation.x += -Math.PI / 40
+                        player_leg_r.position.z += 1
+            
+                        player_hand_r.rotation.x += Math.PI / 40
+                        player_hand_r.position.z -= 0.5
+            
+                        player_hand_l.rotation.x += -Math.PI / 40
+                        player_hand_l.position.z += 0.5
+            
+                        if (player_leg_l.rotation.x >= Math.PI / 4) {
+                            this.pivot = 0
+                        }
+                    }
+                },
+                stop: function() {
+                    let player_leg_l = this.player.children[4]
+                    let player_leg_r = this.player.children[5]
+                    let player_hand_l = this.player.children[1]
+                    let player_hand_r = this.player.children[2]
+            
+                    player_leg_l.position.z = 0
+                    player_leg_l.rotation.x = 0
+            
+                    player_leg_r.position.z = 0
+                    player_leg_r.rotation.x = 0
+            
+                    player_hand_l.position.z = 0
+                    player_hand_l.rotation.x = 0
+            
+                    player_hand_r.position.z = 0
+                    player_hand_r.rotation.x = 0
+                }
+            }    
         })
-    }
-
-    walk(character) {
-        let player_leg_l = character.children[4]
-        let player_leg_r = character.children[5]
-        let player_hand_l = character.children[1]
-        let player_hand_r = character.children[2]
-
-        if (this.pivot == 0) {
-            player_leg_l.rotation.x += -Math.PI / 40
-            player_leg_l.position.z += 1
-
-            player_leg_r.rotation.x += Math.PI / 40
-            player_leg_r.position.z -= 1
-
-            player_hand_l.rotation.x += Math.PI / 40
-            player_hand_l.position.z -= 0.5
-
-            player_hand_r.rotation.x += -Math.PI / 40
-            player_hand_r.position.z += 0.5
-
-            if (player_leg_l.rotation.x <= -Math.PI / 4) {
-                this.pivot = 1
-            }
-        } else {
-            player_leg_l.rotation.x += Math.PI / 40
-            player_leg_l.position.z -= 1
-
-            player_leg_r.rotation.x += -Math.PI / 40
-            player_leg_r.position.z += 1
-
-            player_hand_r.rotation.x += Math.PI / 40
-            player_hand_r.position.z -= 0.5
-
-            player_hand_l.rotation.x += -Math.PI / 40
-            player_hand_l.position.z += 0.5
-
-            if (player_leg_l.rotation.x >= Math.PI / 4) {
-                this.pivot = 0
-            }
-        }
-
-    }
-
-    stop(character) {
-        let player_leg_l = character.children[4]
-        let player_leg_r = character.children[5]
-        let player_hand_l = character.children[1]
-        let player_hand_r = character.children[2]
-
-        player_leg_l.position.z = 0
-        player_leg_l.rotation.x = 0
-
-        player_leg_r.position.z = 0
-        player_leg_r.rotation.x = 0
-
-        player_hand_l.position.z = 0
-        player_hand_l.rotation.x = 0
-
-        player_hand_r.position.z = 0
-        player_hand_r.rotation.x = 0
     }
 }
 export default PlayerLoader

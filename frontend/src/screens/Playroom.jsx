@@ -246,33 +246,22 @@ const Playroom = () => {
                         newPoint.x = Math.round(i.point.x / 25)
                         newPoint.z = Math.round(i.point.z / 25)
 
-                        if (newPoint.x < 0) {
-                            newPoint.x = 0
-                        }
-                        if (newPoint.z < 0) {
-                            newPoint.z = 0
-                        }
+                        if (newPoint.x < 0) newPoint.x = 0
+                        if (newPoint.z < 0) newPoint.z = 0
 
-                        if (newPoint.x > ROOM_LOADER.x - 1) {
-                            newPoint.x = ROOM_LOADER.x - 1
-                        }
-                        if (newPoint.z > ROOM_LOADER.y - 1) {
-                            newPoint.z = ROOM_LOADER.y - 1
-                        }
-
+                        if (newPoint.x > ROOM_LOADER.x - 1) newPoint.x = ROOM_LOADER.x - 1
+                        if (newPoint.z > ROOM_LOADER.y - 1) newPoint.z = ROOM_LOADER.y - 1
 
                         let startPos = {
-                            x: Math.floor((PLAYER.position.x + 12.5) / 25) - 1,
-                            z: Math.floor((PLAYER.position.z + 12.5) / 25) - 1
+                            x: (PLAYER.position.x - 12.5) / 25,
+                            z: (PLAYER.position.z - 12.5) / 25
                         }
                         var gridClone = ROOM_GRID.clone()
                         var path = WALK_FINDER.findPath(startPos.x, startPos.z, newPoint.x, newPoint.z, gridClone)
-                        // PLAYER_MOVE.push([newPoint.x,newPoint.z,startPos.x,startPos.z])
                         let walk_path = {
                             _id: userInfo._id,
                             path: path,
-                            onProcess: false,
-                            pivot: {x: 0, z:0}
+                            distance: null
                         }
                         socket.emit("playroom_walk", walk_path)
                         walk_path._id = "self"
@@ -290,36 +279,35 @@ const Playroom = () => {
         })
 
         socket.on("playroom_addplayer", param => {
-            console.log(param._id, userInfo._id)
             if(param._id != userInfo._id){
                 PLAYER_LOADER.Load(param._id)
-                OTHER_PLAYER[param._id] = PLAYER_LOADER.OTHER_PLAYER[param._id].player
-                OTHER_PLAYER[param._id].position.copy(ROOM_LOADER.spawn)
-                SCENE.add(OTHER_PLAYER[param._id])
+                OTHER_PLAYER[param._id] = PLAYER_LOADER.OTHER_PLAYER[param._id]
+                OTHER_PLAYER[param._id].player.position.copy(ROOM_LOADER.spawn)
+                SCENE.add(OTHER_PLAYER[param._id].player)
             }
         })
 
         socket.on("user-disconnected", _id => {
-            SCENE.remove(OTHER_PLAYER[_id])
-            PLAYER_LOADER.OTHER_PLAYER[_id] = null
-            OTHER_PLAYER[_id] = null
-            walking[_id] = null
-            PLAYER_MOVE.forEach(e =>{
-                if(e._id === _id){
-                    PLAYER_MOVE.splice(PLAYER_MOVE.indexOf(e),1)
-                }
-            })
+            if(OTHER_PLAYER[_id]){
+                SCENE.remove(OTHER_PLAYER[_id].player)
+                PLAYER_LOADER.OTHER_PLAYER[_id] = null
+                OTHER_PLAYER[_id] = null
+                walking[_id] = null
+                PLAYER_MOVE.forEach(e =>{
+                    if(e._id === _id){
+                        PLAYER_MOVE.splice(PLAYER_MOVE.indexOf(e),1)
+                    }
+                })
+            }
         })
 
         socket.on("playroom_walk", param =>{
             const walk_path = {
                 _id: param._id,
                 path: param.path,
-                onProcess: param.onProcess,
-                pivot: {x: param.pivot.x, z: param.pivot.z}
+                distance: null
             }
             PLAYER_MOVE.push(walk_path)
-
         })
     }
     function gameLoop() {
@@ -327,78 +315,51 @@ const Playroom = () => {
 
         // Process player input
         if (PLAYER_MOVE.length > 0) {
-            PLAYER_MOVE.forEach(e => {
-                if(!walking[e._id] || e.onProcess){
-                    walking[e._id] = true
-                    if (e.path.length > 1) {
-                        let character
-                        if(e._id != "self"){
-                            character = OTHER_PLAYER[PLAYER_MOVE[0]._id]
-                        } else{
-                            character = PLAYER
-                        }
-                        PLAYER_LOADER.walk(character)
-                        let start_position = {
-                            x: e.path[0][0],
-                            z: e.path[0][1]
-                        }
-                        if(!e.onProcess){
-                            character.position.x = (start_position.x * 25) + 12.5
-                            character.position.z = (start_position.z * 25) + 12.5
-                            e.onProcess = true
-                        }
-                        let end_position = {
-                            x: e.path[1][0],
-                            z: e.path[1][1]
-                        }
-                        let xMove = 0;
-                        let zMove = 0;
-                        if (end_position.x - start_position.x > 0) {
-                            xMove = 1;
-                        } else xMove = -1
-        
-                        if (end_position.z - start_position.z > 0) {
-                            zMove = 1;
-                        } else zMove = -1
-        
-                        if (character.position.x !== (end_position.x * 25) + 12.5) {
-                            character.position.x += xMove * PLAYER.speedMultiplier
-                        } else {
-                            e.pivot.x++
-                        }
-                        if (character.position.z !== (end_position.z * 25) + 12.5) {
-                            character.position.z += zMove * PLAYER.speedMultiplier
-                        } else {
-                            e.pivot.z++
-                        }
-                        if (xMove == -1 && zMove == -1) {
-                            if (e.pivot.x > 0 && e.pivot.z == 0) {
-                                character.rotation.y = Math.PI
-                            } else if (e.pivot.z > 0 && e.pivot.x == 0) {
-                                character.rotation.y = -Math.PI / 2
-                            }
-                        } else if (xMove == -1 && zMove == 1) {
-                            character.rotation.y = 0
-                        } else if (xMove == 1 && zMove == -1) {
-                            character.rotation.y = Math.PI / 2
-                        }
-        
-                        if (e.pivot.x !== 0 && e.pivot.z !== 0) {
-                            e.path.shift()
-                            e.pivot.x = 0
-                            e.pivot.z = 0
-                            if (e.path.length === 1) {
-                                PLAYER_MOVE.shift()
-                                PLAYER_LOADER.stop(character)
-                                walking[e._id] = false
-                            }
-                        }
+            for (let i = 0; i < PLAYER_MOVE.length; i++) {
+                if(PLAYER_MOVE[i].path.length > 1){
+                    if(PLAYER_MOVE[i].distance === null){
+                        let from = PLAYER_MOVE[i].path[0]
+                        let destination = PLAYER_MOVE[i].path[1]
+                        
+                        let vector_start = new THREE.Vector3((from[0]*25)+12.5,0,(from[1]*25)+12.5)
+                        let vector_end = new THREE.Vector3((destination[0]*25)+12.5,0,(destination[1]*25)+12.5)
+                        
+                        PLAYER_MOVE[i].distance = vector_start.distanceTo(vector_end)
                     } else {
-                        PLAYER_MOVE.splice(PLAYER_MOVE.indexOf(e),1)
-                    }
-                }
-            })
+                        let temp = PLAYER_MOVE[i]
+                        let character
+                        
+                        if(temp._id === "self"){
+                            character = PLAYER_LOADER.PLAYER
+                        } else {
+                            character= PLAYER_LOADER.OTHER_PLAYER[temp._id]
+                        }
+                        
+                        if(temp.distance > 0){
+                            character.walk()
+                            if((temp.path[1][0]*25) + 12.5 > character.player.position.x) {character.player.position.x += 1; character.player.rotation.y = Math.PI/2;}
+                            if((temp.path[1][0]*25) + 12.5 < character.player.position.x) {character.player.position.x -= 1; character.player.rotation.y = -Math.PI/2;}
 
+                            if((temp.path[1][1]*25) + 12.5 > character.player.position.z) {character.player.position.z += 1; character.player.rotation.y = 0;}
+                            if((temp.path[1][1]*25) + 12.5 < character.player.position.z) {character.player.position.z -= 1; character.player.rotation.y = Math.PI;}
+
+    
+                            let destination = PLAYER_MOVE[i].path[1]
+                            let vector_end = new THREE.Vector3((destination[0]*25)+12.5,character.player.position.y,(destination[1]*25)+12.5)
+                            temp.distance = character.player.position.distanceTo(vector_end)
+                            PLAYER_MOVE[i] = temp
+                        } else {
+                            PLAYER_MOVE[i].path.shift()
+                            if(PLAYER_MOVE[i].path.length <= 1){
+                                character.stop()
+                            }
+                            PLAYER_MOVE[i].distance = null
+                        }
+                    }
+                } else {
+                    PLAYER_MOVE.splice(i,1)
+                }
+            }
         }
 
         // Broadcast movement to other players n times per second
@@ -433,6 +394,7 @@ const Playroom = () => {
         RENDERER.render(SCENE, CAMERA);
         UI_RENDERER.render(UI, UI_CAMERA);
     }
+
 
     function onWindowResize() {
         CAMERA.aspect = window.innerWidth / window.innerHeight;
