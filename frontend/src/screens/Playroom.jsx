@@ -242,6 +242,11 @@ const Playroom = () => {
                         window.open(i.object.parent.userData.URL)
                         items.pop()
                     } else {
+                        PLAYER_MOVE.forEach(e => {
+                            if(e._id === "self"){
+                                PLAYER_MOVE.splice(PLAYER_MOVE.indexOf(e),1)
+                            }
+                        })
                         let newPoint = {}
                         newPoint.x = Math.round(i.point.x / 25)
                         newPoint.z = Math.round(i.point.z / 25)
@@ -253,8 +258,8 @@ const Playroom = () => {
                         if (newPoint.z > ROOM_LOADER.y - 1) newPoint.z = ROOM_LOADER.y - 1
 
                         let startPos = {
-                            x: (PLAYER.position.x - 12.5) / 25,
-                            z: (PLAYER.position.z - 12.5) / 25
+                            x: Math.floor((PLAYER.position.x - 12.5) / 25),
+                            z: Math.floor((PLAYER.position.z - 12.5) / 25)
                         }
                         var gridClone = ROOM_GRID.clone()
                         var path = WALK_FINDER.findPath(startPos.x, startPos.z, newPoint.x, newPoint.z, gridClone)
