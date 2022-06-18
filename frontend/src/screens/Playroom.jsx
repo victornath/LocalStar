@@ -312,8 +312,13 @@ const Playroom = () => {
                 path: param.path,
                 distance: null
             }
+            PLAYER_MOVE.forEach(e => {
+                if(e._id === param._id){
+                    PLAYER_MOVE.splice(PLAYER_MOVE.indexOf(e),1)
+                }
+            })
             PLAYER_MOVE.push(walk_path)
-        })
+})
     }
     function gameLoop() {
         requestAnimationFrame(gameLoop);
