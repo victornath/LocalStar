@@ -6,21 +6,32 @@ const playroomSchema = mongoose.Schema({
         unique: true,
         required: true,
     },
-    game_name: {
+    x: {
+        type: Number,
+        required: true,
+    },
+    y: {
+        type: Number,
+        required: true,
+    },
+    room_name: {
         type: String,
         required: true,
     },
-    furniture_ids: {
-        type: [String],
-        default: null,
+    floor: {
+        type: String,
+        required: true,
     },
-    user_ids: {
-        type: [mongoose.Types.ObjectId],
-        default: null,
+    wall: {
+        type: String,
+        required: true,
     },
-    table_ids: {
-        type: [Number],
-        unique: true,
+    spawn: {
+        type: Object,
+        required: true,
+    },
+    objects: {
+        type: [Object],
         required: true,
     },
     _id: false,
