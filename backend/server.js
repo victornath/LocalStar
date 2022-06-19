@@ -29,23 +29,64 @@ const io = new Server(server, {
 });
 let users = []
 let _id
+let room
 
 io.on("connection", (socket) => {
     // Disconnect listener
     socket.on('disconnect', (reason) => {
         socket.broadcast.emit("user-disconnected", _id)
     });
+    socket.on('disconnecting', (reason) => {
+        var rooms = Object.keys(socket.rooms)
+        rooms.forEach(e=>{
+            socket.to(e).emit('user-disconnected',_id)
+        })
+    });
     socket.on("new-user", name => {
         users[socket.id] = name
         socket.broadcast.emit("user-connected", name)
     })
+
     socket.on("send-chat-message", message => {
         socket.broadcast.emit("chat-message", message)
     })
 
     socket.on("playroom_enter", param => {
         _id = param._id
-        socket.broadcast.emit("playroom_addplayer", param)
+        room = param.roomId
+        socket.join(param.roomId)
+        socket.to(room).emit("playroom_addplayer", param)
+        if(io.sockets.adapter.rooms.get(room)){
+            let players = io.sockets.adapter.rooms.get(room)
+            let players_array = Array.from(players)
+            socket.emit("playroom_playerList", players_array)
+        }
+    })
+
+    socket.on("ask_id",param =>{
+        socket.to(param).emit("ask_id", socket.id)
+    })
+
+    socket.on("give_id", param => {
+        socket.to(param.to).emit("playroom_already_in", param)
+    })
+
+    socket.on("lobby_checkRooms", param => {
+        let rooms = []
+        for (let i = 1; i <= 5; i++) {
+            let count
+            if(io.sockets.adapter.rooms.get("room_"+param+"_"+i)){
+                count = io.sockets.adapter.rooms.get("room_" + param + "_" + i).size
+            } else {
+                count = 0
+            }
+            rooms.push({
+                game: param,
+                roomName: "room_" + param + "_" + i,
+                user_count: count
+            })
+        }
+        socket.emit("lobby_rooms", rooms)
     })
 
     socket.on("playroom_walk", param =>{

@@ -5,6 +5,9 @@ import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import PlayerLoader from '../../src/character/PlayerLoader.js'
 import WebGL from '../WebGL.js';
 import { useSelector } from "react-redux";
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:5000");
 
 const Lobby = () => {
 
@@ -75,6 +78,7 @@ const Lobby = () => {
         initCamera()
         loadData("/api/users/getData")
         initScene()
+        initSocket()
         window.addEventListener('resize', onWindowResize, false);
     }
 
@@ -365,31 +369,26 @@ const Lobby = () => {
                                 break;
                         }
                     } else if (obj_name.startsWith("play_")) {
-                        getPlayrooms(choice, "/api/playrooms/lobby")
+                        socket.emit("lobby_checkRooms", choice)
                     } else if (obj_name.startsWith("room_")) {
-                        window.open("/playroom", "_self")
+                        socket.emit("playroom_join", obj_name);
+                        window.open("/playroom?room_id="+obj_name, "_self")
                     }
                 })
             }
         })
     }
 
-    async function getPlayrooms(gameId, url) {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + userInfo.token,
-            }
-        });
-        var data = await response.json()
-        if (response) {
-            showRoom(gameId, data)
-        }
+    function initSocket(){
+        socket.on("lobby_rooms", rooms => {
+            showRoom(rooms)
+        })
+        socket.on("roomChecked", param =>{
+            console.log(param)
+        })
     }
 
-    function showRoom(gameId, data) {
+    function showRoom(data) {
         MAIN_UI.forEach(e => {
             UI.remove(e)
         });
@@ -414,12 +413,12 @@ const Lobby = () => {
                 if (i === 2 && j === 1) break;
                 let room = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), LOADED_MATERIAL[0])
                 room.position.set(20 + (i * 70), 150 - (j * 85), 100)
-                room.name = "room_" + gameId + "_" + (i + (j * 3) + 1)
+                room.name = data[(i + (j * 3))].roomName
                 ROOM_UI.push(room)
                 UI.add(room)
 
-                let userCount = data[((gameId - 1) * 5) + (i + (j * 3) + 1)].user_ids.length.toString()
-                console.log(userCount)
+                console.log(data[(i + (j * 3))].user_count)
+                let userCount = data[(i + (j * 3))].user_count.toString()
                 let point_geometry = new TextGeometry(userCount + "/10", {
                     font: LOADED_FONT,
                     size: 8,
@@ -432,8 +431,6 @@ const Lobby = () => {
                 UI.add(mesh)
             }
         }
-
-
     }
 
     function loadUI_main() {

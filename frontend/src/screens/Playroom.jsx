@@ -18,14 +18,12 @@ const socket = io("http://localhost:5000");
 const Playroom = () => {
     const userLogin = useSelector((state) => state.userLogin);
     const { userInfo } = userLogin;
+    const currURL = window.location.href.substring(window.location.href.indexOf('?')+1,window.location.href.length)
 
     // Variables
     const MANAGER = new THREE.LoadingManager();
-    const GLTF_LOADER = new GLTFLoader(MANAGER);
-    const CUBE_TEXTURE_LOADER = new THREE.CubeTextureLoader();
     const FONT_LOADER = new FontLoader(MANAGER);
     const TEXTURE_LOADER = new THREE.TextureLoader();
-    const FONT_SIZE = 0.08;
 
     let CONTAINER
     let UI_CONTAINER
@@ -38,11 +36,11 @@ const Playroom = () => {
     const CAMERA = new THREE.OrthographicCamera((-135 * (window.innerWidth / window.innerHeight)), (135 * (window.innerWidth / window.innerHeight)), 135, -135, -1000, 1000)
     const UI_CAMERA = new THREE.OrthographicCamera((-135 * (window.innerWidth / window.innerHeight)), (135 * (window.innerWidth / window.innerHeight)), 135, -135, -1000, 1000)
     const RENDERER = new THREE.WebGLRenderer({
-        antialias: false,
+        antialias: true,
         localClippingEnabled: true
     });
     const UI_RENDERER = new THREE.WebGLRenderer({
-        antialias: false,
+        antialias: true,
         localClippingEnabled: true,
         alpha: true
     });
@@ -55,26 +53,24 @@ const Playroom = () => {
     let PLAYER, OTHER_PLAYER = []
     let UI_Object = []
     let walking = []
-
-    var time, delta, moveTimer = 0;
-    var useDeltaTiming = true, weirdTiming = 0;
-    var prevTime = performance.now();
-
-
-    // Support check
-    if (!('getContext' in document.createElement('canvas'))) {
-        alert('Sorry, it looks like your browser does not support canvas!');
-    }
+    let passed_parameters = []
 
     // Also make sure webgl is enabled on the current machine
-    if (WebGL.isWebGLAvailable()) {
-        // If everything is possible, start the app, otherwise show an error
-        load();
-        gameLoop();
-    } else {
-        let warning = WebGL.getWebGLErrorMessage();
-        document.body.appendChild(warning);
-        throw 'WebGL disabled or not supported';
+    if(currURL){
+        (currURL.split(";")).forEach(e=>{
+            let temp = e.split("=")
+            passed_parameters[temp[0]] = temp[1]
+        })
+        console.log(passed_parameters)
+        if (WebGL.isWebGLAvailable()) {
+            // If everything is possible, start the app, otherwise show an error
+            load();
+            gameLoop();
+        } else {
+            let warning = WebGL.getWebGLErrorMessage();
+            document.body.appendChild(warning);
+            throw 'WebGL disabled or not supported';
+        }
     }
 
     function load() {
@@ -280,7 +276,35 @@ const Playroom = () => {
 
     function initSocket(){
         socket.emit("playroom_enter", {
-            _id: userInfo._id
+            _id: userInfo._id,
+            roomId: passed_parameters["room_id"]
+        })
+
+        socket.on("playroom_already_in", param => {
+            PLAYER_LOADER.Load(param._id)
+            OTHER_PLAYER[param._id] = PLAYER_LOADER.OTHER_PLAYER[param._id]
+            OTHER_PLAYER[param._id].player.position.x = param.position.x
+            OTHER_PLAYER[param._id].player.position.y = param.position.y
+            OTHER_PLAYER[param._id].player.position.z = param.position.z
+            SCENE.add(OTHER_PLAYER[param._id].player)
+        })
+
+        socket.on("playroom_playerList", param => {
+            param.forEach(e => {
+                socket.emit("ask_id", e)
+            })
+        })
+
+        socket.on("ask_id", e => {
+            socket.emit("give_id", {
+                to: e,
+                _id: userInfo._id,
+                position: {
+                    x: PLAYER.position.x,
+                    y: PLAYER.position.y,
+                    z: PLAYER.position.z
+                }
+            })
         })
 
         socket.on("playroom_addplayer", param => {
@@ -371,36 +395,7 @@ const Playroom = () => {
                 }
             }
         }
-
-        // Broadcast movement to other players n times per second
-        // moveTimer += delta;
-        // if (moveTimer >= 1/TICKRATE) {
-        //     moveTimer = 0;
-        //     emitMove();
-        // }
-
-        // Move other players (interpolate movement)
-        // for (let userid in USERS) {
-        //     if (USERS[userid] !== undefined) {
-        //         let oldPos = USERS[userid].oldPos;
-        //         let pos = USERS[userid].pos;
-        //         let rot = USERS[userid].rot;
-        //         let a = USERS[userid].alpha;
-
-        //         if (USERS[userid].mesh !== undefined) {
-        //             USERS[userid].mesh.position.lerpVectors(oldPos, pos, a);
-        //             USERS[userid].mesh.quaternion.rotateTowards(rot, USERS[userid].mesh.quaternion.angleTo(rot) * (TICKRATE * delta));
-        //             if (USERS[userid].text !== undefined) {
-        //                 USERS[userid].text.position.copy(USERS[userid].mesh.position);
-        //                 USERS[userid].text.rotation.copy(USERS[userid].mesh.rotation);
-        //             }
-        //         }
-
-        //         USERS[userid].alpha = Math.min(a + delta*(TICKRATE-1), 2);
-        //     }
-        // }
-
-        prevTime = time;
+        
         RENDERER.render(SCENE, CAMERA);
         UI_RENDERER.render(UI, UI_CAMERA);
     }
