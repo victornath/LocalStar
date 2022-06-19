@@ -5,8 +5,11 @@ import Playroom from "../models/PlayroomModel.js";
 
 const playroomRouter = express.Router();
 
-playroomRouter.get("/lobby", protect, asyncHandler(async (req, res) => {
-    const playroom = await Playroom.find()
+playroomRouter.get("/getPlayroom", protect, asyncHandler(async (req, res) => {
+    let room_name = req.query.room_name
+    const playroom = await Playroom.find({
+        room_name: room_name
+    })
     res.json(playroom)
 }));
 

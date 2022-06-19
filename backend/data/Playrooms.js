@@ -6,7 +6,7 @@ for (let index = 1; index <= 5; index++) {
         playroom_id: index,
         x: 10,
         y: 10,
-        room_name: "Test Congklak Room",
+        room_name: "room_congklak_" + index,
         floor: "ground_test",
         wall: "wall_test",
         spawn: {
