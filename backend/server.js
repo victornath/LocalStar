@@ -90,7 +90,7 @@ io.on("connection", (socket) => {
     })
 
     socket.on("playroom_walk", param =>{
-        socket.broadcast.emit("playroom_walk", param)
+        socket.to(room).emit("playroom_walk", param)
     })
 })
 
