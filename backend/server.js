@@ -38,7 +38,7 @@ io.on("connection", (socket) => {
     room[socket.id] = []
     // Disconnect listener
     socket.on('disconnect', (reason) => {
-        socket.broadcast.emit("room_leave", {id: _id[socket.id], room: room[socket.id]})
+        socket.broadcast.emit("room_leave", {socket_id: socket.id, _id: _id[socket.id], room: room[socket.id]})
         clients.splice(clients.indexOf(socket),1)
     });
     socket.on("new-user", name => {
@@ -125,10 +125,8 @@ io.on("connection", (socket) => {
 
     socket.on("gameroom_playerReady", param => {
         if(socket.id === param.p1){
-            console.log("P1 Ready")
             socket.to(param.p2).emit("gameroom_ready_check", param)
         } else {
-            console.log("P2 Ready")
             socket.to(param.p1).emit("gameroom_ready_check", param)
         }
     })
@@ -151,6 +149,13 @@ io.on("connection", (socket) => {
             socket.to(param.p2).emit("gameroom_congklak_move", param)
         } else {
             socket.to(param.p1).emit("gameroom_congklak_move", param)
+        }
+    })
+    socket.on("gameroom_congklak_timeout", param => {
+        if(socket.id === param.p1){
+            socket.to(param.p2).emit("gameroom_congklak_timeout", param)
+        } else {
+            socket.to(param.p1).emit("gameroom_congklak_timeout", param)
         }
     })
 })

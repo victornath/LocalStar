@@ -27,8 +27,9 @@ const Congklak = () => {
     let OTHER_PLAYER_MESH = []
     let PLAYER_DATA
     let PLAYER_PLAY
-    let PLAYER_READY = false
+    let PLAYER_READY = false, GAME_START = false
     let READY_UI = []
+    let GAME_UI = []
 
     const SCENE = new THREE.Scene();
     const UI = new THREE.Scene();
@@ -48,9 +49,9 @@ const Congklak = () => {
     let PLAYER_LOADER = new PlayerLoader(userInfo._id)
 
     var curr_turn = 1;
-    var end_game = false;
+    var end_game = {status: false}
     var ONGOING_TURN = false;
-    var PLAYER_CHOOSE;
+    var PLAYER_CHOOSE = null;
     let LOADED_FONT;
     let LOADED_MATERIAL = []
 
@@ -116,7 +117,6 @@ const Congklak = () => {
         initRaycast()
         loadData("/api/users/getData")
         initScene()
-        // initGame()
         window.addEventListener('resize', onWindowResize, false);
     }
 
@@ -317,7 +317,6 @@ const Congklak = () => {
             _id: userInfo._id,
             roomId: passed_parameters["game_room"]
         }, (response)=>{
-            console.log(response)
             response.userList.forEach(e => {
                 socket.emit("ask_id", e)
             })
@@ -348,6 +347,12 @@ const Congklak = () => {
 
         socket.on("gameroom_congklak_move", param => {
             PLAYER_CHOOSE = param.choose
+        })
+
+        socket.on("gameroom_congklak_timeout", param => {
+            prevTime = performance.now()
+            if(curr_turn === 1) {curr_turn = 2} else {curr_turn = 1}
+            distributeSeed(s_circle_p1, b_circle[0], s_circle_p2, b_circle[1]);
         })
 
         socket.on("ask_id", e => {
@@ -385,11 +390,13 @@ const Congklak = () => {
         })
 
         socket.on("gameroom_start",param => {
+            prevTime = performance.now()
+            console.log(curr_turn, PLAYER_POSITION, PLAYER_CHOOSE)
             initGame()
         })
 
         socket.on("room_leave", param => {
-            if(passed_parameters["room_id"] === param.room){
+            if(passed_parameters["room_id"] === param.room["gameroom"]){
                 if(OTHER_PLAYER[param._id]){
                     if(OTHER_PLAYER_MESH[param._id].length > 0 && PLAYER_POSITION === 2){
                         PLAYER_POSITION = 1
@@ -424,6 +431,18 @@ const Congklak = () => {
                         OTHER_PLAYER_MESH[param._id].forEach(e =>{
                             UI.remove(e)
                         })
+                    }
+                    if(GAME_START){
+                        let temp = {
+                            status: true,
+                            reason: 0
+                        }
+                        if(PLAYER_PLAY.p1 === param.socket_id){
+                            temp.winner = 2
+                        } else if(PLAYER_PLAY.p2 === param.socket_id){
+                            temp.winner = 1
+                        }
+                        end_game = temp
                     }
                     PLAYER_LOADER.OTHER_PLAYER[param._id] = null
                     OTHER_PLAYER[param._id] = null
@@ -490,14 +509,13 @@ const Congklak = () => {
         OTHER_PLAYER_MESH[_id] = []
         OTHER_PLAYER_MESH[_id].push(name_mesh)
         OTHER_PLAYER_MESH[_id].push(OTHER_PLAYER[_id].player)
-        console.log(_id)
         OTHER_PLAYER_MESH[_id].forEach(e => {
             UI.add(e)
         })
     }
 
     function initGame() {
-
+        GAME_START = true
         if(READY_UI.length > 0){
             READY_UI.forEach(e => {
                 SCENE.remove(e)
@@ -506,6 +524,7 @@ const Congklak = () => {
         }
 
         BOARD.position.set(10, 0, 130)
+        GAME_UI.push(BOARD)
         SCENE.add(BOARD)
 
         for (let i = 0; i < 8; i++) {
@@ -522,6 +541,7 @@ const Congklak = () => {
                     mesh.position.set(p1_loc[i - 1], 10.2, 172)
                 }
             }
+            GAME_UI.push(mesh)
             SCENE.add(mesh)
             mesh = new THREE.Mesh(box_geometry, new THREE.MeshBasicMaterial({ color: 0x000000 }))
             mesh.scale.set(0.25, 0.25, 0.25)
@@ -535,6 +555,7 @@ const Congklak = () => {
                     mesh.position.set(p1_loc[i - 1], 10.2, 113)
                 }
             }
+            GAME_UI.push(mesh)
             SCENE.add(mesh)
         }
 
@@ -624,6 +645,7 @@ const Congklak = () => {
                 mesh.position.set(p1_loc[i] - 5, 10.3, 115)
             }
             counter_p1.push(mesh)
+            GAME_UI.push(mesh)
             SCENE.add(mesh)
         }
         if (counter_p2.length > 0) {
@@ -647,6 +669,7 @@ const Congklak = () => {
                 mesh.position.set(p2_loc[i] - 5, 10.3, 175)
             }
             counter_p2.push(mesh)
+            GAME_UI.push(mesh)
             SCENE.add(mesh)
         }
 
@@ -672,6 +695,7 @@ const Congklak = () => {
                 mesh.position.set(p2_big - 5, 10.3, 165)
             }
             counter_big.push(mesh)
+            GAME_UI.push(mesh)
             SCENE.add(mesh)
         }
 
@@ -683,12 +707,14 @@ const Congklak = () => {
             b_circle_1.position.set(p1_big, 10.1, 142)
             b_circle_1.rotation.x = -Math.PI / 2
             big_circle.push(b_circle_1)
+            GAME_UI.push(b_circle_1)
             SCENE.add(b_circle_1)
 
             const b_circle_2 = new THREE.Mesh(geo_b_circle, LOADED_MATERIAL[9])
             b_circle_2.position.set(p2_big, 10.1, 142)
             b_circle_2.rotation.x = -Math.PI / 2
             big_circle.push(b_circle_2)
+            GAME_UI.push(b_circle_2)
             SCENE.add(b_circle_2)
         }
 
@@ -701,6 +727,7 @@ const Congklak = () => {
                 let congklak = new THREE.Mesh(congklak_seed_geo, LOADED_MATERIAL[8])
                 congklak.position.set((Math.random() * 10) + p1_big - 5, 10 + i / 10, (Math.random() * 15) + 135)
                 congklak_p1.push(congklak)
+                GAME_UI.push(congklak)
                 SCENE.add(congklak)
             }
         }
@@ -711,6 +738,7 @@ const Congklak = () => {
             for (let i = 0; i < b2; i++) {
                 congklak_p2[i] = new THREE.Mesh(congklak_seed_geo, LOADED_MATERIAL[8])
                 congklak_p2[i].position.set((Math.random() * 10) + p2_big - 5, 10 + i / 10, (Math.random() * 15) + 135)
+                GAME_UI.push(congklak_p2[i])
                 SCENE.add(congklak_p2[i])
             }
         }
@@ -723,11 +751,13 @@ const Congklak = () => {
                 circle.rotation.x = -Math.PI / 2
                 circle.name = "player1_row_" + i
                 circle_row1.push(circle)
+                GAME_UI.push(circle)
                 SCENE.add(circle)
                 let arrayTemp = []
                 for (let j = 0; j < 7; j++) {
                     let congklak = new THREE.Mesh(congklak_seed_geo, LOADED_MATERIAL[8])
                     congklak.position.set((Math.random() * 6) + p1_loc[i] - 3, 10.2 + (j / 10), (Math.random() * 5) + 133)
+                    GAME_UI.push(congklak)
                     SCENE.add(congklak)
                     arrayTemp.push(congklak)
                 }
@@ -745,6 +775,7 @@ const Congklak = () => {
                 for (let j = 0; j < a1[i]; j++) {
                     let congklak = new THREE.Mesh(congklak_seed_geo, LOADED_MATERIAL[8])
                     congklak.position.set((Math.random() * 6) + p1_loc[i] - 3, 10.2 + (j / 10), (Math.random() * 5) + 133)
+                    GAME_UI.push(congklak)
                     SCENE.add(congklak)
                     arrayTemp.push(congklak)
                 }
@@ -761,11 +792,13 @@ const Congklak = () => {
                 circle.rotation.x = -Math.PI / 2
                 circle.name = "player2_row_" + i
                 circle_row2.push(circle)
+                GAME_UI.push(circle)
                 SCENE.add(circle)
                 let arrayTemp = []
                 for (let j = 0; j < 7; j++) {
                     let congklak = new THREE.Mesh(congklak_seed_geo, LOADED_MATERIAL[8])
                     congklak.position.set((Math.random() * 6) + p2_loc[i] - 3, 10.2 + j / 10, (Math.random() * 5) + 148)
+                    GAME_UI.push(congklak)
                     SCENE.add(congklak)
                     arrayTemp.push(congklak)
                 }
@@ -783,6 +816,7 @@ const Congklak = () => {
                 for (let j = 0; j < b1[i]; j++) {
                     let congklak = new THREE.Mesh(congklak_seed_geo, LOADED_MATERIAL[8])
                     congklak.position.set((Math.random() * 6) + p2_loc[i] - 3, 10.2 + j / 10, (Math.random() * 5) + 148)
+                    GAME_UI.push(congklak)
                     SCENE.add(congklak)
                     arrayTemp.push(congklak)
                 }
@@ -889,7 +923,8 @@ const Congklak = () => {
         if ((player_input + j - 1) % 15 == 7) {
             console.log("// Turn changed to P1 (Ended in P1's House)");
             ONGOING_TURN = false
-            PLAYER_CHOOSE = null
+            PLAYER_CHOOSE = null;
+            prevTime = performance.now()
         } else if ((player_input + j - 1) % 15 < 7) {
             let input_temp = (player_input + j - 1) % 15;
             if (array[input_temp] > 1) {
@@ -906,11 +941,13 @@ const Congklak = () => {
                 curr_turn = enemy_turn;
                 ONGOING_TURN = false
                 PLAYER_CHOOSE = null
+                prevTime = performance.now()
             } else {
                 curr_turn = enemy_turn;
                 console.log("// Turn Changed to P2 (P1 ended in empty P1's hole.)\n");
                 ONGOING_TURN = false
                 PLAYER_CHOOSE = null
+                prevTime = performance.now()
             }
         } else {
             let input_temp = (player_input + j - 1) % 15;
@@ -924,6 +961,7 @@ const Congklak = () => {
                 console.log("// Turn Changed to P2 (P1 ended in empty P2's hole.)\n");
                 ONGOING_TURN = false
                 PLAYER_CHOOSE = null
+                prevTime = performance.now()
             }
         }
         let p1_row_sum = 0;
@@ -939,12 +977,14 @@ const Congklak = () => {
             console.log("// Turn Changed to P1 (P2 Row is empty)")
             ONGOING_TURN = false
             PLAYER_CHOOSE = null
+            prevTime = performance.now()
         }
         if (curr_turn == 1 && p1_row_sum == 0) {
             curr_turn = 2
             console.log("// Turn Changed to P2 (P1 Row is empty)")
             ONGOING_TURN = false
             PLAYER_CHOOSE = null
+            prevTime = performance.now()
         }
         distributeSeed(s_circle_p1, b_circle[0], s_circle_p2, b_circle[1]);
         resolve([PLAYER_CHOOSE, player_input, curr_turn, congklak_temp]);
@@ -960,15 +1000,18 @@ const Congklak = () => {
                 checkTurn(input, turn, c_temp, result).then(res => {
                     console.log(res)
                     if ((b_circle[0] + b_circle[1]) == 98) {
-                        end_game = true;
-                        let string
-                        if (b_circle[0] > b_circle[1]) {
-                            string = "Player 1 Win!"
-                        } else if (b_circle[0] < b_circle[1]) {
-                            string = "Player 2 Win!"
-                        } else {
-                            string = "Tie."
+                        let temp = {
+                            status: true,
+                            reason: 1
                         }
+                        if (b_circle[0] > b_circle[1]) {
+                            temp.winner = 1
+                        } else if (b_circle[0] < b_circle[1]) {
+                            temp.winner = 2
+                        } else {
+                            temp.winner = 0
+                        }
+                        end_game = temp
                         console.log("Game Ended")
                     }
                     loop(res[0], res[1], res[2], res[3]);
@@ -1006,21 +1049,31 @@ const Congklak = () => {
         requestAnimationFrame(gameLoop);
 
         time = performance.now();
-        if (useDeltaTiming) {
-            delta = (time - prevTime) / 1000;
-            // some code that checks if timing is weird and then turns off delta-timing
-            // this is specifically for those people running this in firefox with privacy.resistFingerprinting enabled
-            if (delta === 0.1) {
-                weirdTiming += 1;
-                if (weirdTiming === 5) {
-                    useDeltaTiming = false;
-                    console.warn("HUMAN.Riley: performance.now() warning: The performance API in your browser is returning strange time measurements, perhaps due to a privacy or anti-fingerprinting setting you've enabled. This may affect your performance :(")
+        if(GAME_START){
+            if(curr_turn === PLAYER_POSITION && PLAYER_CHOOSE === null){
+                delta = (time - prevTime) / 1000;
+                if(delta > 30){
+                    console.log("Turn Timeout")
+                    socket.emit("gameroom_congklak_timeout", PLAYER_PLAY)
+                    if(curr_turn === 1) {curr_turn = 2} else {curr_turn = 1}
+                    distributeSeed(s_circle_p1, b_circle[0], s_circle_p2, b_circle[1]);
                 }
             }
-        } else {
-            // delta = 1 / FRAMERATE;
+            if(end_game.status){
+                GAME_UI.forEach(e => {
+                    SCENE.remove(e)
+                })
+                GAME_UI = []
+                switch(end_game.reason){
+                    case 0:
+                        // If disconnected
+                        break;
+                    case 1:
+                        // If win purely
+                        break;
+                }
+            }
         }
-        prevTime = time;
 
         if (PLAYER_CHOOSE != null) {
             congklakGame(PLAYER_CHOOSE)

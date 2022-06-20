@@ -322,7 +322,7 @@ const Playroom = () => {
         })
 
         socket.on("room_leave", param => {
-            if(passed_parameters["room_id"] === param.room){
+            if(passed_parameters["room_id"] === param.room["playroom"]){
                 if(OTHER_PLAYER[param._id]){
                     SCENE.remove(OTHER_PLAYER[param._id].player)
                     PLAYER_LOADER.OTHER_PLAYER[param._id] = null
