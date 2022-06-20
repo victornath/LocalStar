@@ -263,7 +263,7 @@ const Playroom = () => {
                 items.forEach(i => {
                     if (i.object.parent.name == "clickable") {
                         console.log(i.object.parent.name)
-                        window.open(i.object.parent.userData.URL)
+                        window.open(i.object.parent.userData.URL+"&src="+passed_parameters["room_id"], "_self")
                         items.pop()
                     } else {
                         PLAYER_MOVE.forEach(e => {
@@ -372,18 +372,16 @@ const Playroom = () => {
         })
 
         socket.on("room_leave", param => {
-            if(passed_parameters["room_id"] === param.room["playroom"]){
-                if(OTHER_PLAYER[param._id]){
-                    SCENE.remove(OTHER_PLAYER[param._id].player)
-                    PLAYER_LOADER.OTHER_PLAYER[param._id] = null
-                    OTHER_PLAYER[param._id] = null
-                    walking[param._id] = null
-                    PLAYER_MOVE.forEach(e =>{
-                        if(e.param._id === param._id){
-                            PLAYER_MOVE.splice(PLAYER_MOVE.indexOf(e),1)
-                        }
-                    })
-                }
+            if(OTHER_PLAYER[param._id]){
+                SCENE.remove(OTHER_PLAYER[param._id].player)
+                PLAYER_LOADER.OTHER_PLAYER[param._id] = null
+                OTHER_PLAYER[param._id] = null
+                walking[param._id] = null
+                PLAYER_MOVE.forEach(e =>{
+                    if(e.param._id === param._id){
+                        PLAYER_MOVE.splice(PLAYER_MOVE.indexOf(e),1)
+                    }
+                })
             }
         })
 

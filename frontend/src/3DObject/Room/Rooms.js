@@ -47,7 +47,7 @@ class RoomDetails {
                 },
                 {
                     mesh: new Congklak().group,
-                    URL: "./pages/games/congklak_games.html",
+                    URL: "./congklak?game_room=table_congklak_1",
                     position_x: 8,
                     position_y: 25,
                     position_z: 8,
@@ -56,7 +56,7 @@ class RoomDetails {
                 },
                 {
                     mesh: new Congklak().group,
-                    URL: "./pages/games/congklak_games.html",
+                    URL: "./congklak?game_room=table_congklak_2",
                     position_x: 4,
                     position_y: 25,
                     position_z: 4,
@@ -65,7 +65,7 @@ class RoomDetails {
                 },
                 {
                     mesh: new Congklak().group,
-                    URL: "./pages/games/congklak_games.html",
+                    URL: "./congklak?game_room=table_congklak_3",
                     position_x: 8,
                     position_y: 25,
                     position_z: 4,
@@ -74,7 +74,7 @@ class RoomDetails {
                 },
                 {
                     mesh: new Congklak().group,
-                    URL: "./pages/games/congklak_games.html",
+                    URL: "./congklak?game_room=table_congklak_4",
                     position_x: 4,
                     position_y: 25,
                     position_z: 8,

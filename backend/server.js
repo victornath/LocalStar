@@ -38,7 +38,7 @@ io.on("connection", (socket) => {
     room[socket.id] = []
     // Disconnect listener
     socket.on('disconnect', (reason) => {
-        socket.broadcast.emit("room_leave", {socket_id: socket.id, _id: _id[socket.id], room: room[socket.id]})
+        io.emit("room_leave", {socket_id: socket.id, _id: _id[socket.id], room: room[socket.id]})
         clients.splice(clients.indexOf(socket),1)
     });
     socket.on("new-user", name => {
