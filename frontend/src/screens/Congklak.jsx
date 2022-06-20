@@ -418,60 +418,61 @@ const Congklak = () => {
         })
 
         socket.on("room_leave", param => {
-            if(OTHER_PLAYER[param._id]){
-                if(OTHER_PLAYER_MESH[param._id].length > 0 && PLAYER_POSITION === 2){
-                    PLAYER_POSITION = 1
-                    PLAYER_MESH_POSITION.forEach(e =>{
-                        UI.remove(e)
-                    })
-                    OTHER_PLAYER_MESH[param._id].forEach(e =>{
-                        UI.remove(e)
-                    })
-                    PLAYER_MESH_POSITION = []
-                    OTHER_PLAYER_MESH[param._id] = []
-                    let player_y = [0,145,15]
-                    let name_y = [0,110,-20]
-                    let Player1 = PLAYER_LOADER.PLAYER.player
-                    Player1.position.set(65, player_y[PLAYER_POSITION], 25)
-                    Player1.scale.set(1.25, 1.25, 1.25)
-                    PLAYER_MESH_POSITION.push(Player1)
-                    UI.add(Player1)
-        
-                    let geometry = new TextGeometry(PLAYER_DATA.name, {
-                        font: LOADED_FONT,
-                        size: 10,
-                        height: 0,
-                        bevelEnabled: false,
-                    });
-                    let mesh = new THREE.Mesh(geometry, LOADED_MATERIAL[7])
-                    mesh.rotation.y = -Math.PI / 4
-                    mesh.position.set(100, name_y[PLAYER_POSITION], 50)
-                    PLAYER_MESH_POSITION.push(mesh)
-                    UI.add(mesh)
-
-                    READY_UI.forEach(e => {
-                        UI.remove(e)
-                    })
-                    READY_UI=[]
-                } else if(OTHER_PLAYER_MESH[param._id].length > 0){
-                    OTHER_PLAYER_MESH[param._id].forEach(e =>{
-                        UI.remove(e)
-                    })
-                }
-                if(GAME_START){
-                    let temp = {
-                        status: true,
-                        reason: 0
+            if(passed_parameters["game_room"] === param.room){
+                if(OTHER_PLAYER[param._id]){
+                    if(OTHER_PLAYER_MESH[param._id].length > 0 && PLAYER_POSITION === 2){
+                        PLAYER_POSITION = 1
+                        PLAYER_MESH_POSITION.forEach(e =>{
+                            UI.remove(e)
+                        })
+                        OTHER_PLAYER_MESH[param._id].forEach(e =>{
+                            UI.remove(e)
+                        })
+                        PLAYER_MESH_POSITION = []
+                        OTHER_PLAYER_MESH[param._id] = []
+                        let player_y = [0,145,15]
+                        let name_y = [0,110,-20]
+                        let Player1 = PLAYER_LOADER.PLAYER.player
+                        Player1.position.set(65, player_y[PLAYER_POSITION], 25)
+                        Player1.scale.set(1.25, 1.25, 1.25)
+                        PLAYER_MESH_POSITION.push(Player1)
+                        UI.add(Player1)
+            
+                        let geometry = new TextGeometry(PLAYER_DATA.name, {
+                            font: LOADED_FONT,
+                            size: 10,
+                            height: 0,
+                            bevelEnabled: false,
+                        });
+                        let mesh = new THREE.Mesh(geometry, LOADED_MATERIAL[7])
+                        mesh.rotation.y = -Math.PI / 4
+                        mesh.position.set(100, name_y[PLAYER_POSITION], 50)
+                        PLAYER_MESH_POSITION.push(mesh)
+                        UI.add(mesh)
+                        READY_UI.forEach(e=>{
+                            UI.remove(e)
+                        })
+                        READY_UI = []
+                    } else if(OTHER_PLAYER_MESH[param._id].length > 0){
+                        OTHER_PLAYER_MESH[param._id].forEach(e =>{
+                            UI.remove(e)
+                        })
                     }
-                    if(PLAYER_PLAY.p1 === param.socket_id){
-                        temp.winner = 2
-                    } else if(PLAYER_PLAY.p2 === param.socket_id){
-                        temp.winner = 1
+                    if(GAME_START){
+                        let temp = {
+                            status: true,
+                            reason: 0
+                        }
+                        if(PLAYER_PLAY.p1 === param.socket_id){
+                            temp.winner = 2
+                        } else if(PLAYER_PLAY.p2 === param.socket_id){
+                            temp.winner = 1
+                        }
+                        end_game = temp
                     }
-                    end_game = temp
+                    PLAYER_LOADER.OTHER_PLAYER[param._id] = null
+                    OTHER_PLAYER[param._id] = null
                 }
-                PLAYER_LOADER.OTHER_PLAYER[param._id] = null
-                OTHER_PLAYER[param._id] = null
             }
         })
     }

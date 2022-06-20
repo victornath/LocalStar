@@ -34,11 +34,15 @@ let room = []
 
 io.on("connection", (socket) => {
     clients.push(socket)
-    _id[socket.id] = []
+    _id[socket.id]
     room[socket.id] = []
     // Disconnect listener
     socket.on('disconnect', (reason) => {
-        io.emit("room_leave", {socket_id: socket.id, _id: _id[socket.id], room: room[socket.id]})
+        if(room[socket.id]["playroom"] !== undefined){
+            io.emit("room_leave", {_id: _id[socket.id], room: room[socket.id]["playroom"]})
+        } else if(room[socket.id]["gameroom"] !== undefined){
+            io.emit("room_leave", {_id: _id[socket.id], room: room[socket.id]["gameroom"]})
+        }
         clients.splice(clients.indexOf(socket),1)
     });
     socket.on("new-user", name => {
