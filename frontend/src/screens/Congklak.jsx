@@ -27,7 +27,7 @@ const Congklak = () => {
     let OTHER_PLAYER_MESH = []
     let PLAYER_DATA
     let PLAYER_PLAY
-    let PLAYER_READY = false, GAME_START = false
+    let PLAYER_READY = false, GAME_START = false, TIMEOUT_COUNTER = 0
     let READY_UI = []
     let GAME_UI = []
 
@@ -46,6 +46,7 @@ const Congklak = () => {
     const RAYCAST = new THREE.Raycaster()
     const BOARD = new Congklak_big().group
     const DESK = new Desk().group
+    let ready_button
     let PLAYER_LOADER = new PlayerLoader(userInfo._id)
 
     var curr_turn = 1;
@@ -157,6 +158,7 @@ const Congklak = () => {
             new THREE.MeshLambertMaterial({color: 0xFFFFFF}),       // 8. Biji Congklak
             new THREE.MeshBasicMaterial({color: 0x36594E}),         // 9. Lubang Papan Congklak
             new THREE.MeshBasicMaterial({color: 0xFFFFFF}),         //10. Text Color 2
+            new THREE.MeshBasicMaterial({color: 0x747474}),         //11. Button Disabled
         )
     }
 
@@ -355,6 +357,15 @@ const Congklak = () => {
             distributeSeed(s_circle_p1, b_circle[0], s_circle_p2, b_circle[1]);
         })
 
+        socket.on("disconnect", () => {
+            end_game = {
+                status: true,
+                win: (PLAYER_POSITION === 1)? 2 : 1,
+                reason: 0
+            }
+            
+        })
+
         socket.on("ask_id", e => {
             socket.emit("give_id", {
                 to: e,
@@ -385,7 +396,19 @@ const Congklak = () => {
 
         socket.on("gameroom_ready_check", param =>{
             param.ready = PLAYER_READY
-            console.log("Ready check, " + PLAYER_READY)
+            if(PLAYER_POSITION === 1){
+                if(PLAYER_READY){
+                    updateStatus("Siap", "Siap")
+                } else {
+                    updateStatus("", "Siap")
+                }
+            } else {
+                if(PLAYER_READY){
+                    updateStatus("Siap", "Siap")
+                } else {
+                    updateStatus("Siap", "")
+                }
+            }
             socket.emit("gameroom_ready_check", param)
         })
 
@@ -457,7 +480,7 @@ const Congklak = () => {
         ready_bg.rotation.x = -Math.PI / 2
         READY_UI.push(ready_bg)
         SCENE.add(ready_bg)
-        let ready_button = new THREE.Mesh(new THREE.PlaneGeometry(60,12.5), LOADED_MATERIAL[6])
+        ready_button = new THREE.Mesh(new THREE.PlaneGeometry(60,12.5), LOADED_MATERIAL[6])
         ready_button.position.set(66.5,15,155)
         ready_button.rotation.x = -Math.PI / 2
         ready_button.name = "button_ready"
@@ -578,7 +601,12 @@ const Congklak = () => {
                 let items = RAYCAST.intersectObjects(SCENE.children, false)
                 items.forEach(i => {
                     if(i.object.name == "button_ready"){
-                        console.log("Button clicked")
+                        ready_button.material = LOADED_MATERIAL[11]
+                        if(PLAYER_POSITION === 1){
+                            updateStatus("Siap","")
+                        } else {
+                            updateStatus("", "Siap")
+                        }
                         socket.emit("gameroom_playerReady", PLAYER_PLAY);
                         PLAYER_READY = true
                     } else {
@@ -610,13 +638,13 @@ const Congklak = () => {
     function distributeSeed(a1, a2, b1, b2) {
         console.log(s_circle_p1, b_circle[0], s_circle_p2, b_circle[1])
         if (curr_turn == 1) {
-            updateStatus("Your Turn", "Waiting")
+            updateStatus("Giliranmu", "Menunggu")
             ui_p1.material.color = new THREE.Color(0xFF5D79);
             ui_p1.material.needsUpdate = true
             ui_p2.material.color = new THREE.Color(0xBCE5FB);
             ui_p2.material.needsUpdate = true
         } else {
-            updateStatus("Waiting", "Your Turn")
+            updateStatus("Menunggu", "Giliranmu")
             ui_p1.material.color = new THREE.Color(0xFFCECE);
             ui_p1.material.needsUpdate = true
             ui_p2.material.color = new THREE.Color(0x0B97F4);
@@ -1057,6 +1085,10 @@ const Congklak = () => {
                     socket.emit("gameroom_congklak_timeout", PLAYER_PLAY)
                     if(curr_turn === 1) {curr_turn = 2} else {curr_turn = 1}
                     distributeSeed(s_circle_p1, b_circle[0], s_circle_p2, b_circle[1]);
+                    TIMEOUT_COUNTER += 1
+                    if(TIMEOUT_COUNTER === 2){
+                        socket.disconnect()
+                    }
                 }
             }
             if(end_game.status){
