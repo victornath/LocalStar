@@ -27,6 +27,8 @@ const Congklak = () => {
     let OTHER_PLAYER_MESH = []
     let PLAYER_DATA
     let PLAYER_PLAY
+    let PLAYER_READY = false
+    let READY_UI = []
 
     const SCENE = new THREE.Scene();
     const UI = new THREE.Scene();
@@ -50,6 +52,7 @@ const Congklak = () => {
     var ONGOING_TURN = false;
     var PLAYER_CHOOSE;
     let LOADED_FONT;
+    let LOADED_MATERIAL = []
 
     let ui_p1, ui_p2;
     let ui_status = [];
@@ -110,6 +113,7 @@ const Congklak = () => {
         initRenderer()
         initCamera()
         initSocket()
+        initRaycast()
         loadData("/api/users/getData")
         initScene()
         // initGame()
@@ -140,6 +144,20 @@ const Congklak = () => {
             LOADED_FONT = font
         })
 
+        //Materials
+        LOADED_MATERIAL.push(
+            new THREE.MeshBasicMaterial({color: 0xFFCECE}),         // 0. Player 1 Base
+            new THREE.MeshBasicMaterial({color: 0xFFF2F2}),         // 1. Player 1 Light
+            new THREE.MeshBasicMaterial({color: 0xFF5D79}),         // 2. Player 1 Dark
+            new THREE.MeshBasicMaterial({color: 0xBCE5FB}),         // 3. Player 2 base
+            new THREE.MeshBasicMaterial({color: 0xEBF8FF}),         // 4. Player 2 Light
+            new THREE.MeshBasicMaterial({color: 0x0B97F4}),         // 5. Player 2 Dark
+            new THREE.MeshBasicMaterial({color: 0xFF3366}),         // 6. Button
+            new THREE.MeshBasicMaterial({color: 0x000000}),         // 7. Text Color
+            new THREE.MeshLambertMaterial({color: 0xFFFFFF}),       // 8. Biji Congklak
+            new THREE.MeshBasicMaterial({color: 0x36594E}),         // 9. Lubang Papan Congklak
+            new THREE.MeshBasicMaterial({color: 0xFFFFFF}),         //10. Text Color 2
+        )
     }
 
     async function loadData(url) {
@@ -199,44 +217,18 @@ const Congklak = () => {
 
         // INPUT ENEMY PLAYER ID HERE
 
-        for (let i = 0; i < 2; i++) {
-        }
-
         const ui_background = new THREE.PlaneGeometry(180, 120);
         const ui_padding = new THREE.PlaneGeometry(170, 105);
         const ui_status = new THREE.PlaneGeometry(100, 50);
         const ui_btn_background = new THREE.PlaneGeometry(180, 40);
-        let ui_pink = new THREE.MeshBasicMaterial({
-            color: 0xFFCECE,
-        })
-        let ui_pink_light = new THREE.MeshBasicMaterial({
-            color: 0xFFF2F2,
-        })
-        let ui_pink_dark = new THREE.MeshBasicMaterial({
-            color: 0xFFCECE,
-        })
+        ui_p1 = new THREE.Mesh(ui_background, LOADED_MATERIAL[2]);
+        let ui_p1_padding = new THREE.Mesh(ui_padding, LOADED_MATERIAL[0]);
+        let ui_p1_status = new THREE.Mesh(ui_status, LOADED_MATERIAL[1]);
 
-        let ui_blue = new THREE.MeshBasicMaterial({
-            color: 0xBCE5FB,
-        })
-        let ui_blue_light = new THREE.MeshBasicMaterial({
-            color: 0xEBF8FF,
-        })
-        let ui_blue_dark = new THREE.MeshBasicMaterial({
-            color: 0xBCE5FB,
-        })
-
-        let ui_pink_btn = new THREE.MeshBasicMaterial({
-            color: 0xFF3366,
-        })
-        ui_p1 = new THREE.Mesh(ui_background, ui_pink_dark);
-        let ui_p1_padding = new THREE.Mesh(ui_padding, ui_pink);
-        let ui_p1_status = new THREE.Mesh(ui_status, ui_pink_light);
-
-        ui_p2 = new THREE.Mesh(ui_background, ui_blue_dark);
-        let ui_p2_padding = new THREE.Mesh(ui_padding, ui_blue);
-        let ui_p2_status = new THREE.Mesh(ui_status, ui_blue_light);
-        let ui_btn = new THREE.Mesh(ui_btn_background, ui_pink_btn);
+        ui_p2 = new THREE.Mesh(ui_background, LOADED_MATERIAL[5]);
+        let ui_p2_padding = new THREE.Mesh(ui_padding, LOADED_MATERIAL[3]);
+        let ui_p2_status = new THREE.Mesh(ui_status, LOADED_MATERIAL[4]);
+        let ui_btn = new THREE.Mesh(ui_btn_background, LOADED_MATERIAL[6]);
 
         ui_p1.position.set(170, 85, 0)
         ui_p1.rotation.y = -Math.PI / 4
@@ -270,7 +262,7 @@ const Congklak = () => {
                 height: 0,
                 bevelEnabled: false,
             });
-            let mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x000000 }))
+            let mesh = new THREE.Mesh(geometry, LOADED_MATERIAL[7])
             mesh.rotation.y = -Math.PI / 4
             mesh.position.set(100, name_y[PLAYER_POSITION], 50)
             PLAYER_MESH_POSITION.push(mesh)
@@ -314,7 +306,7 @@ const Congklak = () => {
                 height: 0,
                 bevelEnabled: false,
             });
-            let mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x000000 }))
+            let mesh = new THREE.Mesh(geometry, LOADED_MATERIAL[7])
             mesh.rotation.y = -Math.PI / 4
             mesh.position.set(100, 155 - (i * 130), 50)
             ui_status.push(mesh)
@@ -327,6 +319,7 @@ const Congklak = () => {
             _id: userInfo._id,
             roomId: passed_parameters["game_room"]
         }, (response)=>{
+            console.log(response)
             response.userList.forEach(e => {
                 socket.emit("ask_id", e)
             })
@@ -379,7 +372,18 @@ const Congklak = () => {
         })
 
         socket.on("gameroom_ready_ask", param => {
-            //! Ready
+            showReadyUI()
+            PLAYER_PLAY = param
+        })
+
+        socket.on("gameroom_ready_check", param =>{
+            param.ready = PLAYER_READY
+            console.log("Ready check, " + PLAYER_READY)
+            socket.emit("gameroom_ready_check", param)
+        })
+
+        socket.on("gameroom_start",param => {
+            initGame()
         })
 
         socket.on("room_leave", param => {
@@ -409,7 +413,7 @@ const Congklak = () => {
                             height: 0,
                             bevelEnabled: false,
                         });
-                        let mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x000000 }))
+                        let mesh = new THREE.Mesh(geometry, LOADED_MATERIAL[7])
                         mesh.rotation.y = -Math.PI / 4
                         mesh.position.set(100, name_y[PLAYER_POSITION], 50)
                         PLAYER_MESH_POSITION.push(mesh)
@@ -424,6 +428,42 @@ const Congklak = () => {
                 }
             }
         })
+    }
+
+    function showReadyUI(){
+        let ready_bg = new THREE.Mesh(new THREE.PlaneGeometry(80,50), LOADED_MATERIAL[10])
+        ready_bg.position.set(66.5,10.3,140)
+        ready_bg.rotation.x = -Math.PI / 2
+        READY_UI.push(ready_bg)
+        SCENE.add(ready_bg)
+        let ready_button = new THREE.Mesh(new THREE.PlaneGeometry(60,12.5), LOADED_MATERIAL[6])
+        ready_button.position.set(66.5,15,155)
+        ready_button.rotation.x = -Math.PI / 2
+        ready_button.name = "button_ready"
+        READY_UI.push(ready_button)
+        SCENE.add(ready_button)
+        let ready_button_text_geometry = new TextGeometry("Siap!", {
+            font: LOADED_FONT,
+            size: 5,
+            height: 0,
+            bevelEnabled: false
+        })
+        let ready_button_text = new THREE.Mesh(ready_button_text_geometry, LOADED_MATERIAL[10])
+        centerText(ready_button_text_geometry,ready_button_text,66.5,-100,155)
+        ready_button_text.rotation.x = -Math.PI/3
+        READY_UI.push(ready_button_text)
+        SCENE.add(ready_button_text)
+        let ready_text_geometry = new TextGeometry("Apakah kamu siap?", {
+            font: LOADED_FONT,
+            size: 5,
+            height: 0,
+            bevelEnabled: false
+        })
+        let ready_text = new THREE.Mesh(ready_text_geometry, LOADED_MATERIAL[7])
+        centerText(ready_text_geometry,ready_text,66.5,-75,155)
+        ready_text.rotation.x = -Math.PI/3
+        READY_UI.push(ready_text)
+        SCENE.add(ready_text)
     }
 
     function loadOtherPlayer(_id, position, name){
@@ -442,7 +482,7 @@ const Congklak = () => {
             height: 0,
             bevelEnabled: false,
         });
-        let name_mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x000000 }))
+        let name_mesh = new THREE.Mesh(geometry, LOADED_MATERIAL[7])
         name_mesh.rotation.y = -Math.PI / 4
         name_mesh.position.set(100, name_y[position], 50)
         OTHER_PLAYER_MESH[_id] = []
@@ -455,6 +495,13 @@ const Congklak = () => {
     }
 
     function initGame() {
+
+        if(READY_UI.length > 0){
+            READY_UI.forEach(e => {
+                SCENE.remove(e)
+            })
+            READY_UI = []
+        }
 
         BOARD.position.set(10, 0, 130)
         SCENE.add(BOARD)
@@ -490,6 +537,9 @@ const Congklak = () => {
         }
 
         distributeSeed(s_circle_p1, b_circle[0], s_circle_p2, b_circle[1]);
+    }
+
+    function initRaycast() {
         document.addEventListener("click", function (event) {
             /* which = 1 itu click kiri */
             /* which = 2 itu scroll click */
@@ -502,21 +552,26 @@ const Congklak = () => {
                 mouse.y = event.clientY / h * (-2) + 1
 
                 RAYCAST.setFromCamera(mouse, CAMERA)
-                // console.log(CAMERA.zoom)
                 let items = RAYCAST.intersectObjects(SCENE.children, false)
                 items.forEach(i => {
-                    if (PLAYER_CHOOSE == null) {
-                        if (curr_turn == 1) {
-                            if (i.object.name.startsWith("player1") && s_circle_p1[parseInt(i.object.name.charAt(12))] > 0) {
-                                PLAYER_CHOOSE = i.object.name
+                    if(i.object.name == "button_ready"){
+                        console.log("Button clicked")
+                        socket.emit("gameroom_playerReady", PLAYER_PLAY);
+                        PLAYER_READY = true
+                    } else {
+                        if (PLAYER_CHOOSE == null) {
+                            if (curr_turn == 1) {
+                                if (i.object.name.startsWith("player1") && s_circle_p1[parseInt(i.object.name.charAt(12))] > 0) {
+                                    PLAYER_CHOOSE = i.object.name
+                                }
+                            } else {
+                                if (i.object.name.startsWith("player2") && s_circle_p2[parseInt(i.object.name.charAt(12))] > 0) {
+                                    PLAYER_CHOOSE = i.object.name
+                                }
                             }
                         } else {
-                            if (i.object.name.startsWith("player2") && s_circle_p2[parseInt(i.object.name.charAt(12))] > 0) {
-                                PLAYER_CHOOSE = i.object.name
-                            }
+                            console.log("PLAYER_CHOOSE is not empty")
                         }
-                    } else {
-                        console.log("PLAYER_CHOOSE is not empty")
                     }
                 })
             }
@@ -553,7 +608,7 @@ const Congklak = () => {
                 height: 0,
                 bevelEnabled: false,
             });
-            let mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0xffffff }))
+            let mesh = new THREE.Mesh(geometry, LOADED_MATERIAL[10])
             mesh.rotation.x = -Math.PI / 2
             if (i % 2 == 0) {
                 mesh.position.set(p1_loc[i] - 5, 10.3, 125)
@@ -576,7 +631,7 @@ const Congklak = () => {
                 height: 0,
                 bevelEnabled: false,
             });
-            let mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0xffffff }))
+            let mesh = new THREE.Mesh(geometry, LOADED_MATERIAL[10])
             mesh.rotation.x = -Math.PI / 2
             if (i % 2 == 0) {
                 mesh.position.set(p2_loc[i] - 5, 10.3, 165)
@@ -601,7 +656,7 @@ const Congklak = () => {
                 height: 0,
                 bevelEnabled: false,
             });
-            let mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0xffffff }))
+            let mesh = new THREE.Mesh(geometry, LOADED_MATERIAL[10])
             mesh.rotation.x = -Math.PI / 2
             if (i == 0) {
                 mesh.position.set(p1_big - 5, 10.3, 125)
@@ -613,24 +668,16 @@ const Congklak = () => {
         }
 
         const congklak_seed_geo = new THREE.SphereGeometry(1, 6, 6);
-        let seed = new THREE.MeshLambertMaterial({
-            color: 0xFFFFFF,
-        })
-
-        let wood_dark = new THREE.MeshBasicMaterial({
-            color: 0x36594E,
-        })
-
         if (big_circle.length == 0) {
             let geo_b_circle = new THREE.CircleGeometry(12, 12);
 
-            const b_circle_1 = new THREE.Mesh(geo_b_circle, wood_dark)
+            const b_circle_1 = new THREE.Mesh(geo_b_circle, LOADED_MATERIAL[9])
             b_circle_1.position.set(p1_big, 10.1, 142)
             b_circle_1.rotation.x = -Math.PI / 2
             big_circle.push(b_circle_1)
             SCENE.add(b_circle_1)
 
-            const b_circle_2 = new THREE.Mesh(geo_b_circle, wood_dark)
+            const b_circle_2 = new THREE.Mesh(geo_b_circle, LOADED_MATERIAL[9])
             b_circle_2.position.set(p2_big, 10.1, 142)
             b_circle_2.rotation.x = -Math.PI / 2
             big_circle.push(b_circle_2)
@@ -643,7 +690,7 @@ const Congklak = () => {
             });
             congklak_p1 = [];
             for (let i = 0; i < a2; i++) {
-                let congklak = new THREE.Mesh(congklak_seed_geo, seed)
+                let congklak = new THREE.Mesh(congklak_seed_geo, LOADED_MATERIAL[8])
                 congklak.position.set((Math.random() * 10) + p1_big - 5, 10 + i / 10, (Math.random() * 15) + 135)
                 congklak_p1.push(congklak)
                 SCENE.add(congklak)
@@ -654,7 +701,7 @@ const Congklak = () => {
                 SCENE.remove(e)
             })
             for (let i = 0; i < b2; i++) {
-                congklak_p2[i] = new THREE.Mesh(congklak_seed_geo, seed)
+                congklak_p2[i] = new THREE.Mesh(congklak_seed_geo, LOADED_MATERIAL[8])
                 congklak_p2[i].position.set((Math.random() * 10) + p2_big - 5, 10 + i / 10, (Math.random() * 15) + 135)
                 SCENE.add(congklak_p2[i])
             }
@@ -663,7 +710,7 @@ const Congklak = () => {
         if (circle_row1.length == 0) {
             let geo_circle = new THREE.CircleGeometry(5, 9);
             for (let i = 0; i < 7; i++) {
-                let circle = new THREE.Mesh(geo_circle, wood_dark)
+                let circle = new THREE.Mesh(geo_circle, LOADED_MATERIAL[9])
                 circle.position.set(p1_loc[i], 10.1, 135)
                 circle.rotation.x = -Math.PI / 2
                 circle.name = "player1_row_" + i
@@ -671,7 +718,7 @@ const Congklak = () => {
                 SCENE.add(circle)
                 let arrayTemp = []
                 for (let j = 0; j < 7; j++) {
-                    let congklak = new THREE.Mesh(congklak_seed_geo, seed)
+                    let congklak = new THREE.Mesh(congklak_seed_geo, LOADED_MATERIAL[8])
                     congklak.position.set((Math.random() * 6) + p1_loc[i] - 3, 10.2 + (j / 10), (Math.random() * 5) + 133)
                     SCENE.add(congklak)
                     arrayTemp.push(congklak)
@@ -688,7 +735,7 @@ const Congklak = () => {
                 })
                 congklak_row1[i] = []
                 for (let j = 0; j < a1[i]; j++) {
-                    let congklak = new THREE.Mesh(congklak_seed_geo, seed)
+                    let congklak = new THREE.Mesh(congklak_seed_geo, LOADED_MATERIAL[8])
                     congklak.position.set((Math.random() * 6) + p1_loc[i] - 3, 10.2 + (j / 10), (Math.random() * 5) + 133)
                     SCENE.add(congklak)
                     arrayTemp.push(congklak)
@@ -701,7 +748,7 @@ const Congklak = () => {
         if (circle_row2.length == 0) {
             let geo_circle = new THREE.CircleGeometry(5, 9);
             for (let i = 0; i < 7; i++) {
-                let circle = new THREE.Mesh(geo_circle, wood_dark)
+                let circle = new THREE.Mesh(geo_circle, LOADED_MATERIAL[9])
                 circle.position.set(p2_loc[i], 10.1, 150)
                 circle.rotation.x = -Math.PI / 2
                 circle.name = "player2_row_" + i
@@ -709,7 +756,7 @@ const Congklak = () => {
                 SCENE.add(circle)
                 let arrayTemp = []
                 for (let j = 0; j < 7; j++) {
-                    let congklak = new THREE.Mesh(congklak_seed_geo, seed)
+                    let congklak = new THREE.Mesh(congklak_seed_geo, LOADED_MATERIAL[8])
                     congklak.position.set((Math.random() * 6) + p2_loc[i] - 3, 10.2 + j / 10, (Math.random() * 5) + 148)
                     SCENE.add(congklak)
                     arrayTemp.push(congklak)
@@ -726,7 +773,7 @@ const Congklak = () => {
                 })
                 congklak_row2[i] = []
                 for (let j = 0; j < b1[i]; j++) {
-                    let congklak = new THREE.Mesh(congklak_seed_geo, seed)
+                    let congklak = new THREE.Mesh(congklak_seed_geo, LOADED_MATERIAL[8])
                     congklak.position.set((Math.random() * 6) + p2_loc[i] - 3, 10.2 + j / 10, (Math.random() * 5) + 148)
                     SCENE.add(congklak)
                     arrayTemp.push(congklak)
@@ -1060,7 +1107,7 @@ const Congklak = () => {
         const center = textGeo.boundingBox.getCenter(new THREE.Vector3())
         textMesh.updateMatrixWorld();
         center.applyMatrix4(textMesh.matrixWorld);
-        textMesh.geometry.translate(x - center.x, y - center.y, z - center.z,)
+        textMesh.geometry.translate(x - center.x, y + center.y, z - center.z,)
     }
 
     function onWindowResize() {

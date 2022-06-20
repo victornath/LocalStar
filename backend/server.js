@@ -123,6 +123,27 @@ io.on("connection", (socket) => {
         socket.emit("gameroom_ready_ask", param)
     })
 
+    socket.on("gameroom_playerReady", param => {
+        if(socket.id === param.p1){
+            console.log("P1 Ready")
+            socket.to(param.p2).emit("gameroom_ready_check", param)
+        } else {
+            console.log("P2 Ready")
+            socket.to(param.p1).emit("gameroom_ready_check", param)
+        }
+    })
+
+    socket.on("gameroom_ready_check", param => {
+        if(param.ready){
+            if(socket.id === param.p1){
+                socket.to(param.p2).emit("gameroom_start", param)
+                socket.emit("gameroom_start", param)
+            } else {
+                socket.to(param.p1).emit("gameroom_start", param)
+                socket.emit("gameroom_start", param)
+            }
+        }
+    })
 })
 
 
