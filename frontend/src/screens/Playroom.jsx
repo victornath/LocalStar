@@ -86,7 +86,7 @@ const Playroom = () => {
         initRenderer()
         initScene()
         initCamera()
-        initPlayer()
+        loadData("/api/users/getData")
         initUI()
         initSocket()
         window.addEventListener('resize', onWindowResize, false);
@@ -125,6 +125,7 @@ const Playroom = () => {
         CAMERA.rotation.order = 'YXZ';
         CAMERA.rotation.y = - Math.PI / 4;
         CAMERA.rotation.x = Math.atan(- 1 / Math.sqrt(2));
+        CAMERA.updateProjectionMatrix();
 
         UI_CAMERA.position.set(20, 140, 150)
         UI_CAMERA.updateProjectionMatrix();
@@ -202,6 +203,21 @@ const Playroom = () => {
         CAMERA_CONTROL = new MapControls(CAMERA, UI_CONTAINER)
     }
 
+    async function loadData(url) {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + userInfo.token,
+            }
+        });
+        var data = await response.json()
+        if(response){
+            initPlayer(data)
+        }
+    }
+
     function initRoom() {
         ROOM_LOADER.Load(0)
         WALK_FINDER = new PF.AStarFinder({
@@ -210,11 +226,24 @@ const Playroom = () => {
         ROOM_GRID = ROOM_LOADER.getGrid()
     }
 
-    function initPlayer() {
+    function initPlayer(data) {
         PLAYER = PLAYER_LOADER.PLAYER.player
 
         PLAYER.position.copy(ROOM_LOADER.spawn)
         PLAYER.speedMultiplier = 1
+
+        let PlayerName_geo = new TextGeometry(data.name, {
+            font: LOADED_FONT,
+            size: 6,
+            height: 0,
+            bevelEnabled: false
+        })
+        let PlayerName = new THREE.Mesh(PlayerName_geo, new THREE.MeshBasicMaterial({color:0xFFFFFF}))
+        PlayerName.rotation.y = Math.PI/4
+        // PlayerName.rotation.x = -Math.Pi/3
+        centerText(PlayerName_geo,PlayerName,-2.5,37.5,-2.5)
+        PLAYER.add(PlayerName)
+
         SCENE.add(PLAYER);
 
         document.addEventListener("click", function (event) {
@@ -378,11 +407,27 @@ const Playroom = () => {
                         
                         if(temp.distance > 0){
                             character.walk()
-                            if((temp.path[1][0]*25) + 12.5 > character.player.position.x) {character.player.position.x += 1; character.player.rotation.y = Math.PI/2;}
-                            if((temp.path[1][0]*25) + 12.5 < character.player.position.x) {character.player.position.x -= 1; character.player.rotation.y = -Math.PI/2;}
+                            if((temp.path[1][0]*25) + 12.5 > character.player.position.x) {
+                                character.player.position.x += 1
+                                character.player.rotation.y = Math.PI/2
+                                character.player.children[7].rotation.y = -Math.PI/2 + Math.PI/4
+                            }
+                            if((temp.path[1][0]*25) + 12.5 < character.player.position.x) {
+                                character.player.position.x -= 1
+                                character.player.rotation.y = -Math.PI/2
+                                character.player.children[7].rotation.y = Math.PI/2 + Math.PI/4
+                            }
 
-                            if((temp.path[1][1]*25) + 12.5 > character.player.position.z) {character.player.position.z += 1; character.player.rotation.y = 0;}
-                            if((temp.path[1][1]*25) + 12.5 < character.player.position.z) {character.player.position.z -= 1; character.player.rotation.y = Math.PI;}
+                            if((temp.path[1][1]*25) + 12.5 > character.player.position.z) {
+                                character.player.position.z += 1
+                                character.player.rotation.y = 0
+                                character.player.children[7].rotation.y = Math.PI/4
+                            }
+                            if((temp.path[1][1]*25) + 12.5 < character.player.position.z) {
+                                character.player.position.z -= 1
+                                character.player.rotation.y = Math.PI
+                                character.player.children[7].rotation.y = -Math.PI + Math.PI/4
+                            }
 
     
                             let destination = PLAYER_MOVE[i].path[1]
@@ -407,6 +452,13 @@ const Playroom = () => {
         UI_RENDERER.render(UI, UI_CAMERA);
     }
 
+    function centerText(textGeo, textMesh, x, y, z) {
+        textGeo.computeBoundingBox();
+        const center = textGeo.boundingBox.getCenter(new THREE.Vector3())
+        textMesh.updateMatrixWorld();
+        center.applyMatrix4(textMesh.matrixWorld);
+        textMesh.geometry.translate(x - center.x, y + center.y, z - center.z,)
+    }
 
     function onWindowResize() {
         CAMERA.aspect = window.innerWidth / window.innerHeight;

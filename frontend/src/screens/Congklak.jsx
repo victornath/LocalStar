@@ -414,7 +414,6 @@ const Congklak = () => {
 
         socket.on("gameroom_start",param => {
             prevTime = performance.now()
-            console.log(curr_turn, PLAYER_POSITION, PLAYER_CHOOSE)
             initGame()
         })
 
@@ -1040,7 +1039,6 @@ const Congklak = () => {
                             temp.winner = 0
                         }
                         end_game = temp
-                        console.log("Game Ended")
                     }
                     loop(res[0], res[1], res[2], res[3]);
                 })
