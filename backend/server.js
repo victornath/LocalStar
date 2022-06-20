@@ -144,6 +144,15 @@ io.on("connection", (socket) => {
             }
         }
     })
+
+    // CONGKLAK SOCKETS
+    socket.on("gameroom_congklak_move", param => {
+        if(socket.id === param.p1){
+            socket.to(param.p2).emit("gameroom_congklak_move", param)
+        } else {
+            socket.to(param.p1).emit("gameroom_congklak_move", param)
+        }
+    })
 })
 
 

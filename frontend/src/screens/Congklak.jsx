@@ -215,8 +215,6 @@ const Congklak = () => {
         dirLight.position.set(0, 20, 10); // x, y, z
         UI.add(dirLight);
 
-        // INPUT ENEMY PLAYER ID HERE
-
         const ui_background = new THREE.PlaneGeometry(180, 120);
         const ui_padding = new THREE.PlaneGeometry(170, 105);
         const ui_status = new THREE.PlaneGeometry(100, 50);
@@ -346,6 +344,10 @@ const Congklak = () => {
                     loadOtherPlayer(param._id,param.position,param.name)
                 }
             }
+        })
+
+        socket.on("gameroom_congklak_move", param => {
+            PLAYER_CHOOSE = param.choose
         })
 
         socket.on("ask_id", e => {
@@ -559,14 +561,20 @@ const Congklak = () => {
                         socket.emit("gameroom_playerReady", PLAYER_PLAY);
                         PLAYER_READY = true
                     } else {
-                        if (PLAYER_CHOOSE == null) {
-                            if (curr_turn == 1) {
+                        if (PLAYER_CHOOSE == null && curr_turn === PLAYER_POSITION) {
+                            if (PLAYER_POSITION === 1) {
                                 if (i.object.name.startsWith("player1") && s_circle_p1[parseInt(i.object.name.charAt(12))] > 0) {
+                                    let param = PLAYER_PLAY
+                                    param.choose = i.object.name
                                     PLAYER_CHOOSE = i.object.name
+                                    socket.emit("gameroom_congklak_move", param)
                                 }
-                            } else {
+                            } else if(PLAYER_POSITION === 2) {
                                 if (i.object.name.startsWith("player2") && s_circle_p2[parseInt(i.object.name.charAt(12))] > 0) {
+                                    let param = PLAYER_PLAY
+                                    param.choose = i.object.name
                                     PLAYER_CHOOSE = i.object.name
+                                    socket.emit("gameroom_congklak_move", param)
                                 }
                             }
                         } else {
