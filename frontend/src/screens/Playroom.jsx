@@ -240,7 +240,6 @@ const Playroom = () => {
         })
         let PlayerName = new THREE.Mesh(PlayerName_geo, new THREE.MeshBasicMaterial({color:0xFFFFFF}))
         PlayerName.rotation.y = Math.PI/4
-        // PlayerName.rotation.x = -Math.Pi/3
         centerText(PlayerName_geo,PlayerName,-2.5,37.5,-2.5)
         PLAYER.add(PlayerName)
 
@@ -312,6 +311,7 @@ const Playroom = () => {
         })
         socket.emit("playroom_enter", {
             _id: userInfo._id,
+            name: userInfo.name,
             roomId: passed_parameters["room_id"]
         }, (response)=>{
             response.userList.forEach(e => {
@@ -322,6 +322,16 @@ const Playroom = () => {
         socket.on("playroom_already_in", param => {
             PLAYER_LOADER.Load(param._id)
             OTHER_PLAYER[param._id] = PLAYER_LOADER.OTHER_PLAYER[param._id]
+            let PlayerName_geo = new TextGeometry(param.name, {
+                font: LOADED_FONT,
+                size: 6,
+                height: 0,
+                bevelEnabled: false
+            })
+            let PlayerName = new THREE.Mesh(PlayerName_geo, new THREE.MeshBasicMaterial({color:0xFFFFFF}))
+            PlayerName.rotation.y = Math.PI/4
+            centerText(PlayerName_geo,PlayerName,-2.5,37.5,-2.5)
+            OTHER_PLAYER[param._id].player.add(PlayerName)
             OTHER_PLAYER[param._id].player.position.x = param.position.x
             OTHER_PLAYER[param._id].player.position.y = param.position.y
             OTHER_PLAYER[param._id].player.position.z = param.position.z
@@ -332,6 +342,7 @@ const Playroom = () => {
             socket.emit("give_id", {
                 to: e,
                 _id: userInfo._id,
+                name: userInfo.name,
                 roomType: "playroom",
                 position: {
                     x: PLAYER.position.x,
@@ -345,6 +356,16 @@ const Playroom = () => {
             if(param._id != userInfo._id){
                 PLAYER_LOADER.Load(param._id)
                 OTHER_PLAYER[param._id] = PLAYER_LOADER.OTHER_PLAYER[param._id]
+                let PlayerName_geo = new TextGeometry(param.name, {
+                    font: LOADED_FONT,
+                    size: 6,
+                    height: 0,
+                    bevelEnabled: false
+                })
+                let PlayerName = new THREE.Mesh(PlayerName_geo, new THREE.MeshBasicMaterial({color:0xFFFFFF}))
+                PlayerName.rotation.y = Math.PI/4
+                centerText(PlayerName_geo,PlayerName,-2.5,37.5,-2.5)
+                OTHER_PLAYER[param._id].player.add(PlayerName)
                 OTHER_PLAYER[param._id].player.position.copy(ROOM_LOADER.spawn)
                 SCENE.add(OTHER_PLAYER[param._id].player)
             }
