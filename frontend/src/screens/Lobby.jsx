@@ -78,7 +78,6 @@ const Lobby = () => {
         initCamera()
         loadData("/api/users/getData")
         initScene()
-        initSocket()
         window.addEventListener('resize', onWindowResize, false);
     }
 
@@ -369,22 +368,14 @@ const Lobby = () => {
                                 break;
                         }
                     } else if (obj_name.startsWith("play_")) {
-                        socket.emit("lobby_checkRooms", choice)
+                        socket.emit("lobby_checkRooms", choice, (response)=> {
+                            showRoom(response.roomList)
+                        })
                     } else if (obj_name.startsWith("room_")) {
-                        socket.emit("playroom_join", obj_name);
                         window.open("/playroom?room_id="+obj_name, "_self")
                     }
                 })
             }
-        })
-    }
-
-    function initSocket(){
-        socket.on("lobby_rooms", rooms => {
-            showRoom(rooms)
-        })
-        socket.on("roomChecked", param =>{
-            console.log(param)
         })
     }
 

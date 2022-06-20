@@ -10,6 +10,7 @@ import Lobby from './screens/Lobby';
 import Shop from './screens/Shop';
 import Inventory from './screens/Inventory';
 import PlayerLoader from './screens/Playroom';
+import Congklak from './screens/Congklak';
 import Chat from "./screens/Chat";
 
 
@@ -26,6 +27,7 @@ const App = () => {
         <Route path='/inventory' element={<Inventory />} />;
         <Route path='/playroom' element={<PlayerLoader />} />;
         <Route path="/chat" element={<Chat />} />;
+        <Route path='/congklak' element={<Congklak />} />;
       </Routes>
     </Router>
   )

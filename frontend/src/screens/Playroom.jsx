@@ -275,9 +275,19 @@ const Playroom = () => {
     }
 
     function initSocket(){
+        window.addEventListener('beforeunload', function (e) {
+            socket.disconnect()
+        });
+        window.addEventListener('unload', function(e){
+            socket.disconnect()
+        })
         socket.emit("playroom_enter", {
             _id: userInfo._id,
             roomId: passed_parameters["room_id"]
+        }, (response)=>{
+            response.userList.forEach(e => {
+                socket.emit("ask_id", e)
+            })
         })
 
         socket.on("playroom_already_in", param => {
@@ -289,16 +299,11 @@ const Playroom = () => {
             SCENE.add(OTHER_PLAYER[param._id].player)
         })
 
-        socket.on("playroom_playerList", param => {
-            param.forEach(e => {
-                socket.emit("ask_id", e)
-            })
-        })
-
         socket.on("ask_id", e => {
             socket.emit("give_id", {
                 to: e,
                 _id: userInfo._id,
+                roomType: "playroom",
                 position: {
                     x: PLAYER.position.x,
                     y: PLAYER.position.y,
@@ -316,17 +321,19 @@ const Playroom = () => {
             }
         })
 
-        socket.on("user-disconnected", _id => {
-            if(OTHER_PLAYER[_id]){
-                SCENE.remove(OTHER_PLAYER[_id].player)
-                PLAYER_LOADER.OTHER_PLAYER[_id] = null
-                OTHER_PLAYER[_id] = null
-                walking[_id] = null
-                PLAYER_MOVE.forEach(e =>{
-                    if(e._id === _id){
-                        PLAYER_MOVE.splice(PLAYER_MOVE.indexOf(e),1)
-                    }
-                })
+        socket.on("room_leave", param => {
+            if(passed_parameters["room_id"] === param.room){
+                if(OTHER_PLAYER[param._id]){
+                    SCENE.remove(OTHER_PLAYER[param._id].player)
+                    PLAYER_LOADER.OTHER_PLAYER[param._id] = null
+                    OTHER_PLAYER[param._id] = null
+                    walking[param._id] = null
+                    PLAYER_MOVE.forEach(e =>{
+                        if(e.param._id === param._id){
+                            PLAYER_MOVE.splice(PLAYER_MOVE.indexOf(e),1)
+                        }
+                    })
+                }
             }
         })
 

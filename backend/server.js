@@ -27,23 +27,22 @@ const io = new Server(server, {
         methods: ["GET", "POST"]
     }
 });
-let users = []
-let _id
-let room
+var chat_users = []
+var clients = []
+let _id = []
+let room = []
 
 io.on("connection", (socket) => {
+    clients.push(socket)
+    _id[socket.id] = []
+    room[socket.id] = []
     // Disconnect listener
     socket.on('disconnect', (reason) => {
-        socket.broadcast.emit("user-disconnected", _id)
-    });
-    socket.on('disconnecting', (reason) => {
-        var rooms = Object.keys(socket.rooms)
-        rooms.forEach(e=>{
-            socket.to(e).emit('user-disconnected',_id)
-        })
+        socket.broadcast.emit("room_leave", {id: _id[socket.id], room: room[socket.id]})
+        clients.splice(clients.indexOf(socket),1)
     });
     socket.on("new-user", name => {
-        users[socket.id] = name
+        chat_users[socket.id] = name
         socket.broadcast.emit("user-connected", name)
     })
 
@@ -51,27 +50,16 @@ io.on("connection", (socket) => {
         socket.broadcast.emit("chat-message", message)
     })
 
-    socket.on("playroom_enter", param => {
-        _id = param._id
-        room = param.roomId
-        socket.join(param.roomId)
-        socket.to(room).emit("playroom_addplayer", param)
-        if(io.sockets.adapter.rooms.get(room)){
-            let players = io.sockets.adapter.rooms.get(room)
-            let players_array = Array.from(players)
-            socket.emit("playroom_playerList", players_array)
-        }
-    })
-
+    // Reusable Sockets
     socket.on("ask_id",param =>{
         socket.to(param).emit("ask_id", socket.id)
     })
-
     socket.on("give_id", param => {
-        socket.to(param.to).emit("playroom_already_in", param)
+        socket.to(param.to).emit(param.roomType+"_already_in", param)
     })
 
-    socket.on("lobby_checkRooms", param => {
+    // Lobby Sockets
+    socket.on("lobby_checkRooms", (param,callback) => {
         let rooms = []
         for (let i = 1; i <= 5; i++) {
             let count
@@ -86,12 +74,55 @@ io.on("connection", (socket) => {
                 user_count: count
             })
         }
-        socket.emit("lobby_rooms", rooms)
+        callback({
+            roomList: rooms
+        })
+    })
+
+    // PLAYROOM SOCKETS
+    socket.on("playroom_enter", (param,callback) => {
+        _id[socket.id] = param._id
+        room[socket.id]["playroom"] = param.roomId
+        socket.join(param.roomId)
+        socket.to(room[socket.id]["playroom"]).emit("playroom_addplayer", param)
+        if(io.sockets.adapter.rooms.get(room[socket.id]["playroom"])){
+            let players = io.sockets.adapter.rooms.get(room[socket.id]["playroom"])
+            let players_array = Array.from(players)
+            callback({
+                userList: players_array
+            })
+        }
     })
 
     socket.on("playroom_walk", param =>{
-        socket.to(room).emit("playroom_walk", param)
+        socket.to(room[socket.id]["playroom"]).emit("playroom_walk", param)
     })
+
+    // Gameroom Sockets
+    socket.on("gameroom_enter", (param,callback)=>{
+        _id[socket.id] = param._id
+        room[socket.id]["gameroom"] = param.roomId
+        socket.join(param.roomId)
+        if(io.sockets.adapter.rooms.get(room[socket.id]["gameroom"])){
+            let players = io.sockets.adapter.rooms.get(room[socket.id]["gameroom"])
+            let players_array = Array.from(players)
+            callback({
+                userList: players_array
+            })
+        }
+    })
+
+    socket.on("gameroom_playerLoaded", param => {
+        param.socket_id = socket.id
+        socket.to(room[socket.id]["gameroom"]).emit("gameroom_newPlayer", param)
+    })
+
+    socket.on("gameroom_playerFilled", param => {
+        param.p1 = socket.id,
+        socket.to(param.p2).emit("gameroom_ready_ask", param)
+        socket.emit("gameroom_ready_ask", param)
+    })
+
 })
 
 
