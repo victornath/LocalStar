@@ -133,6 +133,7 @@ const Playroom = () => {
         UI_CAMERA.rotation.y = - Math.PI / 4;
         UI_CAMERA.rotation.x = Math.atan(- 1 / Math.sqrt(2));
         CAMERA_CONTROL.enableDamping = false;
+        CAMERA_CONTROL.update()
     }
 
     function initUI() {
