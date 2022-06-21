@@ -299,6 +299,206 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
 }
 ));
 
+userRouter.patch("/game-result", protect, asyncHandler(async (req, res) => {
+    const { game_name, win_player_id, lose_player_id, reason } = req.body
+
+    const winUser = await User.findById(win_player_id);
+    const loseUser = await User.findById(lose_player_id);
+
+    let winnerNewPoint, winnerNewGold, winnerExperience, loserNewPoint, loserNewGold, loserExperience, newNumOfWin
+
+    switch (game_name) {
+        case "Congklak":
+            if (reason == 1) {
+                winnerNewPoint = winUser.point += 50
+                winnerNewGold = winUser.gold += 10
+                winnerExperience = winUser.experience += 15
+                newNumOfWin = winUser.num_of_win
+                newNumOfWin[0] += 1
+                loserNewPoint = loseUser.point += 10
+                loserExperience = loseUser.experience += 8
+            }
+            else if (reason == 0) {  // PLAYER DISCONNECTED
+                loserNewPoint = loseUser.point -= 10
+            }
+            else if (reason == 2) {
+                winnerNewPoint = winUser.point += 25
+                winnerNewGold = winUser.gold += 3
+                winnerExperience = winUser.experience += 10
+                loserNewPoint = loseUser.point += 25
+                loserNewGold = loseUser.gold += 3
+                loserExperience = loseUser.experience += 10
+            }
+            break;
+        case "Gobak Sodor":
+            if (reason == 1) {
+                winnerNewPoint = winUser.point += 25
+                winnerNewGold = winUser.gold += 5
+                winnerExperience = winUser.experience += 10
+                newNumOfWin = winUser.num_of_win
+                newNumOfWin[1] += 1
+                loserNewPoint = loseUser.point += 5
+                loserExperience = loseUser.experience += 5
+            }
+            else if (reason == 0) {  // PLAYER DISCONNECTED
+                loserNewPoint = loseUser.point -= 10
+            }
+            else if (reason == 2) {
+                winnerNewPoint = winUser.point += 10
+                winnerNewGold = winUser.gold += 1
+                winnerExperience = winUser.experience += 8
+                loserNewPoint = loseUser.point += 10
+                loserNewGold = loseUser.gold += 1
+                loserExperience = loseUser.experience += 8
+            }
+            break;
+        case "Tarik Tambang":
+            if (reason == 1) {
+                winnerNewPoint = winUser.point += 25
+                winnerNewGold = winUser.gold += 5
+                winnerExperience = winUser.experience += 10
+                newNumOfWin = winUser.num_of_win
+                newNumOfWin[2] += 1
+                loserNewPoint = loseUser.point += 5
+                loserExperience = loseUser.experience += 5
+            }
+            else if (reason == 0) {  // PLAYER DISCONNECTED
+                loserNewPoint = loseUser.point -= 10
+            }
+            else if (reason == 2) {
+                winnerNewPoint = winUser.point += 10
+                winnerNewGold = winUser.gold += 1
+                winnerExperience = winUser.experience += 8
+                loserNewPoint = loseUser.point += 10
+                loserNewGold = loseUser.gold += 1
+                loserExperience = loseUser.experience += 8
+            }
+            break;
+        case "Balap Karung":
+            if (reason == 1) {
+                winnerNewPoint = winUser.point += 25
+                winnerNewGold = winUser.gold += 5
+                winnerExperience = winUser.experience += 10
+                newNumOfWin = winUser.num_of_win
+                newNumOfWin[3] += 1
+                loserNewPoint = loseUser.point += 5
+                loserExperience = loseUser.experience += 5
+            }
+            else if (reason == 0) {  // PLAYER DISCONNECTED
+                loserNewPoint = loseUser.point -= 10
+            }
+            else if (reason == 2) {
+                winnerNewPoint = winUser.point += 10
+                winnerNewGold = winUser.gold += 1
+                winnerExperience = winUser.experience += 8
+                loserNewPoint = loseUser.point += 10
+                loserNewGold = loseUser.gold += 1
+                loserExperience = loseUser.experience += 8
+            }
+            break;
+    }
+
+    var [winUserLevel, winUserExp] = levelCalculator(winUser.level, winUser.experience)
+    var [loseUserLevel, loseUserExp] = levelCalculator(loseUser.level, loseUser.experience)
+
+    console.log(winUserLevel, winUserExp)
+    await User.updateOne({ _id: winUser._id }, {
+        $set: {
+            point: winnerNewPoint,
+            gold: winnerNewGold,
+            level: winUserLevel,
+            experience: winUserExp,
+            num_of_win: newNumOfWin
+        }
+    }).catch(
+        error => {
+            console.log(error);
+        }
+    );
+
+    await User.updateOne({ _id: loseUser._id }, {
+        $set: {
+            point: loserNewPoint,
+            gold: loserNewGold,
+            level: loseUserLevel,
+            experience: loseUserExp,
+        }
+    }).catch(
+        error => {
+            console.log(error);
+        }
+    );
+    res.json({
+        message: "Success."
+    })
+
+}))
+
+function levelCalculator(level, experience) {
+    switch (level) {
+        case 1:
+            if (experience >= 10) {
+                level += 1
+                experience -= 10
+            }
+            break;
+        case 2:
+            if (experience >= 30) {
+                level += 1
+                experience -= 30
+            }
+            break;
+        case 3:
+            if (experience >= 60) {
+                level += 1
+                experience -= 60
+            }
+            break;
+        case 4:
+            if (experience >= 100) {
+                level += 1
+                experience -= 100
+            }
+            break;
+        case 5:
+            if (experience >= 150) {
+                level += 1
+                experience -= 150
+            }
+            break;
+        case 6:
+            if (experience >= 210) {
+                level += 1
+                experience -= 210
+            }
+            break;
+        case 7:
+            if (experience >= 280) {
+                level += 1
+                experience -= 280
+            }
+            break;
+        case 8:
+            if (experience >= 360) {
+                level += 1
+                experience -= 360
+            }
+            break;
+        case 9:
+            if (experience >= 450) {
+                level += 1
+                experience -= 450
+            }
+            break;
+        case 10:
+            if (experience >= 10) {
+                level += 1
+                experience -= 550
+            }
+            break;
+    }
+    return [level, experience]
+}
 
 
 
