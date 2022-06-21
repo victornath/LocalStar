@@ -14,6 +14,11 @@ const Lobby = () => {
     const userLogin = useSelector((state) => state.userLogin);
     const { userInfo } = userLogin;
 
+    let audioBGM = new Audio("./audio/bgm_lobby.mp3")
+    let audioClick = new Audio("./audio/button_click.mp3")
+
+    audioBGM.loop = true
+
     const MANAGER = new THREE.LoadingManager();
     const FONT_LOADER = new FontLoader(MANAGER);
     const TEXTURE_LOADER = new THREE.TextureLoader(MANAGER)
@@ -52,7 +57,7 @@ const Lobby = () => {
     let ROOM_UI = []
     let PLAYER_DATA
     let sound_icon
-    let SOUND_PLAY = false
+    let SOUND_PLAY
 
 
     // Support check
@@ -128,82 +133,82 @@ const Lobby = () => {
         });
 
         // Texture
-        TEXTURE_LOADER.load('./images/texture/ui/currency/points.png', function ( texture ) {
+        TEXTURE_LOADER.load('./images/texture/ui/currency/points.png', function (texture) {
             LOADED_TEXTURE["point"] = new THREE.MeshBasicMaterial({
                 map: texture,
                 side: THREE.DoubleSide,
                 alphaTest: 0.3
-            })    
+            })
         })
-        TEXTURE_LOADER.load('./images/texture/ui/currency/gold.png', function ( texture ) {
+        TEXTURE_LOADER.load('./images/texture/ui/currency/gold.png', function (texture) {
             LOADED_TEXTURE["gold"] = new THREE.MeshBasicMaterial({
                 map: texture,
                 side: THREE.DoubleSide,
                 alphaTest: 0.3
-            })    
+            })
         })
-        TEXTURE_LOADER.load('./images/texture/ui/sound/sound_on.png', function ( texture ) {
+        TEXTURE_LOADER.load('./images/texture/ui/sound/sound_on.png', function (texture) {
             LOADED_TEXTURE["sound_on"] = new THREE.MeshBasicMaterial({
                 map: texture,
                 side: THREE.DoubleSide,
                 alphaTest: 0.6
-            })    
+            })
         })
-        TEXTURE_LOADER.load('./images/texture/ui/sound/sound_off.png', function ( texture ) {
+        TEXTURE_LOADER.load('./images/texture/ui/sound/sound_off.png', function (texture) {
             LOADED_TEXTURE["sound_off"] = new THREE.MeshBasicMaterial({
                 map: texture,
                 side: THREE.DoubleSide,
                 alphaTest: 0.6
-            })    
+            })
         })
-        TEXTURE_LOADER.load('./images/texture/ui/game/help_btn.png', function ( texture ) {
+        TEXTURE_LOADER.load('./images/texture/ui/game/help_btn.png', function (texture) {
             LOADED_TEXTURE["help"] = new THREE.MeshBasicMaterial({
                 map: texture,
                 side: THREE.DoubleSide,
                 alphaTest: 0.6
-            })    
+            })
         })
-        TEXTURE_LOADER.load('./images/texture/ui/game/game_1.png', function ( texture ) {
+        TEXTURE_LOADER.load('./images/texture/ui/game/game_1.png', function (texture) {
             LOADED_TEXTURE["game_1"] = new THREE.MeshBasicMaterial({
                 map: texture,
                 side: THREE.DoubleSide,
                 alphaTest: 0.6
-            })    
+            })
         })
-        TEXTURE_LOADER.load('./images/texture/ui/game/game_2.png', function ( texture ) {
+        TEXTURE_LOADER.load('./images/texture/ui/game/game_2.png', function (texture) {
             LOADED_TEXTURE["game_2"] = new THREE.MeshBasicMaterial({
                 map: texture,
                 side: THREE.DoubleSide,
                 alphaTest: 0.6
-            })    
+            })
         })
-        TEXTURE_LOADER.load('./images/texture/ui/game/game_3.png', function ( texture ) {
+        TEXTURE_LOADER.load('./images/texture/ui/game/game_3.png', function (texture) {
             LOADED_TEXTURE["game_3"] = new THREE.MeshBasicMaterial({
                 map: texture,
                 side: THREE.DoubleSide,
                 alphaTest: 0.6
-            })    
+            })
         })
-        TEXTURE_LOADER.load('./images/texture/ui/game/game_4.png', function ( texture ) {
+        TEXTURE_LOADER.load('./images/texture/ui/game/game_4.png', function (texture) {
             LOADED_TEXTURE["game_4"] = new THREE.MeshBasicMaterial({
                 map: texture,
                 side: THREE.DoubleSide,
                 alphaTest: 0.6
-            })    
+            })
         })
-        TEXTURE_LOADER.load('./images/texture/ui/arrow/arrow_l_1.png', function ( texture ) {
+        TEXTURE_LOADER.load('./images/texture/ui/arrow/arrow_l_1.png', function (texture) {
             LOADED_TEXTURE["arrow_l"] = new THREE.MeshBasicMaterial({
                 map: texture,
                 side: THREE.DoubleSide,
                 alphaTest: 0.6
-            })    
+            })
         })
-        TEXTURE_LOADER.load('./images/texture/ui/arrow/arrow_r_1.png', function ( texture ) {
+        TEXTURE_LOADER.load('./images/texture/ui/arrow/arrow_r_1.png', function (texture) {
             LOADED_TEXTURE["arrow_r"] = new THREE.MeshBasicMaterial({
                 map: texture,
                 side: THREE.DoubleSide,
                 alphaTest: 0.6
-            })    
+            })
         })
 
         // Materials
@@ -330,6 +335,11 @@ const Lobby = () => {
 
         loadUI_currency()
         document.addEventListener("click", function (event) {
+            if (SOUND_PLAY === undefined) {
+                audioBGM.play()
+                SOUND_PLAY = true
+            }
+            audioClick.play()
             /* which = 1 itu click kiri */
             /* which = 2 itu scroll click */
             /* which = 3 itu click kanan */
@@ -362,10 +372,12 @@ const Lobby = () => {
                             case 3:
                                 break;
                             case 4:
-                                if(SOUND_PLAY){
+                                if (SOUND_PLAY) {
+                                    audioBGM.pause()
                                     sound_icon.material = LOADED_TEXTURE["sound_off"]
                                     SOUND_PLAY = false
                                 } else {
+                                    audioBGM.play()
                                     sound_icon.material = LOADED_TEXTURE["sound_on"]
                                     SOUND_PLAY = true
                                 }
@@ -404,11 +416,11 @@ const Lobby = () => {
                                 break;
                         }
                     } else if (obj_name.startsWith("play_")) {
-                        socket.emit("lobby_checkRooms", choice, (response)=> {
+                        socket.emit("lobby_checkRooms", choice, (response) => {
                             showRoom(response.roomList)
                         })
                     } else if (obj_name.startsWith("room_")) {
-                        window.open("/playroom?room_id="+obj_name, "_self")
+                        window.open("/playroom?room_id=" + obj_name, "_self")
                     }
                 })
             }
@@ -580,10 +592,10 @@ const Lobby = () => {
         GAME_NAME.push(mesh)
         UI.add(mesh)
 
-        let currency_logo = new THREE.Mesh(new THREE.PlaneGeometry(30,30), LOADED_TEXTURE["point"])
+        let currency_logo = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), LOADED_TEXTURE["point"])
         currency_logo.position.set(42.5, 242, 2)
         UI.add(currency_logo)
-        currency_logo = new THREE.Mesh(new THREE.PlaneGeometry(30,30), LOADED_TEXTURE["gold"])
+        currency_logo = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), LOADED_TEXTURE["gold"])
         currency_logo.position.set(172.5, 242, 2)
         UI.add(currency_logo)
 
@@ -610,7 +622,7 @@ const Lobby = () => {
         GAME_NAME.push(mesh)
         UI.add(mesh)
 
-        sound_icon = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), LOADED_TEXTURE["sound_off"])
+        sound_icon = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), LOADED_TEXTURE["sound_on"])
         sound_icon.position.set(214.75, 243.5, 1)
         UI.add(sound_icon)
 
