@@ -51,6 +51,8 @@ const Lobby = () => {
     let MAIN_UI = []
     let ROOM_UI = []
     let PLAYER_DATA
+    let sound_icon
+    let SOUND_PLAY = false
 
 
     // Support check
@@ -360,7 +362,13 @@ const Lobby = () => {
                             case 3:
                                 break;
                             case 4:
-                                // Mute / Unmute Sound
+                                if(SOUND_PLAY){
+                                    sound_icon.material = LOADED_TEXTURE["sound_off"]
+                                    SOUND_PLAY = false
+                                } else {
+                                    sound_icon.material = LOADED_TEXTURE["sound_on"]
+                                    SOUND_PLAY = true
+                                }
                                 break;
                         }
                     } else if (obj_name.startsWith("bottom_")) {
@@ -602,7 +610,7 @@ const Lobby = () => {
         GAME_NAME.push(mesh)
         UI.add(mesh)
 
-        let sound_icon = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), LOADED_TEXTURE["sound_off"])
+        sound_icon = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), LOADED_TEXTURE["sound_off"])
         sound_icon.position.set(214.75, 243.5, 1)
         UI.add(sound_icon)
 
