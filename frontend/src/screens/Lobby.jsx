@@ -161,6 +161,34 @@ const Lobby = () => {
                 alphaTest: 0.6
             })    
         })
+        TEXTURE_LOADER.load('./images/texture/ui/game/game_1.png', function ( texture ) {
+            LOADED_TEXTURE["game_1"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide,
+                alphaTest: 0.6
+            })    
+        })
+        TEXTURE_LOADER.load('./images/texture/ui/game/game_2.png', function ( texture ) {
+            LOADED_TEXTURE["game_2"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide,
+                alphaTest: 0.6
+            })    
+        })
+        TEXTURE_LOADER.load('./images/texture/ui/game/game_3.png', function ( texture ) {
+            LOADED_TEXTURE["game_3"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide,
+                alphaTest: 0.6
+            })    
+        })
+        TEXTURE_LOADER.load('./images/texture/ui/game/game_4.png', function ( texture ) {
+            LOADED_TEXTURE["game_4"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide,
+                alphaTest: 0.6
+            })    
+        })
         TEXTURE_LOADER.load('./images/texture/ui/arrow/arrow_l_1.png', function ( texture ) {
             LOADED_TEXTURE["arrow_l"] = new THREE.MeshBasicMaterial({
                 map: texture,
@@ -458,7 +486,12 @@ const Lobby = () => {
             UI.add(name_mesh)
         }
 
-        let game_image_material = [LOADED_MATERIAL[0], LOADED_MATERIAL[1], LOADED_MATERIAL[2], LOADED_MATERIAL[3]]
+        let game_image_material = [
+            LOADED_TEXTURE["game_1"],
+            LOADED_TEXTURE["game_2"],
+            LOADED_TEXTURE["game_3"],
+            LOADED_TEXTURE["game_4"]
+        ]
 
         let game_image = new THREE.Mesh(new THREE.PlaneGeometry(180, 120), game_image_material[ACTIVE_GAME])
         game_image.position.set(90, 155, 2)
@@ -592,7 +625,12 @@ const Lobby = () => {
             GAME_MENU = []
         }
 
-        let game_image_material = [LOADED_MATERIAL[0], LOADED_MATERIAL[1], LOADED_MATERIAL[2], LOADED_MATERIAL[3]]
+        let game_image_material = [
+            LOADED_TEXTURE["game_1"],
+            LOADED_TEXTURE["game_2"],
+            LOADED_TEXTURE["game_3"],
+            LOADED_TEXTURE["game_4"]
+        ]
 
         let game_image = new THREE.Mesh(new THREE.PlaneGeometry(180, 120), game_image_material[ACTIVE_GAME])
         game_image.position.set(90, 155, 2)
