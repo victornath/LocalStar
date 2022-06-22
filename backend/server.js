@@ -65,16 +65,31 @@ io.on("connection", (socket) => {
     // Lobby Sockets
     socket.on("lobby_checkRooms", (param, callback) => {
         let rooms = []
+        let game_name
+        switch (param) {
+            case 1:
+                game_name = "congklak"
+                break;
+            case 2:
+                game_name = "gobaksodor"
+                break;
+            case 3:
+                game_name = "tambang"
+                break;
+            case 4:
+                game_name = "karung"
+                break;
+        }
         for (let i = 1; i <= 5; i++) {
             let count
-            if (io.sockets.adapter.rooms.get("room_" + param + "_" + i)) {
-                count = io.sockets.adapter.rooms.get("room_" + param + "_" + i).size
+            if (io.sockets.adapter.rooms.get("room_" + game_name + "_" + i)) {
+                count = io.sockets.adapter.rooms.get("room_" + game_name + "_" + i).size
             } else {
                 count = 0
             }
             rooms.push({
                 game: param,
-                roomName: "room_" + param + "_" + i,
+                roomName: "room_" + game_name + "_" + i,
                 user_count: count
             })
         }

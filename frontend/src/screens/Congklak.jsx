@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import Congklak_big from "../3DObject/congklak_game_board.js";
-import Desk from "../3DObject/Desk.js";
+import Desk from "../3DObject/desk.js";
 import PlayerLoader from '../character/PlayerLoader.js';
 import WebGL from '../WebGL.js';
 import { useSelector } from "react-redux";

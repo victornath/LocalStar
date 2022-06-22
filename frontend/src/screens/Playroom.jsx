@@ -18,7 +18,7 @@ const socket = io("http://localhost:5000");
 const Playroom = () => {
     const userLogin = useSelector((state) => state.userLogin);
     const { userInfo } = userLogin;
-    const currURL = window.location.href.substring(window.location.href.indexOf('?')+1,window.location.href.length)
+    const currURL = window.location.href.substring(window.location.href.indexOf('?') + 1, window.location.href.length)
 
     // Variables
     const MANAGER = new THREE.LoadingManager();
@@ -31,7 +31,7 @@ const Playroom = () => {
 
     const SCENE = new THREE.Scene();
     const UI = new THREE.Scene();
-    const ROOM_LOADER = new RoomLoader(SCENE, MANAGER)
+    const ROOM_LOADER = new RoomLoader(SCENE)
     let PLAYER_LOADER = new PlayerLoader(userInfo._id)
     const CAMERA = new THREE.OrthographicCamera((-135 * (window.innerWidth / window.innerHeight)), (135 * (window.innerWidth / window.innerHeight)), 135, -135, -1000, 1000)
     const UI_CAMERA = new THREE.OrthographicCamera((-135 * (window.innerWidth / window.innerHeight)), (135 * (window.innerWidth / window.innerHeight)), 135, -135, -1000, 1000)
@@ -56,8 +56,8 @@ const Playroom = () => {
     let passed_parameters = []
 
     // Also make sure webgl is enabled on the current machine
-    if(currURL){
-        (currURL.split(";")).forEach(e=>{
+    if (currURL) {
+        (currURL.split(";")).forEach(e => {
             let temp = e.split("=")
             passed_parameters[temp[0]] = temp[1]
         })
@@ -75,7 +75,6 @@ const Playroom = () => {
 
     function load() {
         initManager()
-        initRoom()
         FONT_LOADER.load('./Bahnschrift_Regular.json', function (font) {
             LOADED_FONT = font
         });
@@ -87,7 +86,6 @@ const Playroom = () => {
         initScene()
         initCamera()
         loadData("/api/users/getData")
-        initUI()
         initSocket()
         window.addEventListener('resize', onWindowResize, false);
     }
@@ -214,23 +212,27 @@ const Playroom = () => {
             }
         });
         var data = await response.json()
-        if(response){
-            initPlayer(data)
+        if (response) {
+            initRoom(passed_parameters["room_id"], data)
         }
     }
 
-    function initRoom() {
-        ROOM_LOADER.Load(0)
-        WALK_FINDER = new PF.AStarFinder({
-            allowDiagonal: true
-        });
-        ROOM_GRID = ROOM_LOADER.getGrid()
+    async function initRoom(roomId, data) {
+        ROOM_LOADER.Load(roomId).then(result => {
+            console.log(result)
+            WALK_FINDER = new PF.AStarFinder({
+                allowDiagonal: true
+            });
+            ROOM_GRID = ROOM_LOADER.getGrid()
+            initUI()
+            initPlayer(data)
+        })
     }
 
     function initPlayer(data) {
+        console.log("Initting player")
         PLAYER = PLAYER_LOADER.PLAYER.player
 
-        PLAYER.position.copy(ROOM_LOADER.spawn)
         PLAYER.speedMultiplier = 1
 
         let PlayerName_geo = new TextGeometry(data.name, {
@@ -239,11 +241,12 @@ const Playroom = () => {
             height: 0,
             bevelEnabled: false
         })
-        let PlayerName = new THREE.Mesh(PlayerName_geo, new THREE.MeshBasicMaterial({color:0xFFFFFF}))
-        PlayerName.rotation.y = Math.PI/4
-        centerText(PlayerName_geo,PlayerName,-2.5,37.5,-2.5)
+        let PlayerName = new THREE.Mesh(PlayerName_geo, new THREE.MeshBasicMaterial({ color: 0xFFFFFF }))
+        PlayerName.rotation.y = Math.PI / 4
+        centerText(PlayerName_geo, PlayerName, -2.5, 37.5, -2.5)
         PLAYER.add(PlayerName)
 
+        PLAYER.position.copy(ROOM_LOADER.spawn)
         SCENE.add(PLAYER);
 
         document.addEventListener("click", function (event) {
@@ -264,12 +267,12 @@ const Playroom = () => {
                 items.forEach(i => {
                     if (i.object.parent.name == "clickable") {
                         console.log(i.object.parent.name)
-                        window.open(i.object.parent.userData.URL+"&src="+passed_parameters["room_id"])
+                        window.open(i.object.parent.userData.URL + "&src=" + passed_parameters["room_id"])
                         items.pop()
                     } else {
                         PLAYER_MOVE.forEach(e => {
-                            if(e._id === "self"){
-                                PLAYER_MOVE.splice(PLAYER_MOVE.indexOf(e),1)
+                            if (e._id === "self") {
+                                PLAYER_MOVE.splice(PLAYER_MOVE.indexOf(e), 1)
                             }
                         })
                         let newPoint = {}
@@ -303,18 +306,18 @@ const Playroom = () => {
         })
     }
 
-    function initSocket(){
+    function initSocket() {
         window.addEventListener('beforeunload', function (e) {
             socket.disconnect()
         });
-        window.addEventListener('unload', function(e){
+        window.addEventListener('unload', function (e) {
             socket.disconnect()
         })
         socket.emit("playroom_enter", {
             _id: userInfo._id,
             name: userInfo.name,
             roomId: passed_parameters["room_id"]
-        }, (response)=>{
+        }, (response) => {
             response.userList.forEach(e => {
                 socket.emit("ask_id", e)
             })
@@ -329,9 +332,9 @@ const Playroom = () => {
                 height: 0,
                 bevelEnabled: false
             })
-            let PlayerName = new THREE.Mesh(PlayerName_geo, new THREE.MeshBasicMaterial({color:0xFFFFFF}))
-            PlayerName.rotation.y = Math.PI/4
-            centerText(PlayerName_geo,PlayerName,-2.5,37.5,-2.5)
+            let PlayerName = new THREE.Mesh(PlayerName_geo, new THREE.MeshBasicMaterial({ color: 0xFFFFFF }))
+            PlayerName.rotation.y = Math.PI / 4
+            centerText(PlayerName_geo, PlayerName, -2.5, 37.5, -2.5)
             OTHER_PLAYER[param._id].player.add(PlayerName)
             OTHER_PLAYER[param._id].player.position.x = param.position.x
             OTHER_PLAYER[param._id].player.position.y = param.position.y
@@ -354,7 +357,7 @@ const Playroom = () => {
         })
 
         socket.on("playroom_addplayer", param => {
-            if(param._id != userInfo._id){
+            if (param._id != userInfo._id) {
                 PLAYER_LOADER.Load(param._id)
                 OTHER_PLAYER[param._id] = PLAYER_LOADER.OTHER_PLAYER[param._id]
                 let PlayerName_geo = new TextGeometry(param.name, {
@@ -363,9 +366,9 @@ const Playroom = () => {
                     height: 0,
                     bevelEnabled: false
                 })
-                let PlayerName = new THREE.Mesh(PlayerName_geo, new THREE.MeshBasicMaterial({color:0xFFFFFF}))
-                PlayerName.rotation.y = Math.PI/4
-                centerText(PlayerName_geo,PlayerName,-2.5,37.5,-2.5)
+                let PlayerName = new THREE.Mesh(PlayerName_geo, new THREE.MeshBasicMaterial({ color: 0xFFFFFF }))
+                PlayerName.rotation.y = Math.PI / 4
+                centerText(PlayerName_geo, PlayerName, -2.5, 37.5, -2.5)
                 OTHER_PLAYER[param._id].player.add(PlayerName)
                 OTHER_PLAYER[param._id].player.position.copy(ROOM_LOADER.spawn)
                 SCENE.add(OTHER_PLAYER[param._id].player)
@@ -373,34 +376,34 @@ const Playroom = () => {
         })
 
         socket.on("room_leave", param => {
-            if(passed_parameters["room_id"]===param.room){
-                if(OTHER_PLAYER[param._id]){
+            if (passed_parameters["room_id"] === param.room) {
+                if (OTHER_PLAYER[param._id]) {
                     SCENE.remove(OTHER_PLAYER[param._id].player)
                     PLAYER_LOADER.OTHER_PLAYER[param._id] = null
                     OTHER_PLAYER[param._id] = null
                     walking[param._id] = null
-                    PLAYER_MOVE.forEach(e =>{
-                        if(e.param._id === param._id){
-                            PLAYER_MOVE.splice(PLAYER_MOVE.indexOf(e),1)
+                    PLAYER_MOVE.forEach(e => {
+                        if (e.param._id === param._id) {
+                            PLAYER_MOVE.splice(PLAYER_MOVE.indexOf(e), 1)
                         }
                     })
                 }
             }
         })
 
-        socket.on("playroom_walk", param =>{
+        socket.on("playroom_walk", param => {
             const walk_path = {
                 _id: param._id,
                 path: param.path,
                 distance: null
             }
             PLAYER_MOVE.forEach(e => {
-                if(e._id === param._id){
-                    PLAYER_MOVE.splice(PLAYER_MOVE.indexOf(e),1)
+                if (e._id === param._id) {
+                    PLAYER_MOVE.splice(PLAYER_MOVE.indexOf(e), 1)
                 }
             })
             PLAYER_MOVE.push(walk_path)
-})
+        })
     }
     function gameLoop() {
         requestAnimationFrame(gameLoop);
@@ -408,68 +411,68 @@ const Playroom = () => {
         // Process player input
         if (PLAYER_MOVE.length > 0) {
             for (let i = 0; i < PLAYER_MOVE.length; i++) {
-                if(PLAYER_MOVE[i].path.length > 1){
-                    if(PLAYER_MOVE[i].distance === null){
+                if (PLAYER_MOVE[i].path.length > 1) {
+                    if (PLAYER_MOVE[i].distance === null) {
                         let from = PLAYER_MOVE[i].path[0]
                         let destination = PLAYER_MOVE[i].path[1]
-                        
-                        let vector_start = new THREE.Vector3((from[0]*25)+12.5,0,(from[1]*25)+12.5)
-                        let vector_end = new THREE.Vector3((destination[0]*25)+12.5,0,(destination[1]*25)+12.5)
-                        
+
+                        let vector_start = new THREE.Vector3((from[0] * 25) + 12.5, 0, (from[1] * 25) + 12.5)
+                        let vector_end = new THREE.Vector3((destination[0] * 25) + 12.5, 0, (destination[1] * 25) + 12.5)
+
                         PLAYER_MOVE[i].distance = vector_start.distanceTo(vector_end)
                     } else {
                         let temp = PLAYER_MOVE[i]
                         let character
-                        
-                        if(temp._id === "self"){
+
+                        if (temp._id === "self") {
                             character = PLAYER_LOADER.PLAYER
                         } else {
-                            character= PLAYER_LOADER.OTHER_PLAYER[temp._id]
+                            character = PLAYER_LOADER.OTHER_PLAYER[temp._id]
                         }
-                        
-                        if(temp.distance > 0){
+
+                        if (temp.distance > 0) {
                             character.walk()
-                            if((temp.path[1][0]*25) + 12.5 > character.player.position.x) {
+                            if ((temp.path[1][0] * 25) + 12.5 > character.player.position.x) {
                                 character.player.position.x += 1
-                                character.player.rotation.y = Math.PI/2
-                                character.player.children[7].rotation.y = -Math.PI/2 + Math.PI/4
+                                character.player.rotation.y = Math.PI / 2
+                                character.player.children[7].rotation.y = -Math.PI / 2 + Math.PI / 4
                             }
-                            if((temp.path[1][0]*25) + 12.5 < character.player.position.x) {
+                            if ((temp.path[1][0] * 25) + 12.5 < character.player.position.x) {
                                 character.player.position.x -= 1
-                                character.player.rotation.y = -Math.PI/2
-                                character.player.children[7].rotation.y = Math.PI/2 + Math.PI/4
+                                character.player.rotation.y = -Math.PI / 2
+                                character.player.children[7].rotation.y = Math.PI / 2 + Math.PI / 4
                             }
 
-                            if((temp.path[1][1]*25) + 12.5 > character.player.position.z) {
+                            if ((temp.path[1][1] * 25) + 12.5 > character.player.position.z) {
                                 character.player.position.z += 1
                                 character.player.rotation.y = 0
-                                character.player.children[7].rotation.y = Math.PI/4
+                                character.player.children[7].rotation.y = Math.PI / 4
                             }
-                            if((temp.path[1][1]*25) + 12.5 < character.player.position.z) {
+                            if ((temp.path[1][1] * 25) + 12.5 < character.player.position.z) {
                                 character.player.position.z -= 1
                                 character.player.rotation.y = Math.PI
-                                character.player.children[7].rotation.y = -Math.PI + Math.PI/4
+                                character.player.children[7].rotation.y = -Math.PI + Math.PI / 4
                             }
 
-    
+
                             let destination = PLAYER_MOVE[i].path[1]
-                            let vector_end = new THREE.Vector3((destination[0]*25)+12.5,character.player.position.y,(destination[1]*25)+12.5)
+                            let vector_end = new THREE.Vector3((destination[0] * 25) + 12.5, character.player.position.y, (destination[1] * 25) + 12.5)
                             temp.distance = character.player.position.distanceTo(vector_end)
                             PLAYER_MOVE[i] = temp
                         } else {
                             PLAYER_MOVE[i].path.shift()
-                            if(PLAYER_MOVE[i].path.length <= 1){
+                            if (PLAYER_MOVE[i].path.length <= 1) {
                                 character.stop()
                             }
                             PLAYER_MOVE[i].distance = null
                         }
                     }
                 } else {
-                    PLAYER_MOVE.splice(i,1)
+                    PLAYER_MOVE.splice(i, 1)
                 }
             }
         }
-        
+
         RENDERER.render(SCENE, CAMERA);
         UI_RENDERER.render(UI, UI_CAMERA);
     }

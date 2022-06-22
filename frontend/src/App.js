@@ -29,7 +29,7 @@ const App = () => {
         <Route path='/playroom' element={<PlayerLoader />} />;
         <Route path="/chat" element={<Chat />} />;
         <Route path='/congklak' element={<Congklak />} />;
-        <Route path='/gobak_sodor' element={<GobakSodor />} />;
+        <Route path='/gobaksodor' element={<GobakSodor />} />;
       </Routes>
     </Router>
   )
