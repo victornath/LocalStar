@@ -544,18 +544,18 @@ const GobakSodor = () => {
         if (PLAYER_POSITION === 1) {
             for (let i = 0; i < 6; i++) {
                 Catcher[i] = OTHER_PLAYER[OTHER_PLAYER_ID].player.clone()
-                Catcher[i].position.set(320, 30, CATCHER_POSITION[i])
+                Catcher[i].position.set(320, 50, CATCHER_POSITION[i])
             }
             Player2 = PLAYER_LOADER.PLAYER.player.clone()
-            Player2.position.set(295, 30, 82.5)
+            Player2.position.set(295, 50, 82.5)
             Player2.rotation.y = -Math.PI
         } else {
             Player2 = OTHER_PLAYER[OTHER_PLAYER_ID].player.clone()
-            Player2.position.set(295, 30, 82.5)
+            Player2.position.set(295, 50, 82.5)
             Player2.rotation.y = -Math.PI
             for (let i = 0; i < 6; i++) {
                 Catcher[i] = PLAYER_LOADER.PLAYER.player.clone()
-                Catcher[i].position.set(320, 30, CATCHER_POSITION[i])
+                Catcher[i].position.set(320, 50, CATCHER_POSITION[i])
             }
         }
 

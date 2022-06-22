@@ -13,6 +13,8 @@ import PlayerLoader from './screens/Playroom';
 import Congklak from './screens/Congklak';
 import Chat from "./screens/Chat";
 import GobakSodor from "./screens/GobakSodor";
+import BalapKarung from './screens/BalapKarung';
+import TarikTambang from './screens/TarikTambang';
 
 
 const App = () => {
@@ -30,6 +32,8 @@ const App = () => {
         <Route path="/chat" element={<Chat />} />;
         <Route path='/congklak' element={<Congklak />} />;
         <Route path='/gobaksodor' element={<GobakSodor />} />;
+        <Route path='/karung' element={<BalapKarung />} />;
+        <Route path='/tambang' element={<TarikTambang />} />;
       </Routes>
     </Router>
   )
