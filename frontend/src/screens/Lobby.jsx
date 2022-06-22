@@ -136,66 +136,51 @@ const Lobby = () => {
         TEXTURE_LOADER.load('./images/texture/ui/currency/points.png', function (texture) {
             LOADED_TEXTURE["point"] = new THREE.MeshBasicMaterial({
                 map: texture,
-                side: THREE.DoubleSide,
                 alphaTest: 0.3
             })
         })
         TEXTURE_LOADER.load('./images/texture/ui/currency/gold.png', function (texture) {
             LOADED_TEXTURE["gold"] = new THREE.MeshBasicMaterial({
                 map: texture,
-                side: THREE.DoubleSide,
                 alphaTest: 0.3
             })
         })
         TEXTURE_LOADER.load('./images/texture/ui/sound/sound_on.png', function (texture) {
             LOADED_TEXTURE["sound_on"] = new THREE.MeshBasicMaterial({
                 map: texture,
-                side: THREE.DoubleSide,
                 alphaTest: 0.6
             })
         })
         TEXTURE_LOADER.load('./images/texture/ui/sound/sound_off.png', function (texture) {
             LOADED_TEXTURE["sound_off"] = new THREE.MeshBasicMaterial({
                 map: texture,
-                side: THREE.DoubleSide,
                 alphaTest: 0.6
             })
         })
         TEXTURE_LOADER.load('./images/texture/ui/game/help_btn.png', function (texture) {
             LOADED_TEXTURE["help"] = new THREE.MeshBasicMaterial({
                 map: texture,
-                side: THREE.DoubleSide,
                 alphaTest: 0.6
             })
         })
-        TEXTURE_LOADER.load('./images/texture/ui/game/game_1.png', function (texture) {
-            LOADED_TEXTURE["game_1"] = new THREE.MeshBasicMaterial({
-                map: texture,
-                side: THREE.DoubleSide,
-                alphaTest: 0.6
+        for (let i = 1; i <= 4; i++) {
+            TEXTURE_LOADER.load('./images/texture/ui/game/game_' + i + '.png', function (texture) {
+                LOADED_TEXTURE["game_" + i] = new THREE.MeshBasicMaterial({
+                    map: texture,
+                    side: THREE.DoubleSide,
+                    alphaTest: 0.6
+                })
             })
-        })
-        TEXTURE_LOADER.load('./images/texture/ui/game/game_2.png', function (texture) {
-            LOADED_TEXTURE["game_2"] = new THREE.MeshBasicMaterial({
-                map: texture,
-                side: THREE.DoubleSide,
-                alphaTest: 0.6
+        }
+        for (let i = 1; i <= 20; i++) {
+            TEXTURE_LOADER.load('./images/texture/ui/game/rooms/Room_' + i + '.jpg', function (texture) {
+                LOADED_TEXTURE["room_" + i] = new THREE.MeshBasicMaterial({
+                    map: texture,
+                    side: THREE.DoubleSide,
+                    alphaTest: 0.6
+                })
             })
-        })
-        TEXTURE_LOADER.load('./images/texture/ui/game/game_3.png', function (texture) {
-            LOADED_TEXTURE["game_3"] = new THREE.MeshBasicMaterial({
-                map: texture,
-                side: THREE.DoubleSide,
-                alphaTest: 0.6
-            })
-        })
-        TEXTURE_LOADER.load('./images/texture/ui/game/game_4.png', function (texture) {
-            LOADED_TEXTURE["game_4"] = new THREE.MeshBasicMaterial({
-                map: texture,
-                side: THREE.DoubleSide,
-                alphaTest: 0.6
-            })
-        })
+        }
         TEXTURE_LOADER.load('./images/texture/ui/arrow/arrow_l_1.png', function (texture) {
             LOADED_TEXTURE["arrow_l"] = new THREE.MeshBasicMaterial({
                 map: texture,
@@ -417,7 +402,7 @@ const Lobby = () => {
                         }
                     } else if (obj_name.startsWith("play_")) {
                         socket.emit("lobby_checkRooms", choice, (response) => {
-                            showRoom(response.roomList)
+                            showRoom(response.roomList, choice)
                         })
                     } else if (obj_name.startsWith("room_")) {
                         window.open("/playroom?room_id=" + obj_name, "_self")
@@ -427,7 +412,7 @@ const Lobby = () => {
         })
     }
 
-    function showRoom(data) {
+    function showRoom(data, choice) {
         MAIN_UI.forEach(e => {
             UI.remove(e)
         });
@@ -450,7 +435,7 @@ const Lobby = () => {
         for (let j = 0; j < 2; j++) {
             for (let i = 0; i < 3; i++) {
                 if (i === 2 && j === 1) break;
-                let room = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), LOADED_MATERIAL[0])
+                let room = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), LOADED_TEXTURE["room_" + (((choice - 1) * 5) + (i + (j * 3)) + 1)])
                 room.position.set(20 + (i * 70), 150 - (j * 85), 100)
                 room.name = data[(i + (j * 3))].roomName
                 ROOM_UI.push(room)
