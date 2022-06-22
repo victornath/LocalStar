@@ -15,6 +15,7 @@ import Chat from "./screens/Chat";
 import GobakSodor from "./screens/GobakSodor";
 import BalapKarung from './screens/BalapKarung';
 import TarikTambang from './screens/TarikTambang';
+import Profile from './screens/Profile';
 
 
 const App = () => {
@@ -24,6 +25,7 @@ const App = () => {
         <Route path='/' element={<HomeScreen />} exact />;
         <Route path='/login' element={<Login />} />;
         <Route path='/register' element={<Register />} />;
+        <Route path='/profile' element={<Profile />} />;
         <Route path='*' element={<NotFound />} />;
         <Route path='/lobby' element={<Lobby />} />;
         <Route path='/shop' element={<Shop />} />;
