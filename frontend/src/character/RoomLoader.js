@@ -101,7 +101,7 @@ class RoomLoader {
                 RoomDetail.objects.forEach(element => {
                     this.loadObjects(element.mesh).then(result => {
                         result.object.group.position.set((element.position_x) * 25, element.position_y, (element.position_z) * 25)
-                        if (element.URL != null) {
+                        if (element.URL.length > 1) {
                             result.object.group.name = "clickable"
                             result.object.group.userData = { URL: element.URL }
                         }
