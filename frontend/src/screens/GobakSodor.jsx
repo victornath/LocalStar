@@ -981,13 +981,8 @@ const GobakSodor = () => {
                     SCENE.remove(e)
                 })
                 GAME_UI = []
-                switch (end_game.reason) {
-                    case 0:
-                        // If disconnected
-                        break;
-                    case 1:
-                        // If win purely
-                        break;
+                if (end_game.win) {
+                    sendGameResult("/api/users/game-result", end_game)
                 }
                 GAME_START = false
             }
@@ -999,6 +994,67 @@ const GobakSodor = () => {
 
         RENDERER.render(SCENE, CAMERA);
         UI_RENDERER.render(UI, UI_CAMERA);
+    }
+
+    async function sendGameResult(url, end_game) {
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + userInfo.token,
+            },
+            body: JSON.stringify({
+                "game_name": "Gobak Sodor",
+                "win_player_id": userInfo._id,
+                "lose_player_id": OTHER_PLAYER_ID,
+                "reason": end_game.reason
+            })
+        });
+        var data = await response.json()
+        if (response) {
+            showEndScreen(end_game)
+        }
+    }
+
+    function showEndScreen(end_game) {
+        let ready_bg = new THREE.Mesh(new THREE.PlaneGeometry(80, 50), new THREE.MeshBasicMaterial({ color: 0xffffff }))
+        ready_bg.position.set(66.5, 10.3, 140)
+        ready_bg.rotation.x = -Math.PI / 2
+        SCENE.add(ready_bg)
+        ready_button = new THREE.Mesh(new THREE.PlaneGeometry(60, 12.5), ui_pink_btn)
+        ready_button.position.set(66.5, 15, 155)
+        ready_button.rotation.x = -Math.PI / 2
+        ready_button.name = "button_back"
+        SCENE.add(ready_button)
+        let string
+        if (end_game.reason === 2) {
+            string = "Hasil seri!"
+        } else if (end_game.win) {
+            string = "Kamu menang"
+        } else {
+            string = "Kamu kalah"
+        }
+        let ready_button_text_geometry = new TextGeometry("Kembali", {
+            font: LOADED_FONT,
+            size: 5,
+            height: 0,
+            bevelEnabled: false
+        })
+        let ready_button_text = new THREE.Mesh(ready_button_text_geometry, new THREE.MeshBasicMaterial({ color: 0xffffff }))
+        centerText(ready_button_text_geometry, ready_button_text, 66.5, -100, 155)
+        ready_button_text.rotation.x = -Math.PI / 3
+        SCENE.add(ready_button_text)
+        let ready_text_geometry = new TextGeometry(string, {
+            font: LOADED_FONT,
+            size: 5,
+            height: 0,
+            bevelEnabled: false
+        })
+        let ready_text = new THREE.Mesh(ready_text_geometry, new THREE.MeshBasicMaterial({ color: 0x000000 }))
+        centerText(ready_text_geometry, ready_text, 66.5, -75, 155)
+        ready_text.rotation.x = -Math.PI / 3
+        SCENE.add(ready_text)
     }
 
     function centerText(textGeo, textMesh, x, y, z) {
