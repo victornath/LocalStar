@@ -56,6 +56,7 @@ const GobakSodor = () => {
     let ui_pink_btn = new THREE.MeshBasicMaterial({
         color: 0xFF3366,
     })
+    let PENDING_MOVE = []
     let OTHER_PLAYER = []
     let OTHER_PLAYER_ID
     let P1_UI = []
@@ -192,6 +193,9 @@ const GobakSodor = () => {
                 transparent: true,
                 alphaTest: 0.5
             })
+        })
+        TEXTURE_LOADER.load('./images/texture/ui/game/gobak_sodor/finish_line.png', function (texture) {
+            LOADED_TEXTURE["finish_line"] = texture
         })
     }
 
@@ -418,7 +422,11 @@ const GobakSodor = () => {
         })
 
         socket.on("gameroom_move", param => {
-            PLAYER_CHOOSE[(param.position - 1)] = param.choose
+            if (ONGOING_TURN) {
+                PENDING_MOVE.push(param)
+            } else {
+                PLAYER_CHOOSE[(param.position - 1)] = param.choose
+            }
         })
 
 
@@ -474,7 +482,6 @@ const GobakSodor = () => {
                             temp.winner = 1
                         }
                         end_game = temp
-                        GAME_START = false
                     }
                     PLAYER_LOADER.OTHER_PLAYER[param._id] = null
                     OTHER_PLAYER[param._id] = null
@@ -579,7 +586,7 @@ const GobakSodor = () => {
 
         let white_strip_long = new THREE.PlaneGeometry(25, 750)
         let white_strip_short = new THREE.PlaneGeometry(275, 25)
-        let finish = new finish_line().group
+        let finish = new finish_line(LOADED_TEXTURE["finish_line"]).group
         finish.position.set(325, 0, -817.5)
 
         let strip_side = [];
@@ -954,6 +961,13 @@ const GobakSodor = () => {
         requestAnimationFrame(gameLoop);
 
         time = performance.now();
+
+        if (PENDING_MOVE.length > 0) {
+            let param = PENDING_MOVE[0]
+            PLAYER_CHOOSE[(param.position - 1)] = param.choose
+            PENDING_MOVE.shift()
+        }
+
         if (GAME_START) {
             if (PLAYER_POSITION !== 0 && PLAYER_CHOOSE[(PLAYER_POSITION - 1)] === null) {
                 delta = (time - prevTime) / 1000;

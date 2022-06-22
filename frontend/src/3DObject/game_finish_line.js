@@ -25,10 +25,10 @@ import * as THREE from 'three'
 
 
 class Finish_line {
-    constructor() {
+    constructor(texture) {
         // basic test color material
         const TEXTURE_LOADER = new THREE.TextureLoader();
-        let ground_texture = TEXTURE_LOADER.load('../../texture/ground/finish_line.png')
+        let ground_texture = texture
         ground_texture.wrapS = THREE.RepeatWrapping
         ground_texture.repeat.set(10, 1)
         let black = new THREE.MeshLambertMaterial({
@@ -38,7 +38,7 @@ class Finish_line {
         let white = new THREE.MeshLambertMaterial({
             color: 0xAAAAAA,
         })
-        let flag_texture = TEXTURE_LOADER.load('../../texture/ground/finish_line.png')
+        let flag_texture = texture
         flag_texture.wrapS = THREE.RepeatWrapping
         flag_texture.wrapT = THREE.RepeatWrapping
         flag_texture.repeat.set(10, 2)
@@ -46,9 +46,6 @@ class Finish_line {
             map: flag_texture,
             side: THREE.DoubleSide
         })
-
-        // Stack Height (y)
-        let height = 0
 
         // Object 1 : Ground_Line
         let finish_line = new THREE.PlaneGeometry(275, 25)
