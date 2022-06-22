@@ -38,12 +38,12 @@ io.on("connection", (socket) => {
     room[socket.id] = []
     // Disconnect listener
     socket.on('disconnect', (reason) => {
-        if(room[socket.id]["playroom"] !== undefined){
-            io.emit("room_leave", {_id: _id[socket.id], room: room[socket.id]["playroom"]})
-        } else if(room[socket.id]["gameroom"] !== undefined){
-            io.emit("room_leave", {_id: _id[socket.id], room: room[socket.id]["gameroom"]})
+        if (room[socket.id]["playroom"] !== undefined) {
+            io.emit("room_leave", { _id: _id[socket.id], room: room[socket.id]["playroom"] })
+        } else if (room[socket.id]["gameroom"] !== undefined) {
+            io.emit("room_leave", { _id: _id[socket.id], room: room[socket.id]["gameroom"] })
         }
-        clients.splice(clients.indexOf(socket),1)
+        clients.splice(clients.indexOf(socket), 1)
     });
     socket.on("new-user", name => {
         chat_users[socket.id] = name
@@ -55,19 +55,19 @@ io.on("connection", (socket) => {
     })
 
     // Reusable Sockets
-    socket.on("ask_id",param =>{
+    socket.on("ask_id", param => {
         socket.to(param).emit("ask_id", socket.id)
     })
     socket.on("give_id", param => {
-        socket.to(param.to).emit(param.roomType+"_already_in", param)
+        socket.to(param.to).emit(param.roomType + "_already_in", param)
     })
 
     // Lobby Sockets
-    socket.on("lobby_checkRooms", (param,callback) => {
+    socket.on("lobby_checkRooms", (param, callback) => {
         let rooms = []
         for (let i = 1; i <= 5; i++) {
             let count
-            if(io.sockets.adapter.rooms.get("room_"+param+"_"+i)){
+            if (io.sockets.adapter.rooms.get("room_" + param + "_" + i)) {
                 count = io.sockets.adapter.rooms.get("room_" + param + "_" + i).size
             } else {
                 count = 0
@@ -84,12 +84,12 @@ io.on("connection", (socket) => {
     })
 
     // PLAYROOM SOCKETS
-    socket.on("playroom_enter", (param,callback) => {
+    socket.on("playroom_enter", (param, callback) => {
         _id[socket.id] = param._id
         room[socket.id]["playroom"] = param.roomId
         socket.join(param.roomId)
         socket.to(room[socket.id]["playroom"]).emit("playroom_addplayer", param)
-        if(io.sockets.adapter.rooms.get(room[socket.id]["playroom"])){
+        if (io.sockets.adapter.rooms.get(room[socket.id]["playroom"])) {
             let players = io.sockets.adapter.rooms.get(room[socket.id]["playroom"])
             let players_array = Array.from(players)
             callback({
@@ -98,16 +98,16 @@ io.on("connection", (socket) => {
         }
     })
 
-    socket.on("playroom_walk", param =>{
+    socket.on("playroom_walk", param => {
         socket.to(room[socket.id]["playroom"]).emit("playroom_walk", param)
     })
 
     // Gameroom Sockets
-    socket.on("gameroom_enter", (param,callback)=>{
+    socket.on("gameroom_enter", (param, callback) => {
         _id[socket.id] = param._id
         room[socket.id]["gameroom"] = param.roomId
         socket.join(param.roomId)
-        if(io.sockets.adapter.rooms.get(room[socket.id]["gameroom"])){
+        if (io.sockets.adapter.rooms.get(room[socket.id]["gameroom"])) {
             let players = io.sockets.adapter.rooms.get(room[socket.id]["gameroom"])
             let players_array = Array.from(players)
             callback({
@@ -123,12 +123,12 @@ io.on("connection", (socket) => {
 
     socket.on("gameroom_playerFilled", param => {
         param.p1 = socket.id,
-        socket.to(param.p2).emit("gameroom_ready_ask", param)
+            socket.to(param.p2).emit("gameroom_ready_ask", param)
         socket.emit("gameroom_ready_ask", param)
     })
 
     socket.on("gameroom_playerReady", param => {
-        if(socket.id === param.p1){
+        if (socket.id === param.p1) {
             socket.to(param.p2).emit("gameroom_ready_check", param)
         } else {
             socket.to(param.p1).emit("gameroom_ready_check", param)
@@ -136,8 +136,8 @@ io.on("connection", (socket) => {
     })
 
     socket.on("gameroom_ready_check", param => {
-        if(param.ready){
-            if(socket.id === param.p1){
+        if (param.ready) {
+            if (socket.id === param.p1) {
                 socket.to(param.p2).emit("gameroom_start", param)
                 socket.emit("gameroom_start", param)
             } else {
@@ -147,19 +147,18 @@ io.on("connection", (socket) => {
         }
     })
 
-    // CONGKLAK SOCKETS
-    socket.on("gameroom_congklak_move", param => {
-        if(socket.id === param.p1){
-            socket.to(param.p2).emit("gameroom_congklak_move", param)
+    socket.on("gameroom_move", param => {
+        if (socket.id === param.p1) {
+            socket.to(param.p2).emit("gameroom_move", param)
         } else {
-            socket.to(param.p1).emit("gameroom_congklak_move", param)
+            socket.to(param.p1).emit("gameroom_move", param)
         }
     })
-    socket.on("gameroom_congklak_timeout", param => {
-        if(socket.id === param.p1){
-            socket.to(param.p2).emit("gameroom_congklak_timeout", param)
+    socket.on("gameroom_timeout", param => {
+        if (socket.id === param.p1) {
+            socket.to(param.p2).emit("gameroom_timeout", param)
         } else {
-            socket.to(param.p1).emit("gameroom_congklak_timeout", param)
+            socket.to(param.p1).emit("gameroom_timeout", param)
         }
     })
 })

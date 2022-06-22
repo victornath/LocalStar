@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import Desk from "../Desk/Desk.js";
-import Congklak from "../Congklak/congklak_board.js";
+import Desk from "../Desk.js";
+import Congklak from "../congklak_board.js";
 
 class RoomDetails {
     constructor() {

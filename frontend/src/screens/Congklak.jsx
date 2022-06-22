@@ -1,8 +1,8 @@
 import * as THREE from 'three'
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
-import Congklak_big from "../3DObject/Congklak/congklak_game_board.js";
-import Desk from "../3DObject/Desk/Desk.js";
+import Congklak_big from "../3DObject/congklak_game_board.js";
+import Desk from "../3DObject/Desk.js";
 import PlayerLoader from '../character/PlayerLoader.js';
 import WebGL from '../WebGL.js';
 import { useSelector } from "react-redux";
@@ -14,7 +14,7 @@ const socket = io("http://localhost:5000");
 const Congklak = () => {
     const userLogin = useSelector((state) => state.userLogin);
     const { userInfo } = userLogin;
-    const currURL = window.location.href.substring(window.location.href.indexOf('?')+1,window.location.href.length)
+    const currURL = window.location.href.substring(window.location.href.indexOf('?') + 1, window.location.href.length)
 
     // Variables
     const MANAGER = new THREE.LoadingManager();
@@ -50,7 +50,7 @@ const Congklak = () => {
     let PLAYER_LOADER = new PlayerLoader(userInfo._id)
 
     var curr_turn = 1;
-    var end_game = {status: false}
+    var end_game = { status: false }
     var ONGOING_TURN = false;
     var PLAYER_CHOOSE = null;
     let LOADED_FONT;
@@ -79,7 +79,7 @@ const Congklak = () => {
     let passed_parameters = []
     let OTHER_PLAYER = []
 
-    const hand = new THREE.Mesh(new THREE.BoxGeometry(5, 13, 5), new THREE.MeshLambertMaterial({color: 0xffdbac}))
+    const hand = new THREE.Mesh(new THREE.BoxGeometry(5, 13, 5), new THREE.MeshLambertMaterial({ color: 0xffdbac }))
 
     var time, delta, moveTimer = 0;
     var useDeltaTiming = true, weirdTiming = 0;
@@ -90,8 +90,8 @@ const Congklak = () => {
     if (!('getContext' in document.createElement('canvas'))) {
         alert('Sorry, it looks like your browser does not support canvas!');
     }
-    if(window.location.href.indexOf('?') > 0){
-        (currURL.split("&")).forEach(e=>{
+    if (window.location.href.indexOf('?') > 0) {
+        (currURL.split("&")).forEach(e => {
             let temp = e.split("=")
             passed_parameters[temp[0]] = temp[1]
         })
@@ -147,18 +147,18 @@ const Congklak = () => {
 
         //Materials
         LOADED_MATERIAL.push(
-            new THREE.MeshBasicMaterial({color: 0xFFCECE}),         // 0. Player 1 Base
-            new THREE.MeshBasicMaterial({color: 0xFFF2F2}),         // 1. Player 1 Light
-            new THREE.MeshBasicMaterial({color: 0xFF5D79}),         // 2. Player 1 Dark
-            new THREE.MeshBasicMaterial({color: 0xBCE5FB}),         // 3. Player 2 base
-            new THREE.MeshBasicMaterial({color: 0xEBF8FF}),         // 4. Player 2 Light
-            new THREE.MeshBasicMaterial({color: 0x0B97F4}),         // 5. Player 2 Dark
-            new THREE.MeshBasicMaterial({color: 0xFF3366}),         // 6. Button
-            new THREE.MeshBasicMaterial({color: 0x000000}),         // 7. Text Color
-            new THREE.MeshLambertMaterial({color: 0xFFFFFF}),       // 8. Biji Congklak
-            new THREE.MeshBasicMaterial({color: 0x36594E}),         // 9. Lubang Papan Congklak
-            new THREE.MeshBasicMaterial({color: 0xFFFFFF}),         //10. Text Color 2
-            new THREE.MeshBasicMaterial({color: 0x747474}),         //11. Button Disabled
+            new THREE.MeshBasicMaterial({ color: 0xFFCECE }),         // 0. Player 1 Base
+            new THREE.MeshBasicMaterial({ color: 0xFFF2F2 }),         // 1. Player 1 Light
+            new THREE.MeshBasicMaterial({ color: 0xFF5D79 }),         // 2. Player 1 Dark
+            new THREE.MeshBasicMaterial({ color: 0xBCE5FB }),         // 3. Player 2 base
+            new THREE.MeshBasicMaterial({ color: 0xEBF8FF }),         // 4. Player 2 Light
+            new THREE.MeshBasicMaterial({ color: 0x0B97F4 }),         // 5. Player 2 Dark
+            new THREE.MeshBasicMaterial({ color: 0xFF3366 }),         // 6. Button
+            new THREE.MeshBasicMaterial({ color: 0x000000 }),         // 7. Text Color
+            new THREE.MeshLambertMaterial({ color: 0xFFFFFF }),       // 8. Biji Congklak
+            new THREE.MeshBasicMaterial({ color: 0x36594E }),         // 9. Lubang Papan Congklak
+            new THREE.MeshBasicMaterial({ color: 0xFFFFFF }),         //10. Text Color 2
+            new THREE.MeshBasicMaterial({ color: 0x747474 }),         //11. Button Disabled
         )
     }
 
@@ -172,7 +172,7 @@ const Congklak = () => {
             }
         });
         var data = await response.json()
-        if(response){
+        if (response) {
             initUI(data)
         }
     }
@@ -247,9 +247,9 @@ const Congklak = () => {
         ui_btn.name = "opt_button"
         ui_btn.position.set(170, -140, 0)
 
-        if(PLAYER_POSITION !== 0){
-            let player_y = [0,145,15]
-            let name_y = [0,110,-20]
+        if (PLAYER_POSITION !== 0) {
+            let player_y = [0, 145, 15]
+            let name_y = [0, 110, -20]
             let Player1 = PLAYER_LOADER.PLAYER.player
             Player1.position.set(65, player_y[PLAYER_POSITION], 25)
             Player1.scale.set(1.25, 1.25, 1.25)
@@ -314,15 +314,15 @@ const Congklak = () => {
         }
     }
 
-    function initSocket(){
+    function initSocket() {
         socket.emit("gameroom_enter", {
             _id: userInfo._id,
             roomId: passed_parameters["game_room"]
-        }, (response)=>{
+        }, (response) => {
             response.userList.forEach(e => {
                 socket.emit("ask_id", e)
             })
-            switch(response.userList.length){
+            switch (response.userList.length) {
                 case 1:
                     PLAYER_POSITION = 1
                     break;
@@ -340,30 +340,30 @@ const Congklak = () => {
             })
         })
         socket.on("gameroom_already_in", param => {
-            if(param._id !== userInfo._id){
-                if(param.position !== 0){
-                    loadOtherPlayer(param._id,param.position,param.name)
+            if (param._id !== userInfo._id) {
+                if (param.position !== 0) {
+                    loadOtherPlayer(param._id, param.position, param.name)
                 }
             }
         })
 
-        socket.on("gameroom_congklak_move", param => {
+        socket.on("gameroom_move", param => {
             PLAYER_CHOOSE = param.choose
         })
 
-        socket.on("gameroom_congklak_timeout", param => {
+        socket.on("gameroom_timeout", param => {
             prevTime = performance.now()
-            if(curr_turn === 1) {curr_turn = 2} else {curr_turn = 1}
+            if (curr_turn === 1) { curr_turn = 2 } else { curr_turn = 1 }
             distributeSeed(s_circle_p1, b_circle[0], s_circle_p2, b_circle[1]);
         })
 
         socket.on("disconnect", () => {
             end_game = {
                 status: true,
-                win: (PLAYER_POSITION === 1)? 2 : 1,
+                win: (PLAYER_POSITION === 1) ? 2 : 1,
                 reason: 0
             }
-            
+
         })
 
         socket.on("ask_id", e => {
@@ -377,10 +377,10 @@ const Congklak = () => {
         })
 
         socket.on("gameroom_newPlayer", param => {
-            if(param._id !== userInfo._id){
-                if(param.position !== 0){
-                    loadOtherPlayer(param._id,param.position,param.name)
-                    if(param.position === 2){
+            if (param._id !== userInfo._id) {
+                if (param.position !== 0) {
+                    loadOtherPlayer(param._id, param.position, param.name)
+                    if (param.position === 2) {
                         socket.emit("gameroom_playerFilled", {
                             p2: param.socket_id,
                         })
@@ -394,16 +394,16 @@ const Congklak = () => {
             PLAYER_PLAY = param
         })
 
-        socket.on("gameroom_ready_check", param =>{
+        socket.on("gameroom_ready_check", param => {
             param.ready = PLAYER_READY
-            if(PLAYER_POSITION === 1){
-                if(PLAYER_READY){
+            if (PLAYER_POSITION === 1) {
+                if (PLAYER_READY) {
                     updateStatus("Siap", "Siap")
                 } else {
                     updateStatus("", "Siap")
                 }
             } else {
-                if(PLAYER_READY){
+                if (PLAYER_READY) {
                     updateStatus("Siap", "Siap")
                 } else {
                     updateStatus("Siap", "")
@@ -412,32 +412,32 @@ const Congklak = () => {
             socket.emit("gameroom_ready_check", param)
         })
 
-        socket.on("gameroom_start",param => {
+        socket.on("gameroom_start", param => {
             prevTime = performance.now()
             initGame()
         })
 
         socket.on("room_leave", param => {
-            if(passed_parameters["game_room"] === param.room){
-                if(OTHER_PLAYER[param._id]){
-                    if(OTHER_PLAYER_MESH[param._id].length > 0 && PLAYER_POSITION === 2){
+            if (passed_parameters["game_room"] === param.room) {
+                if (OTHER_PLAYER[param._id]) {
+                    if (OTHER_PLAYER_MESH[param._id].length > 0 && PLAYER_POSITION === 2) {
                         PLAYER_POSITION = 1
-                        PLAYER_MESH_POSITION.forEach(e =>{
+                        PLAYER_MESH_POSITION.forEach(e => {
                             UI.remove(e)
                         })
-                        OTHER_PLAYER_MESH[param._id].forEach(e =>{
+                        OTHER_PLAYER_MESH[param._id].forEach(e => {
                             UI.remove(e)
                         })
                         PLAYER_MESH_POSITION = []
                         OTHER_PLAYER_MESH[param._id] = []
-                        let player_y = [0,145,15]
-                        let name_y = [0,110,-20]
+                        let player_y = [0, 145, 15]
+                        let name_y = [0, 110, -20]
                         let Player1 = PLAYER_LOADER.PLAYER.player
                         Player1.position.set(65, player_y[PLAYER_POSITION], 25)
                         Player1.scale.set(1.25, 1.25, 1.25)
                         PLAYER_MESH_POSITION.push(Player1)
                         UI.add(Player1)
-            
+
                         let geometry = new TextGeometry(PLAYER_DATA.name, {
                             font: LOADED_FONT,
                             size: 10,
@@ -449,23 +449,23 @@ const Congklak = () => {
                         mesh.position.set(100, name_y[PLAYER_POSITION], 50)
                         PLAYER_MESH_POSITION.push(mesh)
                         UI.add(mesh)
-                        READY_UI.forEach(e=>{
+                        READY_UI.forEach(e => {
                             UI.remove(e)
                         })
                         READY_UI = []
-                    } else if(OTHER_PLAYER_MESH[param._id].length > 0){
-                        OTHER_PLAYER_MESH[param._id].forEach(e =>{
+                    } else if (OTHER_PLAYER_MESH[param._id].length > 0) {
+                        OTHER_PLAYER_MESH[param._id].forEach(e => {
                             UI.remove(e)
                         })
                     }
-                    if(GAME_START){
+                    if (GAME_START) {
                         let temp = {
                             status: true,
                             reason: 0
                         }
-                        if(PLAYER_PLAY.p1 === param.socket_id){
+                        if (PLAYER_PLAY.p1 === param.socket_id) {
                             temp.winner = 2
-                        } else if(PLAYER_PLAY.p2 === param.socket_id){
+                        } else if (PLAYER_PLAY.p2 === param.socket_id) {
                             temp.winner = 1
                         }
                         end_game = temp
@@ -477,14 +477,14 @@ const Congklak = () => {
         })
     }
 
-    function showReadyUI(){
-        let ready_bg = new THREE.Mesh(new THREE.PlaneGeometry(80,50), LOADED_MATERIAL[10])
-        ready_bg.position.set(66.5,10.3,140)
+    function showReadyUI() {
+        let ready_bg = new THREE.Mesh(new THREE.PlaneGeometry(80, 50), LOADED_MATERIAL[10])
+        ready_bg.position.set(66.5, 10.3, 140)
         ready_bg.rotation.x = -Math.PI / 2
         READY_UI.push(ready_bg)
         SCENE.add(ready_bg)
-        ready_button = new THREE.Mesh(new THREE.PlaneGeometry(60,12.5), LOADED_MATERIAL[6])
-        ready_button.position.set(66.5,15,155)
+        ready_button = new THREE.Mesh(new THREE.PlaneGeometry(60, 12.5), LOADED_MATERIAL[6])
+        ready_button.position.set(66.5, 15, 155)
         ready_button.rotation.x = -Math.PI / 2
         ready_button.name = "button_ready"
         READY_UI.push(ready_button)
@@ -496,8 +496,8 @@ const Congklak = () => {
             bevelEnabled: false
         })
         let ready_button_text = new THREE.Mesh(ready_button_text_geometry, LOADED_MATERIAL[10])
-        centerText(ready_button_text_geometry,ready_button_text,66.5,-100,155)
-        ready_button_text.rotation.x = -Math.PI/3
+        centerText(ready_button_text_geometry, ready_button_text, 66.5, -100, 155)
+        ready_button_text.rotation.x = -Math.PI / 3
         READY_UI.push(ready_button_text)
         SCENE.add(ready_button_text)
         let ready_text_geometry = new TextGeometry("Apakah kamu siap?", {
@@ -507,18 +507,18 @@ const Congklak = () => {
             bevelEnabled: false
         })
         let ready_text = new THREE.Mesh(ready_text_geometry, LOADED_MATERIAL[7])
-        centerText(ready_text_geometry,ready_text,66.5,-75,155)
-        ready_text.rotation.x = -Math.PI/3
+        centerText(ready_text_geometry, ready_text, 66.5, -75, 155)
+        ready_text.rotation.x = -Math.PI / 3
         READY_UI.push(ready_text)
         SCENE.add(ready_text)
     }
 
-    function loadOtherPlayer(_id, position, name){
+    function loadOtherPlayer(_id, position, name) {
         PLAYER_LOADER.Load(_id)
         OTHER_PLAYER[_id] = PLAYER_LOADER.OTHER_PLAYER[_id]
 
-        let player_y = [0,145,15]
-        let name_y = [0,110,-20]
+        let player_y = [0, 145, 15]
+        let name_y = [0, 110, -20]
         OTHER_PLAYER[_id].player.position.x = 65
         OTHER_PLAYER[_id].player.position.y = player_y[position]
         OTHER_PLAYER[_id].player.position.z = 25
@@ -542,7 +542,7 @@ const Congklak = () => {
 
     function initGame() {
         GAME_START = true
-        if(READY_UI.length > 0){
+        if (READY_UI.length > 0) {
             READY_UI.forEach(e => {
                 SCENE.remove(e)
             })
@@ -603,10 +603,10 @@ const Congklak = () => {
                 RAYCAST.setFromCamera(mouse, CAMERA)
                 let items = RAYCAST.intersectObjects(SCENE.children, false)
                 items.forEach(i => {
-                    if(i.object.name == "button_ready"){
+                    if (i.object.name == "button_ready") {
                         ready_button.material = LOADED_MATERIAL[11]
-                        if(PLAYER_POSITION === 1){
-                            updateStatus("Siap","")
+                        if (PLAYER_POSITION === 1) {
+                            updateStatus("Siap", "")
                         } else {
                             updateStatus("", "Siap")
                         }
@@ -619,14 +619,14 @@ const Congklak = () => {
                                     let param = PLAYER_PLAY
                                     param.choose = i.object.name
                                     PLAYER_CHOOSE = i.object.name
-                                    socket.emit("gameroom_congklak_move", param)
+                                    socket.emit("gameroom_move", param)
                                 }
-                            } else if(PLAYER_POSITION === 2) {
+                            } else if (PLAYER_POSITION === 2) {
                                 if (i.object.name.startsWith("player2") && s_circle_p2[parseInt(i.object.name.charAt(12))] > 0) {
                                     let param = PLAYER_PLAY
                                     param.choose = i.object.name
                                     PLAYER_CHOOSE = i.object.name
-                                    socket.emit("gameroom_congklak_move", param)
+                                    socket.emit("gameroom_move", param)
                                 }
                             }
                         } else {
@@ -1041,6 +1041,7 @@ const Congklak = () => {
                             temp.winner = 2
                         } else {
                             temp.winner = 0
+                            temp.reason = 2
                         }
                         end_game = temp
                     }
@@ -1079,26 +1080,26 @@ const Congklak = () => {
         requestAnimationFrame(gameLoop);
 
         time = performance.now();
-        if(GAME_START){
-            if(curr_turn === PLAYER_POSITION && PLAYER_CHOOSE === null){
+        if (GAME_START) {
+            if (curr_turn === PLAYER_POSITION && PLAYER_CHOOSE === null) {
                 delta = (time - prevTime) / 1000;
-                if(delta > 30){
+                if (delta > 30) {
                     console.log("Turn Timeout")
-                    socket.emit("gameroom_congklak_timeout", PLAYER_PLAY)
-                    if(curr_turn === 1) {curr_turn = 2} else {curr_turn = 1}
+                    socket.emit("gameroom_timeout", PLAYER_PLAY)
+                    if (curr_turn === 1) { curr_turn = 2 } else { curr_turn = 1 }
                     distributeSeed(s_circle_p1, b_circle[0], s_circle_p2, b_circle[1]);
                     TIMEOUT_COUNTER += 1
-                    if(TIMEOUT_COUNTER === 2){
+                    if (TIMEOUT_COUNTER === 2) {
                         socket.disconnect()
                     }
                 }
             }
-            if(end_game.status){
+            if (end_game.status) {
                 GAME_UI.forEach(e => {
                     SCENE.remove(e)
                 })
                 GAME_UI = []
-                switch(end_game.reason){
+                switch (end_game.reason) {
                     case 0:
                         // If disconnected
                         break;
@@ -1106,6 +1107,7 @@ const Congklak = () => {
                         // If win purely
                         break;
                 }
+                GAME_START = false
             }
         }
 
