@@ -350,7 +350,7 @@ const Lobby = () => {
                     } else if (obj_name.startsWith("top_")) {
                         switch (choice) {
                             case 1:
-                                // Link to Edit Profile
+                                window.open("../profile", "_self")
                                 break;
                             case 2:
                                 break;
