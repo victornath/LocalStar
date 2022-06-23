@@ -153,9 +153,15 @@ io.on("connection", (socket) => {
     socket.on("gameroom_ready_check", param => {
         if (param.ready) {
             if (socket.id === param.p1) {
+                if (param.timed == true) {
+                    param.startAt = performance.now()
+                }
                 socket.to(param.p2).emit("gameroom_start", param)
                 socket.emit("gameroom_start", param)
             } else {
+                if (param.timed == true) {
+                    param.startAt = performance.now()
+                }
                 socket.to(param.p1).emit("gameroom_start", param)
                 socket.emit("gameroom_start", param)
             }
@@ -175,6 +181,10 @@ io.on("connection", (socket) => {
         } else {
             socket.to(param.p1).emit("gameroom_timeout", param)
         }
+    })
+
+    socket.on("gameroom_timecheck", (callback) => {
+        callback(performance.now())
     })
 })
 
