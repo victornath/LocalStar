@@ -795,14 +795,14 @@ const TarikTambang = () => {
     }
 
     function showEndScreen(end_game) {
-        let ready_bg = new THREE.Mesh(new THREE.PlaneGeometry(80, 50), LOADED_MATERIAL[10])
+        let ready_bg = new THREE.Mesh(new THREE.PlaneGeometry(80, 50), new THREE.MeshBasicMaterial({ color: 0xffffff }))
         ready_bg.position.set(280, -45, 30)
         ready_bg.rotation.y = -Math.PI / 4
         SCENE.add(ready_bg)
         let ui_pink_btn = new THREE.MeshBasicMaterial({
             color: 0xFF3366,
         })
-        ready_button = new THREE.Mesh(new THREE.PlaneGeometry(60, 12.5), LOADED_MATERIAL[6])
+        ready_button = new THREE.Mesh(new THREE.PlaneGeometry(60, 12.5), ui_pink_btn)
         ready_button.position.set(270, -72.5, 40)
         ready_button.rotation.y = -Math.PI / 4
         ready_button.name = "button_back"
@@ -821,7 +821,7 @@ const TarikTambang = () => {
             height: 0,
             bevelEnabled: false
         })
-        let ready_button_text = new THREE.Mesh(ready_button_text_geometry, LOADED_MATERIAL[10])
+        let ready_button_text = new THREE.Mesh(ready_button_text_geometry, new THREE.MeshBasicMaterial({ color: 0xffffff }))
         centerText(ready_button_text_geometry, ready_button_text, 220, 112.5, 100)
         ready_button_text.rotation.y = -Math.PI / 4
         SCENE.add(ready_button_text)
@@ -831,7 +831,7 @@ const TarikTambang = () => {
             height: 0,
             bevelEnabled: false
         })
-        let ready_text = new THREE.Mesh(ready_text_geometry, LOADED_MATERIAL[7])
+        let ready_text = new THREE.Mesh(ready_text_geometry, new THREE.MeshBasicMaterial({ color: 0x000000 }))
         centerText(ready_text_geometry, ready_text, 220, 165, 100)
         ready_text.rotation.y = -Math.PI / 4
         SCENE.add(ready_text)
