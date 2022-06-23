@@ -521,9 +521,8 @@ function levelCalculator(level, experience) {
             }
             break;
         case 10:
-            if (experience >= 10) {
-                level += 1
-                experience -= 550
+            if (experience >= 100000) {
+                experience -= 100000
             }
             break;
     }
