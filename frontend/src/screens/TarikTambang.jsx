@@ -687,10 +687,10 @@ const TarikTambang = () => {
                     let temp = {
                         status: true
                     }
-                    if (POWER > ENEMY_POWER) {
+                    if (SCORE > ENEMY_SCORE) {
                         temp.win = true
                         temp.reason = 1
-                    } else if (POWER < ENEMY_POWER) {
+                    } else if (SCORE < ENEMY_SCORE) {
                         temp.win = false
                         temp.reason = 1
                     } else {
