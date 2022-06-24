@@ -5,7 +5,10 @@ import users from "./data/Users.js";
 import Item from "./models/ItemModel.js";
 import items from "./data/Items.js";
 import Playroom from "./models/PlayroomModel.js";
-import playrooms from "./data/Playrooms.js";
+import playrooms_congklak from "./data/Playrooms_congklak.js";
+import playrooms_gobaksodor from "./data/Playrooms_gobaksodor.js";
+import playrooms_tariktambang from "./data/Playrooms_tariktambang.js";
+import playrooms_balapkarung from "./data/Playrooms_balapkarung.js";
 import Gacha from "./models/GachaModel.js";
 import gachas from "./data/Gachas.js";
 
@@ -25,7 +28,11 @@ ImportData.post("/item", asyncHandler(async (req, res) => {
 
 ImportData.post("/playroom", asyncHandler(async (req, res) => {
     await Playroom.remove({});
-    const importPlayroom = await Playroom.insertMany(playrooms);
+    const importPlayroom = []
+    importPlayroom[0] = await Playroom.insertMany(playrooms_congklak);
+    importPlayroom[1] = await Playroom.insertMany(playrooms_gobaksodor);
+    importPlayroom[2] = await Playroom.insertMany(playrooms_tariktambang);
+    importPlayroom[3] = await Playroom.insertMany(playrooms_balapkarung);
     res.send({ importPlayroom });
 }));
 

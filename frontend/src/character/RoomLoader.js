@@ -17,9 +17,10 @@ class RoomLoader {
 
     async loadObjects(itemId) {
         let item = await import('../3DObject/' + itemId + '.js');
+        let tempObj = new item.default()
         return new Promise(resolve => {
             resolve({
-                object: new item.default()
+                object: tempObj
             })
         })
     }
@@ -70,37 +71,42 @@ class RoomLoader {
                     R = kanan
                     L = kiri
                 */
-                let wall_r = new THREE.PlaneGeometry(RoomDetail.x * 25, 100)
-                let wall_r_texture = this.TEXTURE_LOADER.load('./images/texture/wall/' + RoomDetail.wall + '.png')
-                wall_r_texture.wrapS = THREE.RepeatWrapping
-                wall_r_texture.wrapT = THREE.RepeatWrapping
-                wall_r_texture.repeat.set(RoomDetail.x, 1)
-                let wall_r_material = new THREE.MeshLambertMaterial({
-                    map: wall_r_texture,
-                    side: THREE.DoubleSide
-                })
-                const wall_r_mesh = new THREE.Mesh(wall_r, wall_r_material)
-                wall_r_mesh.position.set((RoomDetail.x * 25) / 2, 50, 0)
-                this.Scene.add(wall_r_mesh)
+                if (RoomDetail.wall !== "none") {
+                    let wall_r = new THREE.PlaneGeometry(RoomDetail.x * 25, 100)
+                    let wall_r_texture = this.TEXTURE_LOADER.load('./images/texture/wall/' + RoomDetail.wall + '.png')
+                    wall_r_texture.wrapS = THREE.RepeatWrapping
+                    wall_r_texture.wrapT = THREE.RepeatWrapping
+                    wall_r_texture.repeat.set(RoomDetail.x, 1)
+                    let wall_r_material = new THREE.MeshLambertMaterial({
+                        map: wall_r_texture,
+                        side: THREE.DoubleSide
+                    })
+                    const wall_r_mesh = new THREE.Mesh(wall_r, wall_r_material)
+                    wall_r_mesh.position.set((RoomDetail.x * 25) / 2, 50, 0)
+                    this.Scene.add(wall_r_mesh)
 
-                let wall_l = new THREE.PlaneGeometry(RoomDetail.y * 25, 100)
-                let wall_l_texture = this.TEXTURE_LOADER.load('./images/texture/wall/' + RoomDetail.wall + '.png')
-                wall_l_texture.wrapS = THREE.RepeatWrapping
-                wall_l_texture.wrapT = THREE.RepeatWrapping
-                wall_l_texture.repeat.set(RoomDetail.y, 1)
-                let wall_l_material = new THREE.MeshLambertMaterial({
-                    map: wall_l_texture,
-                    side: THREE.DoubleSide
-                })
-                const wall_l_mesh = new THREE.Mesh(wall_l, wall_l_material)
-                wall_l_mesh.position.set(0, 50, (RoomDetail.y * 25) / 2)
-                wall_l_mesh.rotation.y = -Math.PI / 2
-                this.Scene.add(wall_l_mesh)
+                    let wall_l = new THREE.PlaneGeometry(RoomDetail.y * 25, 100)
+                    let wall_l_texture = this.TEXTURE_LOADER.load('./images/texture/wall/' + RoomDetail.wall + '.png')
+                    wall_l_texture.wrapS = THREE.RepeatWrapping
+                    wall_l_texture.wrapT = THREE.RepeatWrapping
+                    wall_l_texture.repeat.set(RoomDetail.y, 1)
+                    let wall_l_material = new THREE.MeshLambertMaterial({
+                        map: wall_l_texture,
+                        side: THREE.DoubleSide
+                    })
+                    const wall_l_mesh = new THREE.Mesh(wall_l, wall_l_material)
+                    wall_l_mesh.position.set(0, 50, (RoomDetail.y * 25) / 2)
+                    wall_l_mesh.rotation.y = -Math.PI / 2
+                    this.Scene.add(wall_l_mesh)
+                }
 
                 //objects
                 RoomDetail.objects.forEach(element => {
                     this.loadObjects(element.mesh).then(result => {
                         result.object.group.position.set((element.position_x) * 25, element.position_y, (element.position_z) * 25)
+                        if (element.rotation !== undefined) {
+                            result.object.group.rotation.y = Math.PI / 2 * element.rotation
+                        }
                         if (element.URL.length > 1) {
                             result.object.group.name = "clickable"
                             result.object.group.userData = { URL: element.URL }
