@@ -117,6 +117,11 @@ io.on("connection", (socket) => {
         socket.to(room[socket.id]["playroom"]).emit("playroom_walk", param)
     })
 
+    socket.on("playroom_chat", param => {
+        socket.to(room[socket.id]["playroom"]).emit("playroom_chat", param)
+        socket.emit("playroom_chat", param)
+    })
+
     // Gameroom Sockets
     socket.on("gameroom_enter", (param, callback) => {
         _id[socket.id] = param._id

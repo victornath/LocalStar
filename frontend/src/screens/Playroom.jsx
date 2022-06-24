@@ -3,14 +3,13 @@ import * as THREE from 'three'
 import RoomLoader from '../character/RoomLoader.js';
 import PlayerLoader from '../character/PlayerLoader.js';
 import { MapControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import WebGL from '../WebGL.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import * as PF from 'pathfinding';
 import { useSelector } from "react-redux";
 import { io } from "socket.io-client";
-
 
 const socket = io("http://localhost:5000");
 
@@ -27,6 +26,7 @@ const Playroom = () => {
 
     let CONTAINER
     let UI_CONTAINER
+    let CSS2DCONTAINER
 
 
     const SCENE = new THREE.Scene();
@@ -44,6 +44,7 @@ const Playroom = () => {
         localClippingEnabled: true,
         alpha: true
     });
+    const CSS2DRENDERER = new CSS2DRenderer();
     let CAMERA_CONTROL
     let LOADED_FONT
     const RAYCAST = new THREE.Raycaster()
@@ -54,14 +55,15 @@ const Playroom = () => {
     let UI_Object = []
     let walking = []
     let passed_parameters = []
-
+    var inputManager
+    let MESSAGE_TIMER = []
+    let time = performance.now()
     // Also make sure webgl is enabled on the current machine
     if (currURL) {
         (currURL.split(";")).forEach(e => {
             let temp = e.split("=")
             passed_parameters[temp[0]] = temp[1]
         })
-        console.log(passed_parameters)
         if (WebGL.isWebGLAvailable()) {
             // If everything is possible, start the app, otherwise show an error
             load();
@@ -102,6 +104,7 @@ const Playroom = () => {
         MANAGER.onLoad = function () {
             CONTAINER = document.getElementById('canvas-holder');
             UI_CONTAINER = document.getElementById('ui-holder');
+            CSS2DCONTAINER = document.getElementById('css-holder');
             init()
             console.log('Loading complete!');
             document.getElementById('progress').hidden = true;
@@ -116,6 +119,8 @@ const Playroom = () => {
         UI_RENDERER.setSize(window.innerWidth, window.innerHeight)
         UI_RENDERER.setClearColor(0xFFFFFF, 0)
         UI_RENDERER.shadowMap.enabled = true
+
+        CSS2DRENDERER.setSize(window.innerWidth, window.innerHeight);
     }
 
     function initCamera() {
@@ -125,11 +130,7 @@ const Playroom = () => {
         CAMERA.rotation.x = Math.atan(- 1 / Math.sqrt(2));
         CAMERA.updateProjectionMatrix();
 
-        UI_CAMERA.position.set(20, 140, 150)
-        UI_CAMERA.updateProjectionMatrix();
-        UI_CAMERA.rotation.order = 'YXZ';
-        UI_CAMERA.rotation.y = - Math.PI / 4;
-        UI_CAMERA.rotation.x = Math.atan(- 1 / Math.sqrt(2));
+        UI_CAMERA.position.set(0, 0, 0)
         CAMERA_CONTROL.enableDamping = false;
         CAMERA_CONTROL.update()
     }
@@ -141,7 +142,6 @@ const Playroom = () => {
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
         dirLight.position.set(0, 20, 10); // x, y, z
         UI.add(dirLight);
-        console.log(ROOM_LOADER.getRoomName())
         let geometry = new TextGeometry(ROOM_LOADER.getRoomName(), {
             font: LOADED_FONT,
             size: 10,
@@ -149,8 +149,7 @@ const Playroom = () => {
             bevelEnabled: false,
         });
         let mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0xffffff }))
-        mesh.rotation.y = -Math.PI / 4
-        mesh.position.set(-5, 140, -150)
+        mesh.position.set(-225, 110, 0)
         UI_Object.push(mesh)
         UI.add(mesh)
 
@@ -161,16 +160,26 @@ const Playroom = () => {
             bevelEnabled: false,
         });
         mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0xffffff }))
-        mesh.rotation.y = -Math.PI / 4
-        mesh.position.set(-5, -150, -150)
+        mesh.position.set(-225, -120, 1)
         mesh.userData = { URL: "./lobby" }
         mesh.name = "ui_back_btn"
         UI.add(mesh)
 
-        geometry = new THREE.PlaneGeometry(70, 40)
+        inputManager = document.createElement('input')
+        inputManager.addEventListener("keydown", function (e) {
+            if (e.code === "Enter") {
+                sendChat(inputManager.value)
+                inputManager.value = ""
+            }
+        })
+        const obj = new CSS2DObject(inputManager);
+        obj.position.set(125, -120, 0)
+        UI.add(obj)
+
+
+        geometry = new THREE.PlaneGeometry(85, 40)
         mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x000000, opacity: 0.2, transparent: true }))
-        mesh.rotation.y = -Math.PI / 4
-        mesh.position.set(17.5, -150, -127.5)
+        mesh.position.set(-200, -120, 0)
         mesh.userData = { URL: "./lobby" }
         mesh.name = "ui_back_btn"
         UI.add(mesh)
@@ -199,6 +208,7 @@ const Playroom = () => {
     function initScene() {
         CONTAINER.appendChild(RENDERER.domElement)
         UI_CONTAINER.appendChild(UI_RENDERER.domElement)
+        CSS2DCONTAINER.appendChild(CSS2DRENDERER.domElement)
         CAMERA_CONTROL = new MapControls(CAMERA, UI_CONTAINER)
     }
 
@@ -219,7 +229,6 @@ const Playroom = () => {
 
     async function initRoom(roomId, data) {
         ROOM_LOADER.Load(roomId).then(result => {
-            console.log(result)
             WALK_FINDER = new PF.AStarFinder({
                 allowDiagonal: true
             });
@@ -404,9 +413,72 @@ const Playroom = () => {
             })
             PLAYER_MOVE.push(walk_path)
         })
+
+        socket.on("playroom_chat", param => {
+            let PlayerText_geo = new TextGeometry(param.message, {
+                font: LOADED_FONT,
+                size: 6,
+                height: 0,
+                bevelEnabled: false
+            })
+            let PlayerText = new THREE.Mesh(PlayerText_geo, new THREE.MeshBasicMaterial({ color: 0x000000 }))
+            PlayerText_geo.computeBoundingBox();
+            const size = PlayerText_geo.boundingBox.getSize(new THREE.Vector3())
+            const center = PlayerText_geo.boundingBox.getCenter(new THREE.Vector3())
+            let PlayerText_bg = new THREE.Mesh(new THREE.PlaneGeometry((size.x + 5), (size.y + 2)), new THREE.MeshBasicMaterial({ color: 0xffffff }))
+            PlayerText_bg.position.set(-2.5, 45.5, -2.5)
+            centerText(PlayerText_geo, PlayerText, -3.5, 45.5, 6.5)
+            PlayerText_bg.add(PlayerText)
+            let MessageGroup = new THREE.Group()
+            MessageGroup.add(PlayerText, PlayerText_bg)
+            MESSAGE_TIMER.push({
+                _id: param._id,
+                message: MessageGroup,
+                time: performance.now()
+            })
+            if (OTHER_PLAYER[param._id]) {
+                if (OTHER_PLAYER[param._id].player.rotation.y === Math.PI / 2) {
+                    MessageGroup.rotation.y = -Math.PI / 2 + Math.PI / 4
+                } else if (OTHER_PLAYER[param._id].player.rotation.y === -Math.PI / 2) {
+                    MessageGroup.rotation.y = Math.PI / 2 + Math.PI / 4
+                } else if (OTHER_PLAYER[param._id].player.rotation.y === Math.PI) {
+                    MessageGroup.rotation.y = -Math.PI + Math.PI / 4
+                } else {
+                    MessageGroup.rotation.y = Math.PI / 4
+                }
+                if (OTHER_PLAYER[param._id].player.children.length > 8) {
+                    OTHER_PLAYER[param._id].player.remove(OTHER_PLAYER[param._id].children[8])
+                }
+                OTHER_PLAYER[param._id].player.add(MessageGroup)
+            } else if (param._id === userInfo._id) {
+                if (PLAYER.rotation.y === Math.PI / 2) {
+                    MessageGroup.rotation.y = -Math.PI / 2 + Math.PI / 4
+                } else if (PLAYER.rotation.y === -Math.PI / 2) {
+                    MessageGroup.rotation.y = Math.PI / 2 + Math.PI / 4
+                } else if (PLAYER.rotation.y === Math.PI) {
+                    MessageGroup.rotation.y = -Math.PI + Math.PI / 4
+                } else {
+                    MessageGroup.rotation.y = Math.PI / 4
+                }
+                if (PLAYER.children.length > 8) {
+                    PLAYER.remove(PLAYER.children[8])
+                }
+                PLAYER.add(MessageGroup)
+            }
+        })
     }
+
+    function sendChat(e) {
+        let object = {
+            _id: userInfo._id,
+            message: e
+        }
+        socket.emit("playroom_chat", object)
+    }
+
     function gameLoop() {
         requestAnimationFrame(gameLoop);
+        time = performance.now()
 
         // Process player input
         if (PLAYER_MOVE.length > 0) {
@@ -436,22 +508,33 @@ const Playroom = () => {
                                 character.player.position.x += 1
                                 character.player.rotation.y = Math.PI / 2
                                 character.player.children[7].rotation.y = -Math.PI / 2 + Math.PI / 4
+                                if (character.player.children.length > 8) {
+                                    character.player.children[8].rotation.y = -Math.PI / 2 + Math.PI / 4
+                                }
                             }
                             if ((temp.path[1][0] * 25) + 12.5 < character.player.position.x) {
                                 character.player.position.x -= 1
                                 character.player.rotation.y = -Math.PI / 2
                                 character.player.children[7].rotation.y = Math.PI / 2 + Math.PI / 4
+                                if (character.player.children.length > 8) {
+                                    character.player.children[8].rotation.y = Math.PI / 2 + Math.PI / 4
+                                }
                             }
-
                             if ((temp.path[1][1] * 25) + 12.5 > character.player.position.z) {
                                 character.player.position.z += 1
                                 character.player.rotation.y = 0
                                 character.player.children[7].rotation.y = Math.PI / 4
+                                if (character.player.children.length > 8) {
+                                    character.player.children[8].rotation.y = Math.PI / 4
+                                }
                             }
                             if ((temp.path[1][1] * 25) + 12.5 < character.player.position.z) {
                                 character.player.position.z -= 1
                                 character.player.rotation.y = Math.PI
                                 character.player.children[7].rotation.y = -Math.PI + Math.PI / 4
+                                if (character.player.children.length > 8) {
+                                    character.player.children[8].rotation.y = -Math.PI + Math.PI / 4
+                                }
                             }
 
 
@@ -473,8 +556,23 @@ const Playroom = () => {
             }
         }
 
+        if (MESSAGE_TIMER.length > 0) {
+            MESSAGE_TIMER.forEach(e => {
+                let delta = (time - e.time) / 1000
+                if (delta > 6) {
+                    if (e._id === userInfo._id) {
+                        PLAYER.remove(e.message)
+                    } else {
+                        OTHER_PLAYER[e._id].player.remove(e.message)
+                    }
+                    MESSAGE_TIMER.splice(MESSAGE_TIMER.indexOf(e), 1)
+                }
+            })
+        }
+
         RENDERER.render(SCENE, CAMERA);
         UI_RENDERER.render(UI, UI_CAMERA);
+        CSS2DRENDERER.render(UI, UI_CAMERA)
     }
 
     function centerText(textGeo, textMesh, x, y, z) {
@@ -499,6 +597,7 @@ const Playroom = () => {
                     <div id="progress-bar">
                     </div>
                 </div>
+                <div id="css-holder"></div>
                 <div id="ui-holder"></div>
                 <div id="canvas-holder"></div>
             </>
