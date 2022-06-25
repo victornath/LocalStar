@@ -377,8 +377,18 @@ const Lobby = () => {
                     let obj_name = i.object.name
                     let choice = parseInt(obj_name.charAt(obj_name.length - 1))
                     if (obj_name.startsWith("help_")) {
-                        switch (obj_name) {
-                            case "help_button":
+                        switch (ACTIVE_GAME) {
+                            case 0:
+                                // Congklak Help
+                                break;
+                            case 1:
+                                // Gobak Sodor Help
+                                break;
+                            case 2:
+                                // Tarik Tambang Help
+                                break;
+                            case 3:
+                                // Balap Karung Help
                                 break;
                         }
                     } else if (obj_name.startsWith("top_")) {

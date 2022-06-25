@@ -5,7 +5,7 @@ class top_hoodie_gn {
     constructor() {
         // basic test color material
         let color = new THREE.MeshLambertMaterial({
-            color: 0x686A68,
+            color: 0x71BC68,
             side: THREE.DoubleSide
         })
 
