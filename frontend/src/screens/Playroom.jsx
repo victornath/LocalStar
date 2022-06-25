@@ -142,7 +142,10 @@ const Playroom = () => {
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
         dirLight.position.set(0, 20, 10); // x, y, z
         UI.add(dirLight);
-        let geometry = new TextGeometry(ROOM_LOADER.getRoomName(), {
+        let temp_roomName = ROOM_LOADER.getRoomName()
+        temp_roomName = temp_roomName.split("_")
+        let roomName = temp_roomName[1] + " " + temp_roomName[0] + " " + temp_roomName[2]
+        let geometry = new TextGeometry(roomName, {
             font: LOADED_FONT,
             size: 10,
             height: 0,
@@ -166,6 +169,7 @@ const Playroom = () => {
         UI.add(mesh)
 
         inputManager = document.createElement('input')
+        inputManager.placeholder = "Ketik disini..."
         inputManager.addEventListener("keydown", function (e) {
             if (e.code === "Enter") {
                 sendChat(inputManager.value)

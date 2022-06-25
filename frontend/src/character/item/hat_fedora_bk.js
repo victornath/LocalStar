@@ -1,9 +1,8 @@
 import * as THREE from 'three';
-import Object from './hat_fedora.js'
+import Object from './base/hat_fedora.js'
 
-class hat_fedora_bk
-{
-    constructor(){
+class hat_fedora_bk {
+    constructor() {
         // basic test color material
         let color = new THREE.MeshLambertMaterial({
             color: 0x504F54,

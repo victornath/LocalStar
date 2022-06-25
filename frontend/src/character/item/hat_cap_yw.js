@@ -1,9 +1,8 @@
 import * as THREE from 'three';
-import Object from './hat_cap.js'
+import Object from './base/hat_cap.js'
 
-class hat_cap_rd
-{
-    constructor(){
+class hat_cap_rd {
+    constructor() {
         // basic test color material
         let color = new THREE.MeshLambertMaterial({
             color: 0xF6BB00,

@@ -1,8 +1,7 @@
 import * as THREE from 'three';
 
-class hat_cap
-{
-    constructor(material){
+class hat_cap {
+    constructor(material) {
         // Stack Height (y)
         let height = 11.5
 
@@ -21,8 +20,9 @@ class hat_cap
             hat_properties.phi_length
         )
         const cap = new THREE.Mesh(geo_hat, material)
-        cap.position.set(0,height,0)
-        cap.rotation.x = -Math.PI/2
+        cap.position.set(0, height, 0)
+        cap.rotation.x = -Math.PI / 2
+        cap.scale.set(0.9, 1, 0.8)
 
         // Object 5 : Vedora Ring
         let circle_properties = {
@@ -34,12 +34,13 @@ class hat_cap
             circle_properties.segment
         )
         const cap_snap = new THREE.Mesh(geo_circle, material)
-        cap_snap.rotation.x = -Math.PI/2
-        cap_snap.position.set(0,height+0.1,6)
+        cap_snap.rotation.x = -Math.PI / 2
+        cap_snap.position.set(0, height + 0.1, 6)
+        cap_snap.scale.set(0.9, 1, 1)
 
-        this.object = [[],[],[],[],[],[]]
+        this.object = [[], [], [], [], [], []]
         // Head
-        this.object[0].push(cap,cap_snap)
+        this.object[0].push(cap, cap_snap)
 
         // Tangan Kanan
         this.object[1].push()

@@ -28,7 +28,7 @@ const userSchema = mongoose.Schema({
     },
     point: {
         type: Number,
-        default: 100,
+        default: 150,
     },
     gold: {
         type: Number,
@@ -36,7 +36,24 @@ const userSchema = mongoose.Schema({
     },
     item_owned: {
         type: [Object],
-        default: null,
+        default: [
+            {
+                item_id: "top_shirt_wh",
+                category: "top",
+            },
+            {
+                item_id: "bottom_pants_s_lbl",
+                category: "bottom",
+            },
+            {
+                item_id: "bottom_pants_s_bk",
+                category: "bottom",
+            },
+            {
+                item_id: "shoes_basic_rd",
+                category: "shoes",
+            },
+        ],
     },
     num_of_win: {
         type: Object,
@@ -52,9 +69,9 @@ const userSchema = mongoose.Schema({
         default: {
             hat: "",
             hair: "",
-            top: "",
-            bottom: "",
-            shoes: "",
+            top: "top_shirt_wh",
+            bottom: "bottom_pants_lbl",
+            shoes: "shoes_basic_rd",
         },
     },
 },

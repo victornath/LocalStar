@@ -1,9 +1,8 @@
 import * as THREE from 'three';
-import Object from './hair_long.js'
+import Object from './base/hair_long.js'
 
-class hair_long_yw
-{
-    constructor(){
+class hair_long_yw {
+    constructor() {
         // basic test color material
         let color = new THREE.MeshLambertMaterial({
             color: 0xE3CC88,

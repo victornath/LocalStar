@@ -1,9 +1,8 @@
 import * as THREE from 'three';
-import Object from './bottom_pants_l.js'
+import Object from './base/bottom_pants_l.js'
 
-class bottom_pants_l_dbl
-{
-    constructor(){
+class bottom_pants_l_dbl {
+    constructor() {
         // basic test color material
         let color = new THREE.MeshLambertMaterial({
             color: 0x35485E,

@@ -279,8 +279,42 @@ const Lobby = () => {
         GAME_NAME.push(player_experience)
         UI.add(player_experience)
 
-        let current_experience = new THREE.Mesh(new THREE.PlaneGeometry(107.5 * (PLAYER_DATA.experience / 588), 2), LOADED_MATERIAL[2])
-        let excess = (107.5 - (107.5 * (PLAYER_DATA.experience / 588))) / 2
+        let maxExp
+        switch (PLAYER_DATA.level) {
+            case 1:
+                maxExp = 20
+                break;
+            case 2:
+                maxExp = 40
+                break;
+            case 3:
+                maxExp = 60
+                break;
+            case 4:
+                maxExp = 100
+                break;
+            case 5:
+                maxExp = 150
+                break;
+            case 6:
+                maxExp = 210
+                break;
+            case 7:
+                maxExp = 280
+                break;
+            case 8:
+                maxExp = 360
+                break;
+            case 9:
+                maxExp = 450
+                break;
+            case 10:
+                maxExp = 100000
+                break;
+        }
+
+        let current_experience = new THREE.Mesh(new THREE.PlaneGeometry(107.5 * (PLAYER_DATA.experience / maxExp), 2), LOADED_MATERIAL[2])
+        let excess = (107.5 - (107.5 * (PLAYER_DATA.experience / maxExp))) / 2
         current_experience.position.set(-140 - excess, 32.5, 2)
         GAME_NAME.push(current_experience)
         UI.add(current_experience)
@@ -297,7 +331,7 @@ const Lobby = () => {
         UI.add(level_number)
 
         let PLAYER_EXP = PLAYER_DATA.experience
-        let experience_text = new TextGeometry(PLAYER_EXP.toString() + "/588", {
+        let experience_text = new TextGeometry(PLAYER_EXP.toString() + "/" + maxExp.toString(), {
             font: LOADED_FONT,
             size: 7,
             height: 0,

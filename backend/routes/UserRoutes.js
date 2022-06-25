@@ -467,15 +467,15 @@ userRouter.patch("/game-result", protect, asyncHandler(async (req, res) => {
 function levelCalculator(level, experience) {
     switch (level) {
         case 1:
-            if (experience >= 10) {
+            if (experience >= 20) {
                 level += 1
-                experience -= 10
+                experience -= 20
             }
             break;
         case 2:
-            if (experience >= 30) {
+            if (experience >= 40) {
                 level += 1
-                experience -= 30
+                experience -= 40
             }
             break;
         case 3:

@@ -173,7 +173,7 @@ const Shop = () => {
     }
 
     async function spinGacha(url, id) {
-        const gacha_names = ["Basic Gacha", "Gacha 2", "Gacha 3"]
+        const gacha_names = ["Basic Gacha", "Simple Gacha", "Premium Gacha"]
         const response = await fetch(url, {
             method: 'PATCH',
             headers: {
@@ -254,8 +254,8 @@ const Shop = () => {
 
         loadUI_currency()
 
-        const gacha_names = ["Basic Gacha", "Gacha 2", "Gacha 3"]
-        const gacha_color = ["#FF0000", "#00FF00", "#0000FF"]
+        const gacha_names = ["Basic Gacha", "Simple Gacha", "Premium Gacha"]
+        const gacha_color = ["#EB1B0C", "#167D3D", "#364EB9"]
         const gacha_prices = ["150 Points", "150 Points", "50 Gold"]
         for (let i = 0; i < 3; i++) {
             GACHA.push(new Gacha(gacha_color[i]))
