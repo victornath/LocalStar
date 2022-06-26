@@ -17,6 +17,7 @@ import BalapKarung from './screens/BalapKarung';
 import TarikTambang from './screens/TarikTambang';
 import Profile from './screens/Profile';
 import Event from './screens/Event';
+import Help_Congklak from './screens/Help_Congklak';
 
 
 const App = () => {
@@ -38,6 +39,7 @@ const App = () => {
         <Route path='/gobaksodor' element={<GobakSodor />} />;
         <Route path='/karung' element={<BalapKarung />} />;
         <Route path='/tambang' element={<TarikTambang />} />;
+        <Route path='help/congklak' element={<Help_Congklak />} />;
       </Routes>
     </Router>
   )

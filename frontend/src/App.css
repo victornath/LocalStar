@@ -392,3 +392,9 @@ button:hover {
   background-color: #FFF;
   padding: 5px;
 }
+
+/* HELP */
+.help-content {
+  margin: 0 25px 0 25px;
+  text-align: justify;
+}
