@@ -9,7 +9,6 @@ const gachaSchema = mongoose.Schema({
     currency: {
         type: String,
         required: true,
-        unique: true,
     },
     price: {
         type: Number,
