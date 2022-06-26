@@ -650,8 +650,11 @@ const TarikTambang = () => {
         TRIANGLE.rotation.y = - Math.PI / 4
         TRIANGLE.rotation.z = -Math.PI / 2
         GAME_UI.push(TRIANGLE)
+        let ui_pink_btn = new THREE.MeshBasicMaterial({
+            color: 0xFF3366,
+        })
 
-        button_action = new THREE.Mesh(new THREE.PlaneGeometry(225, 50), new THREE.MeshBasicMaterial({ color: 0x87CEEB }))
+        button_action = new THREE.Mesh(new THREE.PlaneGeometry(225, 50), ui_pink_btn)
         button_action.position.set(105, 0, 205)
         button_action.rotation.y = -Math.PI / 4
         button_action.name = "button_action"

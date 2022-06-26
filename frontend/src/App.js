@@ -16,6 +16,7 @@ import GobakSodor from "./screens/GobakSodor";
 import BalapKarung from './screens/BalapKarung';
 import TarikTambang from './screens/TarikTambang';
 import Profile from './screens/Profile';
+import Event from './screens/Event';
 
 
 const App = () => {
@@ -32,6 +33,7 @@ const App = () => {
         <Route path='/inventory' element={<Inventory />} />;
         <Route path='/playroom' element={<PlayerLoader />} />;
         <Route path="/chat" element={<Chat />} />;
+        <Route path="/event" element={<Event />} />;
         <Route path='/congklak' element={<Congklak />} />;
         <Route path='/gobaksodor' element={<GobakSodor />} />;
         <Route path='/karung' element={<BalapKarung />} />;

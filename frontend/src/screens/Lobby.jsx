@@ -421,7 +421,7 @@ const Lobby = () => {
                                 window.open("../inventory", "_self")
                                 break;
                             case 2:
-                                window.open("../chat", "_self")
+                                window.open("../event", "_self")
                                 break;
                         }
                     } else if (obj_name.startsWith("button_")) {
@@ -509,7 +509,7 @@ const Lobby = () => {
             })
             ROOM_UI = []
         }
-        let bottom_menu = ["Shop", "Inventory", "Chat"]
+        let bottom_menu = ["Shop", "Inventory", "Event"]
         for (let i = 0; i < bottom_menu.length; i++) {
             let player_background = new THREE.Mesh(new THREE.PlaneGeometry(87, 36), LOADED_MATERIAL[2])
             player_background.position.set(-16.25 + (102 * i), 37.5, 0)
