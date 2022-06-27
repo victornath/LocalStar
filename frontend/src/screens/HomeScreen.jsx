@@ -13,6 +13,7 @@ const HomeScreen = () => {
             <Header />
 
             <div className="banner">
+
                 <div class="content">
                     <h1>LEGENDS ARCADIA</h1>
                     <h3>Web-Based Multiplayer Online Game That Features Indonesian Traditional Games</h3>

@@ -127,6 +127,7 @@ textarea:focus {
   background-image: url("../public/images/congklak.jpeg");
   background-size: cover;
   background-position: center;
+  background-color: #CEC3C1;
 }
 
 .content {
@@ -393,8 +394,12 @@ button:hover {
   padding: 5px;
 }
 
-/* HELP */
-.help-content {
-  margin: 0 25px 0 25px;
-  text-align: justify;
+.help-content p {
+  margin: 2rem 0;
+}
+
+.section-heading {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 3.75rem;
 }

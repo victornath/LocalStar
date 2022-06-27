@@ -428,6 +428,7 @@ const Shop = () => {
 
         sound_icon = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), LOADED_TEXTURE["sound_on"])
         sound_icon.position.set(214.75, 243.5, 1)
+        TOP_MENU.push(sound_icon)
         UI.add(sound_icon)
 
         player_background = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), LOADED_MATERIAL[2])
