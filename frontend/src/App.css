@@ -165,12 +165,13 @@ button {
   text-align: center;
   border-radius: 25px;
   font-weight: bold;
-  border: 2px solid #2F131E;
-  background: transparent;
-  color: #CEC3C1;
+  border: none;
+  background: #CEC3C1;
+  color: #2F131E;
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  transition: 0.5s;
 }
 
 span {
@@ -190,7 +191,8 @@ button:hover span {
 }
 
 button:hover {
-  border: none;
+  background: transparent;
+  color: #CEC3C1;
 }
 
 /* LOGIN */
@@ -419,4 +421,8 @@ button:hover {
   font-weight: 700;
   margin-top: 3.75rem;
   margin-bottom: 1.25rem;
+}
+
+.mask {
+  background-color: rgba(0, 0, 0, 0.6);
 }
