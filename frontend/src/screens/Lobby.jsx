@@ -380,9 +380,11 @@ const Lobby = () => {
                         switch (ACTIVE_GAME) {
                             case 0:
                                 // Congklak Help
+                                window.open("../help/congklak", "_self")
                                 break;
                             case 1:
                                 // Gobak Sodor Help
+                                window.open("../help/gobak-sodor", "_self")
                                 break;
                             case 2:
                                 // Tarik Tambang Help
