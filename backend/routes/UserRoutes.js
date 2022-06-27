@@ -230,12 +230,12 @@ userRouter.patch("/inventory", protect, asyncHandler(async (req, res) => {
 
 // GACHA SYSTEM
 userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
-    const { gacha_name } = req.body
+    const { name } = req.body
     let result
     const user = await User.findById(req.user._id);
-    switch (gacha_name) {
+    switch (name) {
         case "Basic Gacha":
-            const basicGacha = await Gacha.find({ gacha_name: "Basic Gacha" });
+            const basicGacha = await Gacha.find({ name: "Basic Gacha" });
 
             if (user.point < 150) {
                 res.json({
@@ -255,10 +255,10 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
                     }
                 );
                 let gachaResult = await Gacha.aggregate([
-                    { $match: { gacha_name: basicGacha.gacha_name } },
+                    { $match: { name: basicGacha.name } },
                     { $unwind: "$item_ids" },
                     { $sample: { size: 1 } },
-                    { $group: { _id: "$gacha_name", item_ids: { $push: "$item_ids" } } },
+                    { $group: { _id: "$name", item_ids: { $push: "$item_ids" } } },
                 ])
                 result = gachaResult[0].item_ids
                 console.log("GACHA RESULT :  " + result)
@@ -267,7 +267,7 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
 
             break;
         case 'Simple Gacha':
-            const simpleGacha = await Gacha.find({ gacha_name: "Simple Gacha" });
+            const simpleGacha = await Gacha.find({ name: "Simple Gacha" });
 
             if (user.point < 150) {
                 res.json({
@@ -287,10 +287,10 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
                     }
                 );
                 let gachaResult = await Gacha.aggregate([
-                    { $match: { gacha_name: simpleGacha.gacha_name } },
+                    { $match: { name: simpleGacha.name } },
                     { $unwind: "$item_ids" },
                     { $sample: { size: 1 } },
-                    { $group: { _id: "$gacha_name", item_ids: { $push: "$item_ids" } } },
+                    { $group: { _id: "$name", item_ids: { $push: "$item_ids" } } },
                 ])
                 result = gachaResult[0].item_ids
                 console.log("GACHA RESULT :  " + result)
@@ -299,7 +299,7 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
 
             break;
         case 'Premium Gacha':
-            const premiumGacha = await Gacha.find({ gacha_name: "Premium Gacha" });
+            const premiumGacha = await Gacha.find({ name: "Premium Gacha" });
 
             if (user.gold < 50) {
                 res.json({
@@ -319,10 +319,10 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
                     }
                 );
                 let gachaResult = await Gacha.aggregate([
-                    { $match: { gacha_name: premiumGacha.gacha_name } },
+                    { $match: { name: premiumGacha.name } },
                     { $unwind: "$item_ids" },
                     { $sample: { size: 1 } },
-                    { $group: { _id: "$gacha_name", item_ids: { $push: "$item_ids" } } },
+                    { $group: { _id: "$name", item_ids: { $push: "$item_ids" } } },
                 ])
                 result = gachaResult[0].item_ids
                 console.log("GACHA RESULT :  " + result)
