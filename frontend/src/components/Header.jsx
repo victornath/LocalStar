@@ -25,11 +25,11 @@ const Header = () => {
                                     <img alt="logo" src="/images/logo.png" />
                                 </Link>
                             </div>
-                            <div className="col-md-4 col-8 d-flex align-items-center">
-                                <Link to="/gameplay">Gameplay</Link>
-                                <Link to="/news">News</Link>
-                                <Link to="/faq">FAQ</Link>
-                            </div>
+                            <ul class="list-inline col-md-4 col-8 d-flex align-items-center">
+                                <li class="list-inline-item"><Link to="/gameplay">Gameplay</Link></li>
+                                <li class="list-inline-item"><Link to="/news">News</Link></li>
+                                <li class="list-inline-item"><Link to="/faq">FAQ</Link></li>
+                            </ul>
                             <div className="col-md-4 d-flex align-items-center justify-content-end Login-Register">
                                 <a href="https://www.youtube.com/">
                                     <i className="fab fa-youtube"></i>
