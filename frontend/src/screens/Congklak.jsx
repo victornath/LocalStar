@@ -55,6 +55,7 @@ const Congklak = () => {
     var end_game = { status: false }
     var ONGOING_TURN = false;
     var PLAYER_CHOOSE = null;
+    let PENDING_CHOOSE = []
     let LOADED_FONT;
     let LOADED_MATERIAL = []
 
@@ -349,7 +350,11 @@ const Congklak = () => {
         })
 
         socket.on("gameroom_move", param => {
-            PLAYER_CHOOSE = param.choose
+            if (PLAYER_CHOOSE !== null) {
+                PLAYER_CHOOSE = param.choose
+            } else {
+                PENDING_CHOOSE.push(param.choose)
+            }
         })
 
         socket.on("gameroom_timeout", param => {
@@ -1108,10 +1113,15 @@ const Congklak = () => {
                     SCENE.remove(e)
                 })
                 GAME_UI = []
+                showEndScreen(end_game)
                 if (end_game.win) {
                     sendGameResult("/api/users/game-result", end_game)
                 }
                 GAME_START = false
+            }
+            if (PENDING_CHOOSE.length > 0 && PLAYER_CHOOSE === null) {
+                PLAYER_CHOOSE = PENDING_CHOOSE[0]
+                PENDING_CHOOSE.shift()
             }
         }
 
@@ -1139,9 +1149,6 @@ const Congklak = () => {
             })
         });
         var data = await response.json()
-        if (response) {
-            showEndScreen(end_game)
-        }
     }
 
     function showEndScreen(end_game) {

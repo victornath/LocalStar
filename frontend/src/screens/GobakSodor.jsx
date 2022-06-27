@@ -467,6 +467,10 @@ const GobakSodor = () => {
                         })
                         READY_UI = []
                     } else if (OTHER_PLAYER_MESH[param._id].length > 0) {
+                        READY_UI.forEach(e => {
+                            UI.remove(e)
+                        })
+                        READY_UI = []
                         OTHER_PLAYER_MESH[param._id].forEach(e => {
                             UI.remove(e)
                         })
@@ -621,7 +625,7 @@ const GobakSodor = () => {
             let indicator_ring = new THREE.RingGeometry(11, 15, 25, 25)
             let turn_ring = new THREE.Mesh(indicator_ring, new THREE.MeshBasicMaterial({ color: 0xFF3366 }))
             turn_ring.rotation.x = -Math.PI / 2
-            turn_ring.position.set(320, 5.4, CATCHER_POSITION[ROW])
+            turn_ring.position.set(320, 18, CATCHER_POSITION[ROW])
             ROW_RING.push(turn_ring)
 
             GAME_UI.push(turn_ring);
@@ -781,28 +785,20 @@ const GobakSodor = () => {
             obj[0] = Catcher[ROW]
             // loader[0] = CATCHER_LOADER[ROW]
             location[0] = {
-                x: 320 + (player_direction[0] * 75),
-                y: 30,
-                z: CATCHER_POSITION[ROW]
-            }
-        } else {
-            obj[0] = Catcher[ROW]
-            // loader[0] = CATCHER_LOADER[ROW]
-            location[0] = {
                 x: 320 + (player_direction[0] * 50),
                 y: 30,
                 z: CATCHER_POSITION[ROW]
             }
+        } else {
+            location[0] = {
+                x: 320 + (player_direction[0] * 75),
+                y: 30,
+                z: CATCHER_POSITION[ROW]
+            }
+            obj[0] = Catcher[ROW]
+            // loader[0] = CATCHER_LOADER[ROW]
         }
         if (player_direction[1] == -1) {
-            obj[1] = Player2
-            loader[1] = PLAYER_LOADER
-            location[1] = {
-                x: 295 + (player_direction[1] * 50),
-                y: 30,
-                z: CHARACTER_POSITION[ROW] - 50
-            }
-        } else {
             obj[1] = Player2
             loader[1] = PLAYER_LOADER
             location[1] = {
@@ -810,6 +806,14 @@ const GobakSodor = () => {
                 y: 30,
                 z: CHARACTER_POSITION[ROW] - 50
             }
+        } else {
+            location[1] = {
+                x: 295 + (player_direction[1] * 50),
+                y: 30,
+                z: CHARACTER_POSITION[ROW] - 50
+            }
+            obj[1] = Player2
+            loader[1] = PLAYER_LOADER
         }
         Promise.all([moveChara(loader[0], obj[0], location[0]), moveChara(loader[1], obj[1], location[1])]).then(result => {
             resolve(null)
@@ -924,7 +928,7 @@ const GobakSodor = () => {
                         let indicator_ring = new THREE.RingGeometry(11, 15, 25, 25)
                         let turn_ring = new THREE.Mesh(indicator_ring, new THREE.MeshBasicMaterial({ color: 0xFF3366 }))
                         turn_ring.rotation.x = -Math.PI / 2
-                        turn_ring.position.set(320, 5.4, CATCHER_POSITION[ROW])
+                        turn_ring.position.set(320, 18, CATCHER_POSITION[ROW])
                         ROW_RING.push(turn_ring)
 
                         GAME_UI.push(turn_ring)
@@ -981,6 +985,7 @@ const GobakSodor = () => {
                     SCENE.remove(e)
                 })
                 GAME_UI = []
+                showEndScreen(end_game)
                 if (end_game.win) {
                     sendGameResult("/api/users/game-result", end_game)
                 }
@@ -1012,19 +1017,21 @@ const GobakSodor = () => {
             })
         });
         var data = await response.json()
-        if (response) {
-            showEndScreen(end_game)
-        }
     }
 
     function showEndScreen(end_game) {
+        GAME_UI.forEach(e => {
+            SCENE.remove(e)
+        })
+        CAMERA.position.set(150, 110, 100)
+        CAMERA.updateProjectionMatrix();
         let ready_bg = new THREE.Mesh(new THREE.PlaneGeometry(80, 50), new THREE.MeshBasicMaterial({ color: 0xffffff }))
-        ready_bg.position.set(66.5, 10.3, 140)
-        ready_bg.rotation.x = -Math.PI / 2
+        ready_bg.position.set(315, 15, 65)
+        ready_bg.rotation.y = -Math.PI / 4
         SCENE.add(ready_bg)
         ready_button = new THREE.Mesh(new THREE.PlaneGeometry(60, 12.5), ui_pink_btn)
-        ready_button.position.set(66.5, 15, 155)
-        ready_button.rotation.x = -Math.PI / 2
+        ready_button.position.set(305, -12.5, 75)
+        ready_button.rotation.y = -Math.PI / 4
         ready_button.name = "button_back"
         SCENE.add(ready_button)
         let string
@@ -1042,8 +1049,8 @@ const GobakSodor = () => {
             bevelEnabled: false
         })
         let ready_button_text = new THREE.Mesh(ready_button_text_geometry, new THREE.MeshBasicMaterial({ color: 0xffffff }))
-        centerText(ready_button_text_geometry, ready_button_text, 66.5, -100, 155)
-        ready_button_text.rotation.x = -Math.PI / 3
+        centerText(ready_button_text_geometry, ready_button_text, 270, 172.5, 100)
+        ready_button_text.rotation.y = -Math.PI / 4
         SCENE.add(ready_button_text)
         let ready_text_geometry = new TextGeometry(string, {
             font: LOADED_FONT,
@@ -1052,8 +1059,8 @@ const GobakSodor = () => {
             bevelEnabled: false
         })
         let ready_text = new THREE.Mesh(ready_text_geometry, new THREE.MeshBasicMaterial({ color: 0x000000 }))
-        centerText(ready_text_geometry, ready_text, 66.5, -75, 155)
-        ready_text.rotation.x = -Math.PI / 3
+        centerText(ready_text_geometry, ready_text, 270, 225, 100)
+        ready_text.rotation.y = -Math.PI / 4
         SCENE.add(ready_text)
     }
 

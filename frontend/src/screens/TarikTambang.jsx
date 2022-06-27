@@ -21,7 +21,7 @@ const TarikTambang = () => {
     let ready_button
     let passed_parameters = []
     let PLAYER_POSITION
-    let end_game
+    let end_game = { status: false }
     let READY_UI = []
     let GAME_UI = []
     let OTHER_PLAYER = []
@@ -686,7 +686,7 @@ const TarikTambang = () => {
             }
             socket.emit("gameroom_timecheck", (response) => {
                 let temp_delta = (response - startAt) / 1000
-                if (temp_delta > 150) {
+                if (temp_delta > 90) {
                     let temp = {
                         status: true
                     }
@@ -710,6 +710,7 @@ const TarikTambang = () => {
                     SCENE.remove(e)
                 })
                 GAME_UI = []
+                showEndScreen(end_game)
                 if (end_game.win) {
                     sendGameResult("/api/users/game-result", end_game)
                 }
@@ -721,7 +722,10 @@ const TarikTambang = () => {
             if (delta > PRESS_DELAY) {
                 console.log("Ready")
                 pressOnDelay = false
-                button_action.material = new THREE.MeshBasicMaterial({ color: 0x87CEEB })
+                let ui_pink_btn = new THREE.MeshBasicMaterial({
+                    color: 0xFF3366,
+                })
+                button_action.material = ui_pink_btn
             }
         }
 
@@ -792,20 +796,17 @@ const TarikTambang = () => {
             })
         });
         var data = await response.json()
-        if (response) {
-            showEndScreen(end_game)
-        }
     }
 
     function showEndScreen(end_game) {
-        let ready_bg = new THREE.Mesh(new THREE.PlaneGeometry(80, 50), new THREE.MeshBasicMaterial({ color: 0xffffff }))
+        let ready_bg = new THREE.Mesh(new THREE.PlaneGeometry(160, 150), new THREE.MeshBasicMaterial({ color: 0xffffff }))
         ready_bg.position.set(280, -45, 30)
         ready_bg.rotation.y = -Math.PI / 4
         SCENE.add(ready_bg)
         let ui_pink_btn = new THREE.MeshBasicMaterial({
             color: 0xFF3366,
         })
-        ready_button = new THREE.Mesh(new THREE.PlaneGeometry(60, 12.5), ui_pink_btn)
+        ready_button = new THREE.Mesh(new THREE.PlaneGeometry(120, 33), ui_pink_btn)
         ready_button.position.set(270, -72.5, 40)
         ready_button.rotation.y = -Math.PI / 4
         ready_button.name = "button_back"

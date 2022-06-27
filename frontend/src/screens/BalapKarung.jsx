@@ -582,18 +582,21 @@ const BalapKarung = () => {
         TRIANGLE.scale.set(2.2, 2.2, 2.2)
         GAME_UI.push(TRIANGLE)
 
-        let text_Geometry = new TextGeometry("Jump!", {
+        let text_Geometry = new TextGeometry("Lompat!", {
             font: LOADED_FONT,
             size: 10,
             height: 0,
             bevelEnabled: false,
         });
-        text_Mesh = new THREE.Mesh(text_Geometry, new THREE.MeshBasicMaterial({ color: 0x000000 }))
+        text_Mesh = new THREE.Mesh(text_Geometry, new THREE.MeshBasicMaterial({ color: 0xFFFFFF }))
         text_Mesh.rotation.y = -Math.PI / 4
-        text_Mesh.position.set(120, 40, 310)
+        text_Mesh.position.set(115, 40, 305)
         GAME_UI.push(text_Mesh)
 
-        button_action = new THREE.Mesh(new THREE.CircleGeometry(50, 100), new THREE.MeshBasicMaterial({ color: 0x87CEEB }))
+        let ui_pink_btn = new THREE.MeshBasicMaterial({
+            color: 0xFF3366,
+        })
+        button_action = new THREE.Mesh(new THREE.CircleGeometry(50, 100), ui_pink_btn)
         button_action.position.set(175, 0, 285)
         button_action.rotation.y = -Math.PI / 4
         button_action.rotation.x = -Math.PI / 4
@@ -668,7 +671,10 @@ const BalapKarung = () => {
                 button_action.material = new THREE.MeshBasicMaterial({ color: 0xAAAAAA })
                 delta = (time - prevTime) / 1000;
                 if (delta > PRESS_DELAY) {
-                    button_action.material = new THREE.MeshBasicMaterial({ color: 0x87CEEB })
+                    let ui_pink_btn = new THREE.MeshBasicMaterial({
+                        color: 0xFF3366,
+                    })
+                    button_action.material = ui_pink_btn
                     PIVOT = 0
                     POWER = 0
                     TRIANGLE.scale.set(2.2, 2.2, 2.2)
