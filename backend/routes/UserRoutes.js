@@ -230,13 +230,12 @@ userRouter.patch("/inventory", protect, asyncHandler(async (req, res) => {
 
 // GACHA SYSTEM
 userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
-    const { name } = req.body
+    const { gacha_name } = req.body
     let result
     const user = await User.findById(req.user._id);
-    switch (name) {
+    const getGacha = await Gacha.find({ name: gacha_name });
+    switch (gacha_name) {
         case "Basic Gacha":
-            const basicGacha = await Gacha.find({ name: "Basic Gacha" });
-
             if (user.point < 150) {
                 res.json({
                     message: "Point is not sufficient."
@@ -255,7 +254,7 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
                     }
                 );
                 let gachaResult = await Gacha.aggregate([
-                    { $match: { name: basicGacha.name } },
+                    { $match: { name: getGacha[0].name } },
                     { $unwind: "$item_ids" },
                     { $sample: { size: 1 } },
                     { $group: { _id: "$name", item_ids: { $push: "$item_ids" } } },
@@ -267,7 +266,6 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
 
             break;
         case 'Simple Gacha':
-            const simpleGacha = await Gacha.find({ name: "Simple Gacha" });
 
             if (user.point < 150) {
                 res.json({
@@ -287,19 +285,17 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
                     }
                 );
                 let gachaResult = await Gacha.aggregate([
-                    { $match: { name: simpleGacha.name } },
+                    { $match: { name: getGacha[0].name } },
                     { $unwind: "$item_ids" },
                     { $sample: { size: 1 } },
                     { $group: { _id: "$name", item_ids: { $push: "$item_ids" } } },
                 ])
                 result = gachaResult[0].item_ids
                 console.log("GACHA RESULT :  " + result)
-
             }
 
             break;
         case 'Premium Gacha':
-            const premiumGacha = await Gacha.find({ name: "Premium Gacha" });
 
             if (user.gold < 50) {
                 res.json({
@@ -319,7 +315,7 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
                     }
                 );
                 let gachaResult = await Gacha.aggregate([
-                    { $match: { name: premiumGacha.name } },
+                    { $match: { name: getGacha[0].name } },
                     { $unwind: "$item_ids" },
                     { $sample: { size: 1 } },
                     { $group: { _id: "$name", item_ids: { $push: "$item_ids" } } },
@@ -349,27 +345,41 @@ userRouter.patch("/shop", protect, asyncHandler(async (req, res) => {
         let element = userItem[0].item_owned[i];
         if (element == result) {
             foundGachaResult = true
-            console.log("BEFORE FOUNDED: " + user)
-            let newPoint = user.point += 75
-            await User.updateOne({ _id: user._id }, {
-                $set: {
-                    point: newPoint,
-                }
-            }).catch(
-                error => {
-                    console.log(error);
-                }
-            );
-            console.log("AFTER FOUNDED: " + user)
-            res.json({
-                result: result[0],
-                message: "You have already owned the item. Refunded 50% of Gacha Price"
-            })
+            if (getGacha[0].currency === "gold") {
+                let newGold = user.gold += 25
+                await User.updateOne({ _id: user._id }, {
+                    $set: {
+                        gold: newGold,
+                    }
+                }).catch(
+                    error => {
+                        console.log(error);
+                    }
+                );
+                res.json({
+                    result: result[0],
+                    message: "You have already owned the item. Refunded 50% of Gacha Price"
+                })
+            } else if (getGacha[0].currency === "point") {
+                let newPoint = user.point += 75
+                await User.updateOne({ _id: user._id }, {
+                    $set: {
+                        point: newPoint,
+                    }
+                }).catch(
+                    error => {
+                        console.log(error);
+                    }
+                );
+                res.json({
+                    result: result[0],
+                    message: "You have already owned the item. Refunded 50% of Gacha Price"
+                })
+            }
         }
 
     }
     if (foundGachaResult == false) {
-        console.log("NOT FOUNDED: " + user)
         let resultToString = result.toString()
         await User.updateOne({
             _id: user._id,

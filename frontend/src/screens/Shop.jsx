@@ -427,7 +427,11 @@ const Shop = () => {
         TOP_MENU.push(mesh)
         UI.add(mesh)
 
-        sound_icon = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), LOADED_TEXTURE["sound_on"])
+        if (SOUND_PLAY) {
+            sound_icon = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), LOADED_TEXTURE["sound_on"])
+        } else {
+            sound_icon = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), LOADED_TEXTURE["sound_off"])
+        }
         sound_icon.position.set(214.75, 243.5, 1)
         TOP_MENU.push(sound_icon)
         UI.add(sound_icon)
