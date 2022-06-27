@@ -286,7 +286,7 @@ const Shop = () => {
             })
             let spin_mesh = new THREE.Mesh(spin_text, LOADED_MATERIAL[0])
             centerText(spin_text, spin_mesh, -142.5 + (150.55 * i), 45, 4)
-            spin_mesh.name = "button_spin"
+            spin_mesh.name = "button_spin_" + i
             GACHA_UI.push(spin_mesh)
             UI.add(spin_mesh)
 
@@ -340,6 +340,7 @@ const Shop = () => {
                     let choice = parseInt(obj_name.substring(obj_name.length - 1, obj_name.length))
                     if (obj_name.startsWith("button_spin_")) {
                         spinGacha("/api/users/shop", choice)
+                        items.splice(1, 9999)
                     } else {
                         switch (obj_name) {
                             case "button_next":
