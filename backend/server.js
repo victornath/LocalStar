@@ -199,4 +199,8 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT;
 
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static('../frontend/build'))
+}
+
 server.listen(PORT, console.log(`server running in port ${PORT}`));
