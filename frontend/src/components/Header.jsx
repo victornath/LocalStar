@@ -26,9 +26,6 @@ const Header = () => {
                                 </Link>
                             </div>
                             <ul class="list-inline col-md-4 col-8 d-flex align-items-center">
-                                <li class="list-inline-item"><Link to="/gameplay">Gameplay</Link></li>
-                                <li class="list-inline-item"><Link to="/news">News</Link></li>
-                                <li class="list-inline-item"><Link to="/faq">FAQ</Link></li>
                             </ul>
                             <div className="col-md-4 d-flex align-items-center justify-content-end Login-Register">
                                 <a href="https://www.youtube.com/">

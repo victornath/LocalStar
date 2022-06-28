@@ -82,7 +82,7 @@ const Event = () => {
             console.log('Loading file: ' + managerUrl + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
         };
         MANAGER.onLoad = function () {
-            UI_CONTAINER = document.getElementById('ui-holder');
+            UI_CONTAINER = document.getElementById('column-1');
             init()
             document.getElementById('progress').hidden = true;
             console.log('Loading complete!');
@@ -203,7 +203,10 @@ const Event = () => {
                 <div id="progress-bar">
                 </div>
             </div>
-            <div id="ui-holder"></div>
+            <div id="row">
+                <div id="column-1"></div>
+                <div id="column-2">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Omnis nihil aspernatur ullam nulla esse. Voluptates reprehenderit dignissimos inventore repellendus! Mollitia nemo officia adipisci! Dolore amet explicabo, exercitationem ab non aliquam?</div>
+            </div>
         </>
     )
 }
