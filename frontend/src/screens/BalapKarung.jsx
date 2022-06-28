@@ -268,6 +268,18 @@ const BalapKarung = () => {
         ui_p2_status.position.set(163, 0, 50)
         ui_p2_status.rotation.y = -Math.PI / 4
 
+        let ui_opt_text = new TextGeometry("Menyerah", {
+            font: LOADED_FONT,
+            size: 10,
+            height: 0,
+            bevelEnabled: false
+        })
+        let ui_opt = new THREE.Mesh(ui_opt_text, new THREE.MeshBasicMaterial({ color: 0xffffff }))
+        ui_opt.position.set(150, -120, 20)
+        centerText(ui_opt_text, ui_opt, 150, -120, 20)
+        ui_opt.rotation.y = -Math.PI / 4
+        UI.add(ui_opt)
+
         ui_btn.rotation.y = -Math.PI / 4
         ui_btn.name = "opt_button"
         ui_btn.position.set(170, -140, 0)
@@ -651,6 +663,8 @@ const BalapKarung = () => {
                         socket.emit("gameroom_playerReady", PLAYER_PLAY);
                         PLAYER_READY = true
                         items.splice(0, items.length)
+                    } else if (i.object.name === "opt_button") {
+                        socket.disconnect()
                     }
                 })
             }

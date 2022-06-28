@@ -245,6 +245,18 @@ const Congklak = () => {
         ui_p2_status.position.set(163, 0, 50)
         ui_p2_status.rotation.y = -Math.PI / 4
 
+        let ui_opt_text = new TextGeometry("Menyerah", {
+            font: LOADED_FONT,
+            size: 10,
+            height: 0,
+            bevelEnabled: false
+        })
+        let ui_opt = new THREE.Mesh(ui_opt_text, new THREE.MeshBasicMaterial({ color: 0xFFFFFF }))
+        ui_opt.position.set(150, -120, 20)
+        centerText(ui_opt_text, ui_opt, 150, -120, 20)
+        ui_opt.rotation.y = -Math.PI / 4
+        UI.add(ui_opt)
+
         ui_btn.rotation.y = -Math.PI / 4
         ui_btn.name = "opt_button"
         ui_btn.position.set(170, -140, 0)
@@ -498,7 +510,7 @@ const Congklak = () => {
             bevelEnabled: false
         })
         let ready_button_text = new THREE.Mesh(ready_button_text_geometry, LOADED_MATERIAL[10])
-        centerText(ready_button_text_geometry, ready_button_text, 66.5, -100, 155)
+        centerText(ready_button_text_geometry, ready_button_text, 66.5, -95, 155)
         ready_button_text.rotation.x = -Math.PI / 3
         READY_UI.push(ready_button_text)
         SCENE.add(ready_button_text)
@@ -615,6 +627,8 @@ const Congklak = () => {
                         }
                         socket.emit("gameroom_playerReady", PLAYER_PLAY);
                         PLAYER_READY = true
+                    } else if (i.object.name === "opt_button") {
+                        socket.disconnect()
                     } else {
                         if (PLAYER_CHOOSE == null && curr_turn === PLAYER_POSITION) {
                             if (PLAYER_POSITION === 1) {
@@ -1276,7 +1290,8 @@ const Congklak = () => {
         const center = textGeo.boundingBox.getCenter(new THREE.Vector3())
         textMesh.updateMatrixWorld();
         center.applyMatrix4(textMesh.matrixWorld);
-        textMesh.geometry.translate(x - center.x, y + center.y, z - center.z,)
+        console.log(center.y)
+        textMesh.geometry.translate(x - center.x, y - center.y, z - center.z,)
     }
 
     function onWindowResize() {
