@@ -388,12 +388,18 @@ button:hover {
 
 #column-1 {
   float: left;
-  width: 50%;
+  width: 41%;
 }
 
 #column-2 {
   float: right;
-  width: 50%;
+  width: 59%;
+  max-height: 100vh;
+  height: 100%
+}
+
+.row>* {
+  padding-left: 0;
 }
 
 #css-holder {
@@ -441,4 +447,33 @@ button:hover {
 
 .mask {
   background-color: rgba(0, 0, 0, 0.6);
+}
+
+.event-content {
+  padding: 0 1.5rem;
+  padding-right: 2.5rem;
+}
+
+.event-content p {
+  text-align: justify;
+  margin: 2rem 0;
+}
+
+.event-content .disclaimer {
+  font-size: 0.9rem;
+  color: #DE3C4B;
+  text-align: justify;
+  margin: 2rem 0;
+}
+
+.event-content img {
+  text-align: center;
+  margin: 1.5rem 1rem
+}
+
+.event-content .section-heading {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-top: 0.25rem;
+  margin-bottom: 1.75rem;
 }

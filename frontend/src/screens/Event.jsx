@@ -97,6 +97,7 @@ const Event = () => {
         initRaycast()
         initScene()
         window.addEventListener('resize', onWindowResize, false);
+        showEvent(1)
     }
 
     function initRenderer() {
@@ -126,17 +127,19 @@ const Event = () => {
                 // console.log(CAMERA.zoom)
                 let items = RAYCAST.intersectObjects(UI.children, false)
                 items.forEach(i => {
-                    let choice = i.object.name.substring(i.object.name.length - 1, i.object.name.length)
-                    console.log(choice)
+                    let choice = parseInt(i.object.name.substring(i.object.name.length - 1, i.object.name.length))
                     if (i.object.name === "button_back") {
                         window.open("./lobby", "_self")
                     } else if (i.object.name.startsWith("event_")) {
                         switch (choice) {
                             case 1:
+                                showEvent(1)
                                 break;
                             case 2:
+                                showEvent(2)
                                 break;
                             case 3:
+                                showEvent(3)
                                 break;
                             default:
                                 break;
@@ -146,6 +149,14 @@ const Event = () => {
                 })
             }
         })
+    }
+
+    function showEvent(eventId) {
+        let event = []
+        event.push('                    <img src="./images/event/event_openning.png"></img>\n        <h1 class="section-heading">Pembukaan Legends Arcadia</h1>\n        <p>Selamat datang di Legends Arcadia!</p>\n        <p>Legends Arcadia adalah sebuah permainan berbasis web yang mengangkat permainan-permainan tradisional Indonesia ke dalam bentuk virtual.</p>\n        <p>Pemilihan basis web ini diperuntukkan agar dapat memudahkan para pemainnya untuk mengakses permainan Legends Arcadia dari berbagia platform, baik Desktop, Android, maupun iOS</p>\n        <p>Pada Legends Arcadia, kalian dapat bertemu dengan para pemain lain, dan memainkan permainan-permainan tradisional Indonesia.</p>')
+        event.push('                    <img src="./images/event/event_level10.png" />\n        <h1 class="section-header">Raih Level 10 dan Dapatkan Saldo E-Wallet!</h1>\n        <p>Periode: ? - ?</p>\n        <p>Pada event ini, para pemain ditantang untuk mencapai level 10 dalam periode waktu yang telah ditentukan. Bisakah kamu menjadi salah satu yang berhasil mencapainya?</p>\n        <p>Setelah mencapai level 10, pemain dimohon untuk melengkapi data pada formulir google berikut, agar tim Legends Arcadia dapat menghubungi kalian</p>\n        <p><a href="http://bit.ly/LegendsArcadiaLevel10">http://bit.ly/LegendsArcadiaLevel10</a></p>\n        <p>Terima kasih</p>\n        <p class="disclaimer">Tim Legends Arcadia berhak untuk membatalkan dan mendiskualifikasi pemain yang terbukti melakukan kecurangan dalam bentuk apapun.</p>\n')
+        event.push('                    <img src="./images/event/event_kuesioner.png" />\n        <h1 class="section-header">Isi Kuesioner dan Dapatkan Saldo E-Wallet!</h1>\n        <p>Periode: ? - ?</p>\n        <p>Pada event ini, pemain bisa mendapatkan saldo E-Wallet sebesar Rp. ##????#?#?#?# hanya dengan mengisi kuesioner.</p>\n        <p>Adapun syarat yang harus dipenuhi oleh pemain adalah:</p>\n        <ul>\n            <li>Pemain minimal Level 2.</li>\n            <li>Pemain pernah memainkan 4 jenis permainan yang ada di Legends Arcadia.</li>\n            <li>Pemenang dipilih secara acak pada akhir periode.</li>\n        </ul>\n        <p>Kuesioner dapat diisi pada link berikut: <a href="http://bit.ly/LegendsArcadiaKuesioner">http://bit.ly/LegendsArcadiaKuesioner</a></p>\n        <p class="disclaimer">Tim Legends Arcadia berhak untuk membatalkan dan mendiskualifikasi pemain yang terbukti melakukan kecurangan dalam bentuk apapun.</p>\n')
+        document.getElementById("column-2").innerHTML = event[(eventId - 1)]
     }
 
     function initUI() {
@@ -203,9 +214,10 @@ const Event = () => {
                 <div id="progress-bar">
                 </div>
             </div>
-            <div id="row">
-                <div id="column-1"></div>
-                <div id="column-2">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Omnis nihil aspernatur ullam nulla esse. Voluptates reprehenderit dignissimos inventore repellendus! Mollitia nemo officia adipisci! Dolore amet explicabo, exercitationem ab non aliquam?</div>
+            <div class="row">
+                <div class="col-sm-5" id="column-1"></div>
+                <div class="col-sm-6 overflow-auto event-content" id="column-2">
+                </div>
             </div>
         </>
     )
