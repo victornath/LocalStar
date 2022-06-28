@@ -232,7 +232,7 @@ const Shop = () => {
         UI.add(dirLight);
 
 
-        let page_text = new TextGeometry("Shop", {
+        let page_text = new TextGeometry("Toko", {
             font: LOADED_FONT,
             size: 14,
             height: 0,

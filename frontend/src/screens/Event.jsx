@@ -41,9 +41,33 @@ const Event = () => {
         FONT_LOADER.load('./Bahnschrift_Regular.json', function (font) {
             LOADED_FONT = font
         })
+        TEXTURE_LOADER.load('./images/texture/ui/arrow/arrow_l_back.png', function (texture) {
+            LOADED_TEXTURE["back"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                alphaTest: 0.9
+            })
+        })
         TEXTURE_LOADER.load('./images/event/blank_event.png', function (texture) {
             LOADED_TEXTURE["blank_event"] = new THREE.MeshBasicMaterial({
                 map: texture
+            })
+        })
+        TEXTURE_LOADER.load('./images/event/event_level10.png', function (texture) {
+            LOADED_TEXTURE["event_level10"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide
+            })
+        })
+        TEXTURE_LOADER.load('./images/event/event_kuesioner.png', function (texture) {
+            LOADED_TEXTURE["event_kuesioner"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide
+            })
+        })
+        TEXTURE_LOADER.load('./images/event/event_openning.png', function (texture) {
+            LOADED_TEXTURE["event_openning"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide
             })
         })
     }
@@ -93,7 +117,7 @@ const Event = () => {
             /* which = 3 itu click kanan */
             if (event.which == 1) {
                 let mouse = {}
-                let w = window.innerWidth
+                let w = window.innerWidth * 0.4
                 let h = window.innerHeight
                 mouse.x = event.clientX / w * 2 - 1
                 mouse.y = event.clientY / h * (-2) + 1
@@ -102,6 +126,22 @@ const Event = () => {
                 // console.log(CAMERA.zoom)
                 let items = RAYCAST.intersectObjects(UI.children, false)
                 items.forEach(i => {
+                    let choice = i.object.name.substring(i.object.name.length - 1, i.object.name.length)
+                    console.log(choice)
+                    if (i.object.name === "button_back") {
+                        window.open("./lobby", "_self")
+                    } else if (i.object.name.startsWith("event_")) {
+                        switch (choice) {
+                            case 1:
+                                break;
+                            case 2:
+                                break;
+                            case 3:
+                                break;
+                            default:
+                                break;
+                        }
+                    }
                     console.log(i.object.name)
                 })
             }
@@ -110,20 +150,36 @@ const Event = () => {
 
     function initUI() {
         const event_geo = new THREE.PlaneGeometry(160, 60)
-        const back_geo = new THREE.PlaneGeometry(20, 20)
+        let events = [LOADED_TEXTURE["event_openning"], LOADED_TEXTURE["event_level10"], LOADED_TEXTURE["event_kuesioner"]]
+        for (let i = 0; i < events.length; i++) {
+            let event_mesh = new THREE.Mesh(event_geo, events[i])
+            event_mesh.position.set(0, 55 - (i * 70), 0)
+            event_mesh.name = "event_" + (i + 1)
+            let event_mesh_bg1 = new THREE.Mesh(new THREE.PlaneGeometry(165, 65), new THREE.MeshBasicMaterial({ color: 0x2f131e }))
+            event_mesh_bg1.position.set(0, 55 - (i * 70), -1)
+            UI.add(event_mesh_bg1)
+            UI.add(event_mesh)
+        }
 
-        let back_mesh = new THREE.Mesh(back_geo, LOADED_TEXTURE["blank_event"])
-        let event_mesh = new THREE.Mesh(event_geo, LOADED_TEXTURE["blank_event"])
-        event_mesh.position.set(0, 55, 0)
-        UI.add(event_mesh)
-        let temp = event_mesh.clone()
-        temp.position.set(0, -15, 0)
-        UI.add(temp)
-        temp = event_mesh.clone()
-        temp.position.set(0, -85, 0)
-        UI.add(temp)
+        let back_geo = new THREE.PlaneGeometry(15, 15)
+        let back_mesh = new THREE.Mesh(back_geo, LOADED_TEXTURE["back"])
         back_mesh.position.set(-70, 110, 0)
         UI.add(back_mesh)
+        back_geo = new THREE.PlaneGeometry(20, 20)
+        let back_mesh_bg = new THREE.Mesh(back_geo, new THREE.MeshBasicMaterial({ color: 0x2F131E }))
+        back_mesh_bg.name = "button_back"
+        back_mesh_bg.position.set(-70, 110, -1)
+        UI.add(back_mesh_bg)
+
+        let page_title_text = new TextGeometry("Event", {
+            font: LOADED_FONT,
+            size: 10,
+            height: 0,
+            bevelEnabled: false
+        })
+        let page_title = new THREE.Mesh(page_title_text, new THREE.MeshBasicMaterial({ color: 0x3F131E }))
+        page_title.position.set(-50, 105, 0)
+        UI.add(page_title)
     }
 
     function initScene() {
@@ -148,8 +204,6 @@ const Event = () => {
                 </div>
             </div>
             <div id="ui-holder"></div>
-            <div id="canvas-holder">
-            </div>
         </>
     )
 }

@@ -513,7 +513,7 @@ const Lobby = () => {
             })
             ROOM_UI = []
         }
-        let bottom_menu = ["Shop", "Inventory", "Event"]
+        let bottom_menu = ["Toko", "Tas", "Event"]
         for (let i = 0; i < bottom_menu.length; i++) {
             let player_background = new THREE.Mesh(new THREE.PlaneGeometry(87, 36), LOADED_MATERIAL[2])
             player_background.position.set(-16.25 + (102 * i), 37.5, 0)
@@ -568,7 +568,7 @@ const Lobby = () => {
         UI.add(game_button)
 
         let game_name = ["Congklak", "Gobak Sodor", "Tarik Tambang", "Balap Karung"]
-        let game_text = new TextGeometry("Play\n" + game_name[ACTIVE_GAME], {
+        let game_text = new TextGeometry("Main\n" + game_name[ACTIVE_GAME], {
             font: LOADED_FONT,
             size: 10,
             height: 0,
@@ -691,7 +691,7 @@ const Lobby = () => {
         UI.add(game_image)
 
         let game_name = ["Congklak", "Gobak Sodor", "Tarik Tambang", "Balap Karung"]
-        let game_text = new TextGeometry("Play\n" + game_name[ACTIVE_GAME], {
+        let game_text = new TextGeometry("Main\n" + game_name[ACTIVE_GAME], {
             font: LOADED_FONT,
             size: 10,
             height: 0,
