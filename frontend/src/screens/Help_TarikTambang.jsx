@@ -16,8 +16,7 @@ const Help_TarikTambang = () => {
                             <ol class="list-group-numbered">
                                 <li>Para pemain dibagi menjadi dua regu.</li>
                                 <li>Pemain dapat menarik tali ke sisi bermainnya dengan cara mengklik tombol kiri pada mouse.</li>
-                                <li>Agar dapat menarik tali pemain harus mengklik tombol kiri pada mouse ketika bulatan mendekati lingkaran yang sudah ditetapkan.</li>
-                                <li>Bulatan yang mendekati lingkaran bersifat random jadi pemain harus mengklik dengan cepat dan tepat untuk dapat menarik tali.</li>
+                                <li>Pemainan ini menggunakan fitur power gauge, yang menentukan seberapa jauh pemain dapat melompat dalam sekali klik. Semakin besar maka akan melangkah lebih jauh.</li>
                                 <li>Pemain yang berhasil tertarik dan terbawa sampai melewati batas garis dinyatakan kalah.  </li>
                             </ol>
                         </div>

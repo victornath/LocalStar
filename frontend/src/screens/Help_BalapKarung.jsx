@@ -18,8 +18,8 @@ const Help_BalapKarung = () => {
                                 <li>Pemain akan berhadapan satu lawan satu dengan pemain lain.</li>
                                 <li>Pemain akan memulai permainan dari garis start.</li>
                                 <li>Pemain dapat melangkah maju dengan cara menekan tombol klik kiri pada mouse.</li>
-                                <li>Langkah maju dari pemain ditentukan dengan power gauge.</li>
-                                <li>Power gauge ini menentukan seberapa jauh pemain dapat melompat dalam sekali klik, semakin besar maka akan melangkah lebih jauh.</li>
+                                <li>Pemain dapat melompat maju ketika bulatan mendekati lingkaran yang sudah ditetapkan.</li>
+                                <li>Bulatan yang mendekati lingkaran bersifat random jadi pemain harus mengklik dengan cepat dan tepat untuk dapat melangkah</li>
                                 <li>Pemain yang mencapai garis finish lebih dulu adalah pemenang.</li>
                             </ol>
                         </div>
