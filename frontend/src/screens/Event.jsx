@@ -102,7 +102,7 @@ const Event = () => {
 
     function initRenderer() {
         UI_RENDERER.setSize(window.innerWidth * 0.4, window.innerHeight)
-        UI_RENDERER.setClearColor(0xCEC3C1)
+        UI_RENDERER.setClearColor(0xA5908D)
         UI_RENDERER.shadowMap.enabled = true
     }
 
