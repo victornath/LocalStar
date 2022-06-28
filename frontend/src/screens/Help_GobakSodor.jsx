@@ -1,7 +1,7 @@
 import React from 'react'
 import Header from '../components/Header'
 
-const Help_Congklak = () => {
+const Help_GobakSodor = () => {
     return (
         <div>
             <Header />
@@ -27,4 +27,4 @@ const Help_Congklak = () => {
     )
 }
 
-export default Help_Congklak
+export default Help_GobakSodor
