@@ -388,9 +388,11 @@ const Lobby = () => {
                                 break;
                             case 2:
                                 // Tarik Tambang Help
+                                window.open("../help/tarik-tambang", "_self")
                                 break;
                             case 3:
                                 // Balap Karung Help
+                                window.open("../help/balap-karung", "_self")
                                 break;
                         }
                     } else if (obj_name.startsWith("top_")) {

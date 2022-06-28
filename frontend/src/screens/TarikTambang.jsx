@@ -654,6 +654,16 @@ const TarikTambang = () => {
             color: 0xFF3366,
         })
 
+        let text_action = new TextGeometry("Tarik!", {
+            font: LOADED_FONT,
+            size: 10,
+            height: 0,
+            bevelEnabled: false
+        })
+        let text_act = new THREE.Mesh(text_action, new THREE.MeshBasicMaterial({ color: 0xFFFFFF }))
+        text_act.position.set(90, 15, 220)
+        text_act.rotation.y = -Math.PI / 4
+        GAME_UI.push(text_act)
         button_action = new THREE.Mesh(new THREE.PlaneGeometry(225, 50), ui_pink_btn)
         button_action.position.set(105, 0, 205)
         button_action.rotation.y = -Math.PI / 4
