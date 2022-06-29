@@ -59,8 +59,8 @@ const TarikTambang = () => {
     let SCORE = 0
     let ENEMY_SCORE = 0
 
-    var time, delta, moveTimer = 0;
-    var useDeltaTiming = true, weirdTiming = 0;
+    var time, delta
+    let timer
     var prevTime
     const PRESS_DELAY = 3
     var pressOnDelay = false
@@ -554,6 +554,7 @@ const TarikTambang = () => {
                         let param = PLAYER_PLAY
                         console.log("Power: " + POWER)
                         param.power = POWER
+                        SCORE += POWER
                         socket.emit("gameroom_move", param)
                         shakeCamera()
                         // animateChara(PIVOT, 1, Player1)
@@ -676,6 +677,7 @@ const TarikTambang = () => {
         })
         let text_act = new THREE.Mesh(text_action, new THREE.MeshBasicMaterial({ color: 0xFFFFFF }))
         text_act.position.set(90, 15, 220)
+        centerText(text_action, text_act, 90, 15, 220)
         text_act.rotation.y = -Math.PI / 4
         GAME_UI.push(text_act)
         button_action = new THREE.Mesh(new THREE.PlaneGeometry(225, 50), ui_pink_btn)
@@ -689,6 +691,23 @@ const TarikTambang = () => {
         rope.rotation.x = -Math.PI / 2
         rope.rotation.z = Math.PI / 4
         GAME_UI.push(rope)
+
+        let text_timer = new TextGeometry("WAKTU", {
+            font: LOADED_FONT,
+            size: 10,
+            height: 0,
+            bevelEnabled: false
+        })
+        let text_time = new THREE.Mesh(text_timer, new THREE.MeshBasicMaterial({ color: 0x000000 }))
+        text_time.position.set(90, 275, 220)
+        centerText(text_timer, text_time, 90, 275, 220)
+        text_time.rotation.y = -Math.PI / 4
+        GAME_UI.push(text_time)
+
+        timer = new THREE.Mesh(new THREE.PlaneGeometry(225, 10), new THREE.MeshBasicMaterial({ color: 0xFF0000 }))
+        timer.rotation.y = -Math.PI / 4
+        timer.position.set(105, 245, 205)
+        GAME_UI.push(timer)
         GAME_UI.forEach(e => {
             SCENE.add(e)
         })
@@ -710,6 +729,7 @@ const TarikTambang = () => {
             }
             socket.emit("gameroom_timecheck", (response) => {
                 let temp_delta = (response - startAt) / 1000
+                timer.scale.set((90 - temp_delta) / 90, 1, 1)
                 if (temp_delta > 90) {
                     let temp = {
                         status: true
