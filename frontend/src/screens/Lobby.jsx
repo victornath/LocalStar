@@ -1,0 +1,811 @@
+import React from 'react';
+import * as THREE from 'three';
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
+import PlayerLoader from '../../src/character/PlayerLoader.js'
+import WebGL from '../WebGL.js';
+import { useSelector } from "react-redux";
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:5000");
+
+const Lobby = () => {
+
+    const userLogin = useSelector((state) => state.userLogin);
+    const { userInfo } = userLogin;
+
+    let audioBGM = new Audio("./audio/bgm_lobby.mp3")
+    let audioClick = new Audio("./audio/button_click.mp3")
+
+    audioBGM.loop = true
+
+    const MANAGER = new THREE.LoadingManager();
+    const FONT_LOADER = new FontLoader(MANAGER);
+    const TEXTURE_LOADER = new THREE.TextureLoader(MANAGER)
+    const PLAYER_LOADER = new PlayerLoader(userInfo._id);
+    let FONT_SIZE = 16;
+
+    let CONTAINER
+    let UI_CONTAINER
+
+    const SCENE = new THREE.Scene();
+    const UI = new THREE.Scene();
+    const CAMERA = new THREE.OrthographicCamera((-135 * (window.innerWidth / window.innerHeight)), (135 * (window.innerWidth / window.innerHeight)), 135, -135, -1000, 1000)
+    const UI_CAMERA = new THREE.OrthographicCamera((-135 * (window.innerWidth / window.innerHeight)), (135 * (window.innerWidth / window.innerHeight)), 135, -135, -1000, 1000)
+    const RENDERER = new THREE.WebGLRenderer({
+        antialias: true,
+        localClippingEnabled: true
+    });
+    const UI_RENDERER = new THREE.WebGLRenderer({
+        antialias: true,
+        localClippingEnabled: true,
+        alpha: true
+    });
+
+    let LOADED_FONT = []
+    let LOADED_TEXTURE = []
+    let LOADED_MATERIAL = []
+    // const CAMERA_CONTROL = new MapControls(CAMERA, RENDERER.domElement)
+    const RAYCAST = new THREE.Raycaster()
+    RAYCAST.layers.set = 1
+    let PLAYER_PREVIEW
+    let GAME_MENU = []
+    let ACTIVE_GAME = 0
+    let GAME_NAME = []
+    let TOP_MENU = []
+    let MAIN_UI = []
+    let ROOM_UI = []
+    let PLAYER_DATA
+    let sound_icon
+    let SOUND_PLAY
+
+
+    // Support check
+    if (!('getContext' in document.createElement('canvas'))) {
+        alert('Sorry, it looks like your browser does not support canvas!');
+    }
+
+    // Also make sure webgl is enabled on the current machine
+    if (WebGL.isWebGLAvailable()) {
+        // If everything is possible, start the app, otherwise show an error
+        load();
+        gameLoop();
+    } else {
+        let warning = WebGL.getWebGLErrorMessage();
+        document.body.appendChild(warning);
+        CONTAINER.remove();
+        throw 'WebGL disabled or not supported';
+    }
+
+    function init() {
+        // Initiate Loading
+
+        // Initiate the Game
+        initRenderer()
+        initCamera()
+        loadData("/api/users/getData")
+        initScene()
+        window.addEventListener('resize', onWindowResize, false);
+    }
+
+    function initManager() {
+        MANAGER.onStart = function (managerUrl, itemsLoaded, itemsTotal) {
+            console.log('Started loading: ' + managerUrl + '\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
+        };
+
+        MANAGER.onProgress = function (managerUrl, itemsLoaded, itemsTotal) {
+            document.getElementById('progress-bar').style.width = (itemsLoaded / itemsTotal * 100) + '%';
+            console.log('Loading file: ' + managerUrl + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
+        };
+        MANAGER.onLoad = function () {
+            // Only allow control once content is fully loaded
+            // CANVAS_HOLDER.addEventListener('click', function () {
+            //     CONTROLS.lock();
+            // }, false);
+
+            CONTAINER = document.getElementById('canvas-holder');
+            UI_CONTAINER = document.getElementById('ui-holder');
+
+            init()
+            document.getElementById('progress').hidden = true;
+            console.log('Loading complete!');
+        };
+    }
+
+    async function loadData(url) {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + userInfo.token,
+            }
+        });
+        var data = await response.json()
+        initUI(data)
+        initGame()
+    }
+
+    function load() {
+        initManager()
+        FONT_LOADER.load('./Bahnschrift_Regular.json', function (font) {
+            LOADED_FONT = font
+        });
+
+        // Texture
+        TEXTURE_LOADER.load('./images/texture/ui/currency/points.png', function (texture) {
+            LOADED_TEXTURE["point"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                alphaTest: 0.3
+            })
+        })
+        TEXTURE_LOADER.load('./images/texture/ui/currency/gold.png', function (texture) {
+            LOADED_TEXTURE["gold"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                alphaTest: 0.3
+            })
+        })
+        TEXTURE_LOADER.load('./images/texture/ui/sound/sound_on.png', function (texture) {
+            LOADED_TEXTURE["sound_on"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                alphaTest: 0.6
+            })
+        })
+        TEXTURE_LOADER.load('./images/texture/ui/sound/sound_off.png', function (texture) {
+            LOADED_TEXTURE["sound_off"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                alphaTest: 0.6
+            })
+        })
+        TEXTURE_LOADER.load('./images/texture/ui/game/help_btn.png', function (texture) {
+            LOADED_TEXTURE["help"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                alphaTest: 0.6
+            })
+        })
+        for (let i = 1; i <= 4; i++) {
+            TEXTURE_LOADER.load('./images/texture/ui/game/game_' + i + '.png', function (texture) {
+                LOADED_TEXTURE["game_" + i] = new THREE.MeshBasicMaterial({
+                    map: texture,
+                    side: THREE.DoubleSide,
+                    alphaTest: 0.6
+                })
+            })
+        }
+        for (let i = 1; i <= 20; i++) {
+            TEXTURE_LOADER.load('./images/texture/ui/game/rooms/Room_' + i + '.jpg', function (texture) {
+                LOADED_TEXTURE["room_" + i] = new THREE.MeshBasicMaterial({
+                    map: texture,
+                    side: THREE.DoubleSide,
+                    alphaTest: 0.6
+                })
+            })
+        }
+        TEXTURE_LOADER.load('./images/texture/ui/arrow/arrow_l_1.png', function (texture) {
+            LOADED_TEXTURE["arrow_l"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide,
+                alphaTest: 0.6
+            })
+        })
+        TEXTURE_LOADER.load('./images/texture/ui/arrow/arrow_r_1.png', function (texture) {
+            LOADED_TEXTURE["arrow_r"] = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide,
+                alphaTest: 0.6
+            })
+        })
+
+        // Materials
+        LOADED_MATERIAL.push(
+            new THREE.MeshBasicMaterial({ color: 0xcec3c1 }),
+            new THREE.MeshBasicMaterial({ color: 0x240115 }),
+            new THREE.MeshBasicMaterial({ color: 0xA5908D }),
+            new THREE.MeshBasicMaterial({ color: 0x2F131E })
+        )
+    }
+
+    function initRenderer() {
+        RENDERER.setSize(window.innerWidth, window.innerHeight)
+        RENDERER.setClearColor(0xcec3c1)
+        RENDERER.shadowMap.enabled = true
+
+        UI_RENDERER.setSize(window.innerWidth, window.innerHeight)
+        UI_RENDERER.setClearColor(0xcec3c1, 0)
+        UI_RENDERER.shadowMap.enabled = true
+
+    }
+
+    function initCamera() {
+        CAMERA.position.set(0, 0, 0)
+        CAMERA.zoom = 2.5
+        CAMERA.updateProjectionMatrix();
+        CAMERA.rotation.order = 'YXZ';
+        CAMERA.rotation.y = - Math.PI / 4;
+        CAMERA.rotation.x = Math.atan(- 1 / Math.sqrt(2));
+
+        UI_CAMERA.position.set(20, 140, 150)
+        UI_CAMERA.updateProjectionMatrix();
+    }
+
+    function initScene() {
+        CONTAINER.appendChild(RENDERER.domElement)
+        UI_CONTAINER.appendChild(UI_RENDERER.domElement)
+    }
+
+    function initUI(loadedData) {
+        PLAYER_DATA = loadedData
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        UI.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        dirLight.position.set(0, 20, 10);
+        UI.add(dirLight);
+
+        loadUI_main()
+
+        let player_background = new THREE.Mesh(new THREE.PlaneGeometry(130.5, 60), LOADED_MATERIAL[2])
+        player_background.position.set(-140, 230, 0)
+        player_background.name = "top_menu_01"
+        TOP_MENU.push(player_background)
+        UI.add(player_background)
+
+        let player_name_shadow = new THREE.Mesh(new THREE.PlaneGeometry(130.5, 60), LOADED_MATERIAL[3])
+        player_name_shadow.position.set(-135, 225, -1)
+        TOP_MENU.push(player_name_shadow)
+        UI.add(player_name_shadow)
+
+
+        let PLAYER_NAME = PLAYER_DATA.name
+        if (PLAYER_NAME.length > 8) {
+            FONT_SIZE = 8.5
+        } else {
+            FONT_SIZE = 12
+        }
+
+        const name_geometry = new TextGeometry(PLAYER_NAME, {
+            font: LOADED_FONT,
+            size: FONT_SIZE,
+            height: 0,
+            bevelEnabled: false,
+        });
+        let name_mesh = new THREE.Mesh(name_geometry, LOADED_MATERIAL[1])
+        centerText(name_geometry, name_mesh, -140, 230, 1)
+        GAME_NAME.push(name_mesh)
+        UI.add(name_mesh)
+
+        let player_experience = new THREE.Mesh(new THREE.PlaneGeometry(110.5, 5), LOADED_MATERIAL[3])
+        player_experience.position.set(-140, 32.5, 1)
+        GAME_NAME.push(player_experience)
+        UI.add(player_experience)
+
+        let maxExp
+        switch (PLAYER_DATA.level) {
+            case 1:
+                maxExp = 20
+                break;
+            case 2:
+                maxExp = 40
+                break;
+            case 3:
+                maxExp = 60
+                break;
+            case 4:
+                maxExp = 100
+                break;
+            case 5:
+                maxExp = 150
+                break;
+            case 6:
+                maxExp = 210
+                break;
+            case 7:
+                maxExp = 280
+                break;
+            case 8:
+                maxExp = 360
+                break;
+            case 9:
+                maxExp = 450
+                break;
+            case 10:
+                maxExp = 100000
+                break;
+        }
+
+        let current_experience = new THREE.Mesh(new THREE.PlaneGeometry(107.5 * (PLAYER_DATA.experience / maxExp), 2), LOADED_MATERIAL[2])
+        let excess = (107.5 - (107.5 * (PLAYER_DATA.experience / maxExp))) / 2
+        current_experience.position.set(-140 - excess, 32.5, 2)
+        GAME_NAME.push(current_experience)
+        UI.add(current_experience)
+
+        // PLAYER LEVEL DISINI
+        let level_text = new TextGeometry(PLAYER_DATA.level.toString(), {
+            font: LOADED_FONT,
+            size: 8,
+            height: 0,
+            bevelEnabled: false
+        })
+        let level_number = new THREE.Mesh(level_text, LOADED_MATERIAL[3])
+        centerText(level_text, level_number, -180, 55, 4)
+        UI.add(level_number)
+
+        let PLAYER_EXP = PLAYER_DATA.experience
+        let experience_text = new TextGeometry(PLAYER_EXP.toString() + "/" + maxExp.toString(), {
+            font: LOADED_FONT,
+            size: 7,
+            height: 0,
+            bevelEnabled: false
+        })
+        let experience_number = new THREE.Mesh(experience_text, LOADED_MATERIAL[3])
+        alignText(experience_text, experience_number, -85, 42.5, 3)
+        UI.add(experience_number)
+
+        let player_level = new THREE.Mesh(new THREE.CircleGeometry(12.5, 6), LOADED_MATERIAL[0])
+        player_level.position.set(-180, 55, 2)
+        player_level.rotation.z = Math.PI / 2
+        GAME_NAME.push(player_level)
+        UI.add(player_level)
+        player_level = new THREE.Mesh(new THREE.CircleGeometry(15, 6), LOADED_MATERIAL[3])
+        player_level.position.set(-180, 55, 1)
+        player_level.rotation.z = Math.PI / 2
+        GAME_NAME.push(player_level)
+        UI.add(player_level)
+
+        loadUI_currency()
+        document.addEventListener("click", function (event) {
+            if (SOUND_PLAY === undefined) {
+                audioBGM.play()
+                SOUND_PLAY = true
+            }
+            audioClick.play()
+            /* which = 1 itu click kiri */
+            /* which = 2 itu scroll click */
+            /* which = 3 itu click kanan */
+            if (event.which === 1) {
+                let mouse = {}
+                let w = window.innerWidth
+                let h = window.innerHeight
+                mouse.x = event.clientX / w * 2 - 1
+                mouse.y = event.clientY / h * (-2) + 1
+
+                RAYCAST.setFromCamera(mouse, UI_CAMERA)
+                let items = RAYCAST.intersectObjects(UI.children, false)
+                console.log(items)
+                items.forEach(i => {
+                    console.log(i.object.name)
+                    let obj_name = i.object.name
+                    let choice = parseInt(obj_name.charAt(obj_name.length - 1))
+                    if (obj_name.startsWith("help_")) {
+                        switch (ACTIVE_GAME) {
+                            case 0:
+                                // Congklak Help
+                                window.open("../help/congklak", "_self")
+                                break;
+                            case 1:
+                                // Gobak Sodor Help
+                                window.open("../help/gobak-sodor", "_self")
+                                break;
+                            case 2:
+                                // Tarik Tambang Help
+                                window.open("../help/tarik-tambang", "_self")
+                                break;
+                            case 3:
+                                // Balap Karung Help
+                                window.open("../help/balap-karung", "_self")
+                                break;
+                        }
+                    } else if (obj_name.startsWith("top_")) {
+                        switch (choice) {
+                            case 1:
+                                window.open("../profile", "_self")
+                                break;
+                            case 2:
+                                break;
+                            case 3:
+                                break;
+                            case 4:
+                                if (SOUND_PLAY) {
+                                    audioBGM.pause()
+                                    sound_icon.material = LOADED_TEXTURE["sound_off"]
+                                    SOUND_PLAY = false
+                                } else {
+                                    audioBGM.play()
+                                    sound_icon.material = LOADED_TEXTURE["sound_on"]
+                                    SOUND_PLAY = true
+                                }
+                                break;
+                        }
+                    } else if (obj_name.startsWith("bottom_")) {
+                        switch (choice) {
+                            case 0:
+                                window.open("../shop", "_self")
+                                break;
+                            case 1:
+                                window.open("../inventory", "_self")
+                                break;
+                            case 2:
+                                window.open("../event", "_self")
+                                break;
+                        }
+                    } else if (obj_name.startsWith("button_")) {
+                        switch (obj_name) {
+                            case "button_next":
+                                ACTIVE_GAME++;
+                                if (ACTIVE_GAME > 3) {
+                                    ACTIVE_GAME = 0;
+                                }
+                                changeGameMode()
+                                break;
+                            case "button_prev":
+                                ACTIVE_GAME--;
+                                if (ACTIVE_GAME < 0) {
+                                    ACTIVE_GAME = 3
+                                }
+                                changeGameMode()
+                                break;
+                            case "button_close_choice":
+                                loadUI_main()
+                                break;
+                        }
+                    } else if (obj_name.startsWith("play_")) {
+                        socket.emit("lobby_checkRooms", choice, (response) => {
+                            showRoom(response.roomList, choice)
+                        })
+                    } else if (obj_name.startsWith("room_")) {
+                        window.open("/playroom?room_id=" + obj_name, "_self")
+                    }
+                })
+            }
+        })
+    }
+
+    function showRoom(data, choice) {
+        MAIN_UI.forEach(e => {
+            UI.remove(e)
+        });
+        MAIN_UI = []
+        GAME_MENU.forEach(e => {
+            UI.remove(e)
+        })
+        GAME_MENU = []
+
+        let back_arrow = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), LOADED_TEXTURE["arrow_l"])
+        back_arrow.position.set(-45, 200, 100)
+        back_arrow.name = "button_close_choice"
+        ROOM_UI.push(back_arrow)
+        UI.add(back_arrow)
+
+        let room_choice = new THREE.Mesh(new THREE.PlaneGeometry(296, 200), LOADED_MATERIAL[2])
+        room_choice.position.set(88, 115, 99)
+        ROOM_UI.push(room_choice)
+        UI.add(room_choice)
+        for (let j = 0; j < 2; j++) {
+            for (let i = 0; i < 3; i++) {
+                if (i === 2 && j === 1) break;
+                let room = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), LOADED_TEXTURE["room_" + (((choice - 1) * 5) + (i + (j * 3)) + 1)])
+                room.position.set(20 + (i * 70), 150 - (j * 85), 100)
+                room.name = data[(i + (j * 3))].roomName
+                ROOM_UI.push(room)
+                UI.add(room)
+
+                console.log(data[(i + (j * 3))].user_count)
+                let userCount = data[(i + (j * 3))].user_count.toString()
+                let point_geometry = new TextGeometry(userCount + "/10", {
+                    font: LOADED_FONT,
+                    size: 8,
+                    height: 0,
+                    bevelEnabled: false,
+                });
+                let mesh = new THREE.Mesh(point_geometry, LOADED_MATERIAL[1])
+                centerText(point_geometry, mesh, 20 + (i * 70), 112.5 - (j * 85), 100)
+                ROOM_UI.push(mesh)
+                UI.add(mesh)
+            }
+        }
+    }
+
+    function loadUI_main() {
+
+        if (ROOM_UI.length > 0) {
+            ROOM_UI.forEach(e => {
+                UI.remove(e)
+            })
+            ROOM_UI = []
+        }
+        let bottom_menu = ["Toko", "Tas", "Event"]
+        for (let i = 0; i < bottom_menu.length; i++) {
+            let player_background = new THREE.Mesh(new THREE.PlaneGeometry(87, 36), LOADED_MATERIAL[2])
+            player_background.position.set(-16.25 + (102 * i), 37.5, 0)
+            player_background.name = "bottom_menu_0" + i
+            MAIN_UI.push(player_background)
+            UI.add(player_background)
+
+            player_background = new THREE.Mesh(new THREE.PlaneGeometry(87, 36), LOADED_MATERIAL[3])
+            player_background.position.set(-11.25 + (102 * i), 32.5, -1)
+            player_background.name = "bottom_menu_0" + i
+            MAIN_UI.push(player_background)
+            UI.add(player_background)
+
+            const name_geometry = new TextGeometry(bottom_menu[i], {
+                font: LOADED_FONT,
+                size: 10,
+                height: 0,
+                bevelEnabled: false,
+            });
+            let name_mesh = new THREE.Mesh(name_geometry, LOADED_MATERIAL[1])
+            centerText(name_geometry, name_mesh, -16.25 + (102 * i), 37.5, 1)
+            MAIN_UI.push(name_mesh)
+            UI.add(name_mesh)
+        }
+
+        let game_image_material = [
+            LOADED_TEXTURE["game_1"],
+            LOADED_TEXTURE["game_2"],
+            LOADED_TEXTURE["game_3"],
+            LOADED_TEXTURE["game_4"]
+        ]
+
+        let game_image = new THREE.Mesh(new THREE.PlaneGeometry(180, 120), game_image_material[ACTIVE_GAME])
+        game_image.position.set(90, 155, 2)
+        GAME_MENU.push(game_image)
+        UI.add(game_image)
+
+        let game_help = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), LOADED_TEXTURE["help"])
+        game_help.position.set(170, 205, 3)
+        game_help.name = "help_button"
+        GAME_MENU.push(game_help)
+        UI.add(game_help)
+
+        let game_button = new THREE.Mesh(new THREE.PlaneGeometry(115, 45), LOADED_MATERIAL[2])
+        game_button.position.set(87.5, 92.5, 4)
+        game_button.name = "play_0" + (ACTIVE_GAME + 1)
+        GAME_MENU.push(game_button)
+        UI.add(game_button)
+        game_button = new THREE.Mesh(new THREE.PlaneGeometry(115, 45), LOADED_MATERIAL[3])
+        game_button.position.set(92.5, 87.5, 3)
+        GAME_MENU.push(game_button)
+        UI.add(game_button)
+
+        let game_name = ["Congklak", "Gobak Sodor", "Tarik Tambang", "Balap Karung"]
+        let game_text = new TextGeometry("Main\n" + game_name[ACTIVE_GAME], {
+            font: LOADED_FONT,
+            size: 10,
+            height: 0,
+            bevelEnabled: false
+        })
+        let game_text_mesh = new THREE.Mesh(game_text, LOADED_MATERIAL[1])
+        centerText(game_text, game_text_mesh, 87.5, 92.5, 5)
+        GAME_MENU.push(game_text_mesh)
+        UI.add(game_text_mesh)
+
+        let game_next_arrow = new THREE.Mesh(new THREE.PlaneGeometry(22, 22), LOADED_TEXTURE["arrow_r"])
+        game_next_arrow.position.set(170, 97.5, 4)
+        GAME_MENU.push(game_next_arrow)
+        UI.add(game_next_arrow)
+        let game_next = new THREE.Mesh(new THREE.PlaneGeometry(30, 35), LOADED_MATERIAL[2])
+        game_next.position.set(170, 97.5, 3)
+        game_next.name = "button_next"
+        GAME_MENU.push(game_next)
+        UI.add(game_next)
+
+        let game_prev_arrow = new THREE.Mesh(new THREE.PlaneGeometry(22, 22), LOADED_TEXTURE["arrow_l"])
+        game_prev_arrow.position.set(10, 97.5, 4)
+        GAME_MENU.push(game_prev_arrow)
+        UI.add(game_prev_arrow)
+        let game_prev = new THREE.Mesh(new THREE.PlaneGeometry(30, 35), LOADED_MATERIAL[2])
+        game_prev.position.set(10, 97.5, 3)
+        game_prev.name = "button_prev"
+        GAME_MENU.push(game_prev)
+        UI.add(game_prev)
+    }
+
+    function loadUI_currency() {
+        let currency_plane = new THREE.PlaneGeometry(115, 31)
+        let currency_shadow_plane = new THREE.PlaneGeometry(120, 36)
+        let player_background = new THREE.Mesh(currency_plane, LOADED_MATERIAL[2])
+        player_background.position.set(0.25, 242, 0)
+        player_background.name = "top_menu_02"
+        TOP_MENU.push(player_background)
+        UI.add(player_background)
+        player_background = new THREE.Mesh(currency_shadow_plane, LOADED_MATERIAL[3])
+        player_background.position.set(0.25, 242, -1)
+        player_background.name = "top_menu_02"
+        TOP_MENU.push(player_background)
+        UI.add(player_background)
+
+        let point_geometry = new TextGeometry(PLAYER_DATA.point.toString(), {
+            font: LOADED_FONT,
+            size: 10,
+            height: 0,
+            bevelEnabled: false,
+        });
+        let mesh = new THREE.Mesh(point_geometry, LOADED_MATERIAL[1])
+        alignText(point_geometry, mesh, 27.5, 242, 1)
+        GAME_NAME.push(mesh)
+        UI.add(mesh)
+
+        let currency_logo = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), LOADED_TEXTURE["point"])
+        currency_logo.position.set(42.5, 242, 2)
+        UI.add(currency_logo)
+        currency_logo = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), LOADED_TEXTURE["gold"])
+        currency_logo.position.set(172.5, 242, 2)
+        UI.add(currency_logo)
+
+        player_background = new THREE.Mesh(currency_plane, LOADED_MATERIAL[2])
+        player_background.position.set(129.25, 242, 0)
+        player_background.name = "top_menu_03"
+        TOP_MENU.push(player_background)
+        UI.add(player_background)
+        player_background = new THREE.Mesh(currency_shadow_plane, LOADED_MATERIAL[3])
+        player_background.position.set(129.25, 242, -1)
+        player_background.name = "top_menu_03"
+        TOP_MENU.push(player_background)
+        UI.add(player_background)
+
+
+        point_geometry = new TextGeometry(PLAYER_DATA.gold.toString(), {
+            font: LOADED_FONT,
+            size: 10,
+            height: 0,
+            bevelEnabled: false,
+        });
+        mesh = new THREE.Mesh(point_geometry, LOADED_MATERIAL[1])
+        alignText(point_geometry, mesh, 157.5, 242, 1)
+        GAME_NAME.push(mesh)
+        UI.add(mesh)
+
+        sound_icon = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), LOADED_TEXTURE["sound_on"])
+        sound_icon.position.set(214.75, 243.5, 1)
+        UI.add(sound_icon)
+
+        player_background = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), LOADED_MATERIAL[2])
+        player_background.position.set(214.75, 243.5, 0)
+        player_background.name = "top_menu_04"
+        TOP_MENU.push(player_background)
+        UI.add(player_background)
+        player_background = new THREE.Mesh(new THREE.PlaneGeometry(33, 33), LOADED_MATERIAL[3])
+        player_background.position.set(219.75, 238.5, -1)
+        TOP_MENU.push(player_background)
+        UI.add(player_background)
+    }
+
+    function changeGameMode() {
+        if (GAME_MENU.length > 0) {
+            GAME_MENU.forEach(e => {
+                UI.remove(e)
+            });
+            GAME_MENU = []
+        }
+
+        let game_image_material = [
+            LOADED_TEXTURE["game_1"],
+            LOADED_TEXTURE["game_2"],
+            LOADED_TEXTURE["game_3"],
+            LOADED_TEXTURE["game_4"]
+        ]
+
+        let game_image = new THREE.Mesh(new THREE.PlaneGeometry(180, 120), game_image_material[ACTIVE_GAME])
+        game_image.position.set(90, 155, 2)
+        GAME_MENU.push(game_image)
+        UI.add(game_image)
+
+        let game_name = ["Congklak", "Gobak Sodor", "Tarik Tambang", "Balap Karung"]
+        let game_text = new TextGeometry("Main\n" + game_name[ACTIVE_GAME], {
+            font: LOADED_FONT,
+            size: 10,
+            height: 0,
+            bevelEnabled: false
+        })
+        let game_text_mesh = new THREE.Mesh(game_text, LOADED_MATERIAL[1])
+        centerText(game_text, game_text_mesh, 87.5, 92.5, 5)
+        GAME_MENU.push(game_text_mesh)
+        UI.add(game_text_mesh)
+
+        let game_help = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), LOADED_TEXTURE["help"])
+        game_help.position.set(170, 205, 3)
+        game_help.name = "help_button"
+        GAME_MENU.push(game_help)
+        UI.add(game_help)
+
+        let game_button = new THREE.Mesh(new THREE.PlaneGeometry(115, 45), LOADED_MATERIAL[2])
+        game_button.position.set(87.5, 92.5, 4)
+        game_button.name = "play_0" + (ACTIVE_GAME + 1)
+        GAME_MENU.push(game_button)
+        UI.add(game_button)
+        game_button = new THREE.Mesh(new THREE.PlaneGeometry(115, 45), LOADED_MATERIAL[3])
+        game_button.position.set(92.5, 87.5, 3)
+        GAME_MENU.push(game_button)
+        UI.add(game_button)
+
+
+        let game_next_arrow = new THREE.Mesh(new THREE.PlaneGeometry(22, 22), LOADED_TEXTURE["arrow_r"])
+        game_next_arrow.position.set(170, 97.5, 4)
+        GAME_MENU.push(game_next_arrow)
+        UI.add(game_next_arrow)
+        let game_next = new THREE.Mesh(new THREE.PlaneGeometry(30, 35), LOADED_MATERIAL[2])
+        game_next.position.set(170, 97.5, 3)
+        game_next.name = "button_next"
+        GAME_MENU.push(game_next)
+        UI.add(game_next)
+
+        let game_prev_arrow = new THREE.Mesh(new THREE.PlaneGeometry(22, 22), LOADED_TEXTURE["arrow_l"])
+        game_prev_arrow.position.set(10, 97.5, 4)
+        GAME_MENU.push(game_prev_arrow)
+        UI.add(game_prev_arrow)
+        let game_prev = new THREE.Mesh(new THREE.PlaneGeometry(30, 35), LOADED_MATERIAL[2])
+        game_prev.position.set(10, 97.5, 3)
+        game_prev.name = "button_prev"
+        GAME_MENU.push(game_prev)
+        UI.add(game_prev)
+    }
+
+    function initGame() {
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        SCENE.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        dirLight.position.set(0, 20, 10);
+        SCENE.add(dirLight);
+
+        PLAYER_PREVIEW = PLAYER_LOADER.PLAYER.player
+        PLAYER_PREVIEW.scale.set(0.85, 0.85, 0.85)
+        PLAYER_PREVIEW.position.set(-55, -2.5, -35)
+
+        let player_background = new THREE.Mesh(new THREE.PlaneGeometry(52, 83.5), LOADED_MATERIAL[2])
+        player_background.rotation.y = -Math.PI / 4
+        player_background.position.set(-15.25, -47.5, -75.25)
+        SCENE.add(player_background)
+
+        player_background = new THREE.Mesh(new THREE.PlaneGeometry(51, 83.5), LOADED_MATERIAL[3])
+        player_background.rotation.y = -Math.PI / 4
+        player_background.position.set(0.5, -63.5, -87.25)
+
+        SCENE.add(player_background)
+        SCENE.add(PLAYER_PREVIEW)
+    }
+
+    function gameLoop() {
+        requestAnimationFrame(gameLoop);
+
+        RENDERER.render(SCENE, CAMERA);
+        UI_RENDERER.render(UI, UI_CAMERA);
+    }
+
+    function alignText(textGeo, textMesh, x, y, z) {
+        textGeo.computeBoundingBox();
+        const center = textGeo.boundingBox.getCenter(new THREE.Vector3())
+        textMesh.updateMatrixWorld();
+        center.applyMatrix4(textMesh.matrixWorld);
+        textMesh.geometry.translate(x - (2 * center.x), y - center.y, z - center.z)
+    }
+
+    function centerText(textGeo, textMesh, x, y, z) {
+        textGeo.computeBoundingBox();
+        const center = textGeo.boundingBox.getCenter(new THREE.Vector3())
+        textMesh.updateMatrixWorld();
+        center.applyMatrix4(textMesh.matrixWorld);
+        textMesh.geometry.translate(x - center.x, y - center.y, z - center.z,)
+    }
+
+    function onWindowResize() {
+        CAMERA.aspect = window.innerWidth / window.innerHeight;
+        CAMERA.updateProjectionMatrix();
+        UI_CAMERA.aspect = window.innerWidth / window.innerHeight;
+        UI_CAMERA.updateProjectionMatrix();
+        RENDERER.setSize(window.innerWidth, window.innerHeight);
+        UI_RENDERER.setSize(window.innerWidth, window.innerHeight);
+    }
+    return (
+        <>
+            <div id="progress">
+                <div id="progress-bar">
+                </div>
+            </div>
+            <div id="ui-holder"></div>
+            <div id="canvas-holder"></div>
+        </>
+    )
+}
+
+export default Lobby
